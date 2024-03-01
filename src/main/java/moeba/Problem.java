@@ -57,8 +57,9 @@ public class Problem extends AbstractIntegerProblem {
             x[i] = solution.variables().get(i);
         }
 
+        Integer[][][] biclusters = StaticUtils.getBiclustersFromRepresentation(x, representation);
         for (int i = 0; i < fitnessFunctions.length; i++){
-            solution.objectives()[i] = fitnessFunctions[i].run(x);
+            solution.objectives()[i] = fitnessFunctions[i].run(biclusters);
         }
 
         return solution;
@@ -73,7 +74,7 @@ public class Problem extends AbstractIntegerProblem {
         String [] arrayStrFitnessFunctions = strFitnessFunctions.split(";");
         this.fitnessFunctions = new FitnessFunction[arrayStrFitnessFunctions.length];
         for (int i = 0; i < arrayStrFitnessFunctions.length; i++) {
-            this.fitnessFunctions[i] = StaticUtils.getFitnessFunctionFromString(arrayStrFitnessFunctions[i], data, types, representation);
+            this.fitnessFunctions[i] = StaticUtils.getFitnessFunctionFromString(arrayStrFitnessFunctions[i], data, types);
         }
 
         // Configure jMetal Problem

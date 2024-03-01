@@ -45,12 +45,12 @@ public final class StaticUtils {
      * @param representation the representation used
      * @return a FitnessFunction object
      */
-    public static FitnessFunction getFitnessFunctionFromString(String str, Object[][] data, Class<?>[] types, Representation representation) {
+    public static FitnessFunction getFitnessFunctionFromString(String str, Object[][] data, Class<?>[] types) {
         FitnessFunction res;
         switch (str.toLowerCase()) {
 
             case "biclustersize":
-                res = new BiclusterSize(data, types, representation);
+                res = new BiclusterSize(data, types);
                 break;
             /**
             case "biclustervariance":
@@ -335,6 +335,8 @@ public final class StaticUtils {
         }
     }
 
-
+    public static Integer[][][] getBiclustersFromRepresentation(Integer[] x, Representation representation) {
+        return null;
+    }
     
 }

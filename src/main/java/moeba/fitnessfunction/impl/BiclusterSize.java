@@ -1,20 +1,14 @@
 package moeba.fitnessfunction.impl;
 
-import moeba.Representation;
 import moeba.fitnessfunction.FitnessFunction;
 
 public class BiclusterSize extends FitnessFunction {
-    public BiclusterSize(Object[][] data, Class<?>[] types, Representation representation) {
-        super(data, types, representation);
+    public BiclusterSize(Object[][] data, Class<?>[] types) {
+        super(data, types);
     }
 
     @Override
-    public double runFromGenericRepresentation(Integer[] x) {
-        return 1.0;
-    }
-
-    @Override
-    public double runFromSpecificRepresentation(Integer[] x) {
+    public double run(Integer[][][] biclusters) {
         return 1.0;
     }
     
