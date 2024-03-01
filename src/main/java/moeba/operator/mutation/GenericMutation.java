@@ -6,6 +6,10 @@ import org.uma.jmetal.solution.integersolution.IntegerSolution;
 public class GenericMutation implements MutationOperator<IntegerSolution> {
     private double mutationProbability;
 
+    public GenericMutation(double mutationProbability) {
+        this.mutationProbability = mutationProbability;
+    }
+
     @Override
     public IntegerSolution execute(IntegerSolution source) {
         // TODO Auto-generated method stub
