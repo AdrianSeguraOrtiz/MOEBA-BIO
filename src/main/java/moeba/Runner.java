@@ -53,13 +53,13 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         // Config sort. NOTE: https://github.com/jMetal/jMetal/issues/446
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 
-        // Declare the main execution variables.
+        // Declare main execution variables.
         Problem problem;
         CrossoverOperator<IntegerSolution> crossover;
         MutationOperator<IntegerSolution> mutation;
         NaryTournamentSelection<IntegerSolution> selection;
         
-        // Read the input dataset
+        // Read input dataset
         Object[][] data = null;
         try {
             data = StaticUtils.csvToObjectMatrix(inputDataset);
@@ -77,7 +77,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
             e.printStackTrace();
         }
 
-        // Read the column types
+        // Read column types
         Class<?>[] types = null;
         try {
             types = StaticUtils.jsonToClassArray(inputColumnTypes, columnNames);

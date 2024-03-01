@@ -21,8 +21,8 @@ public class Problem extends AbstractIntegerProblem {
 
     // Specific Representation
     public Problem(Object[][] data, Class<?> [] types, String strFitnessFunctions, int numBiclusters) {
-        if (numBiclusters < 2 || numBiclusters >= data[0].length) {
-            throw new IllegalArgumentException("The number of biclusters must be between 2 and " + (data[0].length - 1) + ".");
+        if (numBiclusters < 2 || numBiclusters >= data.length) {
+            throw new IllegalArgumentException("The number of biclusters must be between 2 and " + (data.length - 1) + ".");
         }
         initialize(data, types, strFitnessFunctions, numBiclusters);
     }
@@ -57,8 +57,8 @@ public class Problem extends AbstractIntegerProblem {
         }
 
         // Configure jMetal Problem
-        int numRows = data[0].length;
-        setNumberOfVariables((representation == Representation.GENERIC) ? (2 * numRows + numRows * data.length) : (numRows + numRows * numBiclusters));
+        int numRows = data.length;
+        setNumberOfVariables((representation == Representation.GENERIC) ? (2 * numRows + numRows * data[0].length) : (numRows + numRows * numBiclusters));
         setNumberOfObjectives(this.fitnessFunctions.length);
         setName("Problem");
 
