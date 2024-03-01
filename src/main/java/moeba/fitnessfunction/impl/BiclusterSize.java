@@ -10,14 +10,12 @@ public class BiclusterSize extends FitnessFunction {
 
     @Override
     public double runFromGenericRepresentation(Integer[] x) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'runFromGenericRepresentation'");
+        return 1.0;
     }
 
     @Override
     public double runFromSpecificRepresentation(Integer[] x) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'runFromSpecificRepresentation'");
+        return 1.0;
     }
     
 }

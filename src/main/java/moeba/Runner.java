@@ -4,13 +4,24 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
 
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.mutation.MutationOperator;
+import org.uma.jmetal.operator.selection.impl.BinaryTournamentSelection;
 import org.uma.jmetal.operator.selection.impl.NaryTournamentSelection;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
 import org.uma.jmetal.util.AbstractAlgorithmRunner;
-
+import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
+import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
+import moeba.StaticUtils.AlgorithmResult;
+import moeba.operator.crossover.GenericCrossover;
+import moeba.operator.mutation.GenericMutation;
+import moeba.utils.fitnessevolution.ProblemFitnessEvolution;
+import moeba.utils.solutionlistoutputwithheader.SolutionListOutputWithHeader;
+import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -20,7 +31,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--input-dataset"}, description = "Path to the input CSV dataset on which you want to perform biclustering", required = true)
     private File inputDataset;
 
-    @Option(names = {"--input-column-types"}, description = "Path to the input JSON file which specifies the names of the columns in order and the type of data of each of them")
+    @Option(names = {"--input-column-types"}, description = "Path to the input JSON file which specifies the names of the columns in order and the type of data of each of them", required = true)
     private File inputColumnTypes;
 
     @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSize, BiclusterVariance, BiclusterRowVariance, MeanSquaredResidue, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSize;BiclusterRowVariance;MeanSquaredResidue")
@@ -32,7 +43,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--max-evaluations"}, description = "Max number of evaluations", defaultValue = "25000")
     private int maxEvaluations;
 
-    @Option(names = {"--str-algorithm"}, description = "Algorithm as a string. Possible values: GA-AsyncParallel (mono-objective), NSGAII-AsyncParallel (multi-objective), SMPSO-SyncParallel (multi-objective), NSGAIIExternalFile-AsyncParallel (many-objective)", defaultValue = "NSGAII-AsyncParallel")
+    @Option(names = {"--str-algorithm"}, description = "Algorithm as a string. Possible values: GA-AsyncParallel (mono-objective), NSGAII-AsyncParallel (multi-objective), NSGAIIExternalFile-AsyncParallel (many-objective)", defaultValue = "NSGAII-AsyncParallel")
     private String strAlgorithm;
 
     @Option(names = {"--crossover-probability"}, description = "Crossover probability", defaultValue = "0.9")
@@ -47,18 +58,11 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--output-folder"}, description = "Output folder", defaultValue = "./MOEBA-HeCliDa/")
     private String outputFolder;
 
-
     @Override
     public void run() {
         // Config sort. NOTE: https://github.com/jMetal/jMetal/issues/446
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 
-        // Declare main execution variables.
-        Problem problem;
-        CrossoverOperator<IntegerSolution> crossover;
-        MutationOperator<IntegerSolution> mutation;
-        NaryTournamentSelection<IntegerSolution> selection;
-        
         // Read input dataset
         Object[][] data = null;
         try {
@@ -84,6 +88,58 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
+        // Evolución central con representación genérica
+        Problem problem = new ProblemFitnessEvolution(data, types, strFitnessFormulas, populationSize);
+        CrossoverOperator<IntegerSolution> crossover = new GenericCrossover(crossoverProbability, 2, 2);
+        MutationOperator<IntegerSolution> mutation = new GenericMutation(mutationProbability);
+        NaryTournamentSelection<IntegerSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
+        AlgorithmResult result = StaticUtils.executeEvolutionaryAlgorithm(
+                problem,
+                populationSize,
+                maxEvaluations,
+                strAlgorithm,
+                selection,
+                crossover,
+                mutation,
+                numThreads
+        );
+
+        // Create output folder
+        try {
+            Files.createDirectories(Paths.get(outputFolder));
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
+
+        // Write the evolution of fitness values to an output txt file
+        Map<String, Double[]> fitnessEvolution = ((ProblemFitnessEvolution) problem).getFitnessEvolution();
+        StaticUtils.writeFitnessEvolution(outputFolder + "/fitness_evolution.txt", fitnessEvolution);
+
+        // Write the data of the last population (pareto front approximation)
+        String[] varLabels = new String[2 * data.length + data.length * data[0].length];
+        for (int i = 0; i < data.length; i++) {
+            varLabels[i] = "R" + i;
+        }
+        for (int i = 0; i < data.length; i++) {
+            varLabels[i + data.length] = "P" + i;
+        }
+        for (int i = 2*data.length; i < varLabels.length; i++) {
+            varLabels[i] = "Cell-R" + (i % data.length) + "-C" + ((i / data.length) - 2);
+        }
+        new SolutionListOutputWithHeader(result.population, strFitnessFormulas.split(";"), varLabels)
+                .setVarFileOutputContext(new DefaultFileOutputContext(outputFolder + "/VAR.csv", ","))
+                .setFunFileOutputContext(new DefaultFileOutputContext(outputFolder + "/FUN.csv", ","))
+                .print();
+
+        System.out.println("Threads used: " + numThreads);
+        System.out.println("Total execution time: " + result.computingTime + "ms");
+            
+        System.exit(0);
+    }
+
+    public static void main(String[] args) {
+        CommandLine commandLine = new CommandLine(new Runner());
+        commandLine.execute(args);
     }
 }

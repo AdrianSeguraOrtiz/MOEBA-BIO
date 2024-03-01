@@ -25,3 +25,9 @@ replay_pid*
 
 # VSCode folders
 .vscode
+
+# Build maven
+target/
+
+# Test files and folders
+test*

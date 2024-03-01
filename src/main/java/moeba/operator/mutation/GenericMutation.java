@@ -12,8 +12,8 @@ public class GenericMutation implements MutationOperator<IntegerSolution> {
 
     @Override
     public IntegerSolution execute(IntegerSolution source) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'execute'");
+        // TODO Implement mutation
+        return source;
     }
 
     @Override
