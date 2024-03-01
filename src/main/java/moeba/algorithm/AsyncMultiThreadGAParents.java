@@ -21,6 +21,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
+/**
+ * Implements an asynchronous multi-threaded genetic algorithm (GA) with parallel evaluation of parents.
+ * This class extends the Master class provided by the jMetal framework to support parallel execution of tasks
+ * in a genetic algorithm context. It handles the creation, execution, and updating of tasks representing
+ * genetic operations such as mutation and crossover in an asynchronous manner.
+ *
+ * @param <S> Solution type that extends the Solution interface, representing the type of solutions the GA will work with.
+ */
 public class AsyncMultiThreadGAParents<S extends Solution<?>>
     extends Master<ParallelTask<S>, List<S>> {
   private Problem<S> problem;
@@ -40,6 +48,18 @@ public class AsyncMultiThreadGAParents<S extends Solution<?>>
 
   private int numberOfCores;
 
+  /**
+   * Constructs an AsyncMultiThreadGAParents object with the specified parameters.
+   *
+   * @param numberOfCores   The number of cores to use for parallel task execution.
+   * @param problem         The problem to be solved by the GA.
+   * @param populationSize  The size of the population.
+   * @param crossover       The crossover operator to be used.
+   * @param mutation        The mutation operator to be used.
+   * @param selection       The selection operator to be used for selecting parents.
+   * @param replacement     The replacement strategy to be used for creating the new population.
+   * @param termination     The termination condition to be checked to stop the algorithm.
+   */
   public AsyncMultiThreadGAParents(
       int numberOfCores,
       Problem<S> problem,
@@ -66,6 +86,12 @@ public class AsyncMultiThreadGAParents<S extends Solution<?>>
     createWorkers(numberOfCores, problem);
   }
 
+  /**
+   * Creates worker threads for parallel task execution.
+   *
+   * @param numberOfCores The number of worker threads to create.
+   * @param problem       The problem to be solved, used in the evaluation of solutions.
+   */
   private void createWorkers(int numberOfCores, Problem<S> problem) {
     IntStream.range(0, numberOfCores).forEach(i -> new Worker<>(
         (task) -> {
@@ -76,10 +102,18 @@ public class AsyncMultiThreadGAParents<S extends Solution<?>>
         completedTaskQueue).start());
   }
 
+  /**
+   * Generates a unique identifier for a task.
+   *
+   * @return An integer representing the task identifier.
+   */
   private int createTaskIdentifier() {
     return JMetalRandom.getInstance().nextInt(0, 1000000000);
   }
 
+  /**
+   * Initializes the progress attributes at the beginning of the algorithm's execution.
+   */
   @Override
   public void initProgress() {
     attributes.put("EVALUATIONS", evaluations);
@@ -90,6 +124,9 @@ public class AsyncMultiThreadGAParents<S extends Solution<?>>
     observable.notifyObservers(attributes);
   }
 
+  /**
+   * Updates progress attributes during the algorithm's execution.
+   */
   @Override
   public void updateProgress() {
     attributes.put("EVALUATIONS", evaluations);
@@ -101,6 +138,11 @@ public class AsyncMultiThreadGAParents<S extends Solution<?>>
     observable.notifyObservers(attributes);
   }
 
+  /**
+   * Creates the initial set of tasks representing the initial population.
+   *
+   * @return A list of ParallelTask objects representing the initial solutions to be evaluated.
+   */
   @Override
   public List<ParallelTask<S>> createInitialTasks() {
     List<S> initialPopulation = new ArrayList<>();
@@ -116,6 +158,11 @@ public class AsyncMultiThreadGAParents<S extends Solution<?>>
     return initialTaskList;
   }
 
+  /**
+   * Submits the initial tasks for execution.
+   *
+   * @param initialTaskList The list of initial tasks to be submitted.
+   */
   @Override
   public void submitInitialTasks(List<ParallelTask<S>> initialTaskList) {
     if (initialTaskList.size() >= numberOfCores) {
@@ -130,6 +177,11 @@ public class AsyncMultiThreadGAParents<S extends Solution<?>>
     }
   }
 
+  /**
+   * Processes a computed task, updating the population with the new solution.
+   *
+   * @param task The computed ParallelTask containing a solution.
+   */
   @Override
   public void processComputedTask(ParallelTask<S> task) {
     evaluations++;
@@ -144,11 +196,21 @@ public class AsyncMultiThreadGAParents<S extends Solution<?>>
     }
   }
 
+  /**
+   * Submits a task for execution.
+   *
+   * @param task The ParallelTask to be submitted.
+   */
   @Override
   public void submitTask(ParallelTask<S> task) {
     pendingTaskQueue.add(task);
   }
 
+  /**
+   * Creates a new task for execution. This method is used when creating tasks dynamically during the algorithm's execution.
+   *
+   * @return A new ParallelTask object.
+   */
   @Override
   public ParallelTask<S> createNewTask() {
     int numberOfParents = crossover.getNumberOfRequiredParents();
@@ -168,22 +230,40 @@ public class AsyncMultiThreadGAParents<S extends Solution<?>>
     }
   }
 
+  /**
+   * Checks whether the termination condition of the algorithm has not been met.
+   *
+   * @return True if the termination condition is not met, false otherwise.
+   */
   @Override
   public boolean stoppingConditionIsNotMet() {
     return !termination.isMet(attributes);
   }
 
+  /**
+   * Starts the execution of the asynchronous multi-threaded genetic algorithm.
+   */
   @Override
   public void run() {
     initTime = System.currentTimeMillis();
     super.run();
   }
 
+  /**
+   * Returns the result of the genetic algorithm, which is the current population.
+   *
+   * @return A list of solutions representing the current population.
+   */
   @Override
   public List<S> getResult() {
     return population;
   }
 
+  /**
+   * Gets the observable object for this algorithm.
+   *
+   * @return The Observable object that allows observers to track changes.
+   */
   public Observable<Map<String, Object>> getObservable() {
     return observable;
   }

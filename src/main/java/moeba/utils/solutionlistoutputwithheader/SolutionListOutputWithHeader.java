@@ -24,8 +24,8 @@ public class SolutionListOutputWithHeader extends SolutionListOutput {
     /**
      * Constructs a new SolutionListOutputWithHeader with specified solutions, fitness formulas, and VAR labels.
      *
-     * @param solutionList     The list of solutions to be output.
-     * @param funLabels  Descriptions or formulas of the fitness functions, used as headers in the objectives file.
+     * @param solutionList    The list of solutions to be output.
+     * @param funLabels       Descriptions or formulas of the fitness functions, used as headers in the objectives file.
      * @param varLabels       Labels for the solution variables, used as headers in the variables file.
      */
     public SolutionListOutputWithHeader(List<? extends Solution<?>> solutionList, String[] funLabels, String[] varLabels) {
