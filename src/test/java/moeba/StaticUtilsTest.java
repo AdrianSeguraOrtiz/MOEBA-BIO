@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import static moeba.StaticUtils.csvToObjectMatrix;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.testng.Assert.assertEquals;
@@ -89,5 +91,42 @@ public class StaticUtilsTest {
         assertThrows(IllegalArgumentException.class, () -> {
             StaticUtils.jsonToClassArray(inputJsonFile, columnNames);
         });
+    }
+
+    @Test
+    public void testGetBiclustersFromRepresentation() {
+        Integer[] x = {5,0,3,1,2,7,6,4, 1,0,1,0,0,1,0,0, 1,0,0,1,1,1,0,0, 1,1,1,0,0,0,0,0, 0,1,1,0,0,0,1,1, 0,0,0,1,1,1,0,0, 0,0,0,1,1,1,0,0, 0,0,0,0,0,0,1,1, 1,0,0,0,0,0,1,1, 0,1,1,0,0,0,1,1};
+        ArrayList<ArrayList<Integer>[]> res = StaticUtils.getBiclustersFromRepresentation(x, Representation.GENERIC, 8, 8);
+
+        // Num of biclusters
+        assertEquals(4, res.size());
+
+        // Create array
+        @SuppressWarnings("unchecked")
+        ArrayList<Integer>[] expected = new ArrayList[2];
+
+        // Bicluster 1
+        expected[0] = new ArrayList<Integer>(Arrays.asList(5));
+        expected[1] = new ArrayList<Integer>(Arrays.asList(0,1,6));
+        assertEquals(expected[0], res.get(0)[0]);
+        assertEquals(expected[1], res.get(0)[1]);
+
+        // Bicluster 2
+        expected[0] = new ArrayList<Integer>(Arrays.asList(0,3));
+        expected[1] = new ArrayList<Integer>(Arrays.asList(1,2,7));
+        assertEquals(expected[0], res.get(1)[0]);
+        assertEquals(expected[1], res.get(1)[1]);
+
+        // Bicluster 3
+        expected[0] = new ArrayList<Integer>(Arrays.asList(1,2,7));
+        expected[1] = new ArrayList<Integer>(Arrays.asList(0,3,4));
+        assertEquals(expected[0], res.get(2)[0]);
+        assertEquals(expected[1], res.get(2)[1]);
+
+        // Bicluster 4
+        expected[0] = new ArrayList<Integer>(Arrays.asList(6,4));
+        expected[1] = new ArrayList<Integer>(Arrays.asList(2,5,6,7));
+        assertEquals(expected[0], res.get(3)[0]);
+        assertEquals(expected[1], res.get(3)[1]);
     }
 }

@@ -1,5 +1,7 @@
 package moeba.fitnessfunction;
 
+import java.util.ArrayList;
+
 public abstract class FitnessFunction {
     private Object[][] data;
     private Class<?>[] types;
@@ -9,5 +11,5 @@ public abstract class FitnessFunction {
         this.types = types;
     }
 
-    public abstract double run(Integer[][][] biclusters);
+    public abstract double run(ArrayList<ArrayList<Integer>[]> biclusters);
 }

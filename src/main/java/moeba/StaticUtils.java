@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
@@ -335,8 +336,62 @@ public final class StaticUtils {
         }
     }
 
-    public static Integer[][][] getBiclustersFromRepresentation(Integer[] x, Representation representation) {
-        return null;
+    /**
+     * Extracts biclusters from the given representation.
+     * 
+     * @param x the input data
+     * @param representation the representation type
+     * @param numRows the number of rows
+     * @param numCols the number of columns
+     * @return the list of biclusters
+     */
+    @SuppressWarnings("unchecked")
+    public static ArrayList<ArrayList<Integer>[]> getBiclustersFromRepresentation(Integer[] x, Representation representation, int numRows, int numCols) {
+        // List to store the resulting biclusters
+        ArrayList<ArrayList<Integer>[]> res = new ArrayList<>();
+
+        // Check if the representation is generic
+        if (representation == Representation.GENERIC) {
+            // List to store the rows and columns of a bicluster
+            ArrayList<Integer> rows = new ArrayList<>();
+            ArrayList<Integer> cols = new ArrayList<>();
+            
+            // Array to store precalculated sums for each column
+            int[][] precalculatedSums = new int[numCols][numRows + 1];
+            
+            // Calculate precalculated sums for each column
+            for (int j = 0; j < numCols; j++) {
+                precalculatedSums[j][0] = 0;
+                for (int i = 1; i <= numRows; i++) {
+                    precalculatedSums[j][i] = precalculatedSums[j][i - 1] + x[2*numRows + j*numRows + i - 1];
+                }
+            }
+
+            // Iterate through the rows to find biclusters
+            for (int i = 0; i < numRows; i++) {
+                rows.add(x[i]);
+                if (x[i + numRows] == 1 || i == numRows - 1) {
+                    for (int j = 0; j < numCols; j++) {
+                        if (((float) (precalculatedSums[j][i + 1] - precalculatedSums[j][i - rows.size() + 1]) / rows.size()) > 0.5) {
+                            cols.add(j);
+                        }
+                    }
+                    // Create a bicluster and add it to the result list
+                    ArrayList<Integer>[] bicluster = new ArrayList[2];
+                    bicluster[0] = new ArrayList<>(rows);
+                    bicluster[1] = new ArrayList<>(cols);
+                    res.add(bicluster);
+
+                    // Clear the rows and columns for the next bicluster
+                    rows.clear();
+                    cols.clear();
+                }
+            }
+            return res;
+        } else {
+            // TODO: Implement specific representation
+            return null;
+        }
     }
     
 }

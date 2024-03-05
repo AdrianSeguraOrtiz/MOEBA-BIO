@@ -57,7 +57,7 @@ public class Problem extends AbstractIntegerProblem {
             x[i] = solution.variables().get(i);
         }
 
-        Integer[][][] biclusters = StaticUtils.getBiclustersFromRepresentation(x, representation);
+        ArrayList<ArrayList<Integer>[]> biclusters = StaticUtils.getBiclustersFromRepresentation(x, representation, data.length, data[0].length);
         for (int i = 0; i < fitnessFunctions.length; i++){
             solution.objectives()[i] = fitnessFunctions[i].run(biclusters);
         }
