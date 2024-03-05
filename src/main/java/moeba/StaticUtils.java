@@ -346,7 +346,7 @@ public final class StaticUtils {
      * @return the list of biclusters
      */
     @SuppressWarnings("unchecked")
-    public static ArrayList<ArrayList<Integer>[]> getBiclustersFromRepresentation(Integer[] x, Representation representation, int numRows, int numCols) {
+    public static ArrayList<ArrayList<Integer>[]> getBiclustersFromRepresentation(int[] x, Representation representation, int numRows, int numCols) {
         // List to store the resulting biclusters
         ArrayList<ArrayList<Integer>[]> res = new ArrayList<>();
 
@@ -363,7 +363,7 @@ public final class StaticUtils {
             for (int j = 0; j < numCols; j++) {
                 precalculatedSums[j][0] = 0;
                 for (int i = 1; i <= numRows; i++) {
-                    precalculatedSums[j][i] = precalculatedSums[j][i - 1] + x[2*numRows + j*numRows + i - 1];
+                    precalculatedSums[j][i] = precalculatedSums[j][i - 1] + x[2*numRows + j*numRows + x[i - 1]];
                 }
             }
 

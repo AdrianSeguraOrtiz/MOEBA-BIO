@@ -11,7 +11,11 @@ public class BiclusterSize extends FitnessFunction {
 
     @Override
     public double run(ArrayList<ArrayList<Integer>[]> biclusters) {
-        return 1.0;
+        int res = 0;
+        for (ArrayList<Integer>[] bic : biclusters) {
+            res += bic[0].size() * bic[1].size();
+        }
+        return 1 - ((double) res)/(data.length * data[0].length);
     }
     
 }

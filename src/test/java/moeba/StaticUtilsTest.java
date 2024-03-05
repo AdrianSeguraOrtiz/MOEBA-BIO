@@ -95,7 +95,7 @@ public class StaticUtilsTest {
 
     @Test
     public void testGetBiclustersFromRepresentation() {
-        Integer[] x = {5,0,3,1,2,7,6,4, 1,0,1,0,0,1,0,0, 1,0,0,1,1,1,0,0, 1,1,1,0,0,0,0,0, 0,1,1,0,0,0,1,1, 0,0,0,1,1,1,0,0, 0,0,0,1,1,1,0,0, 0,0,0,0,0,0,1,1, 1,0,0,0,0,0,1,1, 0,1,1,0,0,0,1,1};
+        int[] x = {5,0,3,1,2,7,6,4, 1,0,1,0,0,1,0,0, 0,1,1,0,0,1,0,1, 1,0,0,1,0,1,0,0, 1,0,0,1,1,0,1,0, 0,1,1,0,0,0,0,1, 0,1,1,0,0,0,0,1, 0,0,0,0,1,0,1,0, 0,0,0,0,1,1,1,0, 1,0,0,4,1,0,1,0};
         ArrayList<ArrayList<Integer>[]> res = StaticUtils.getBiclustersFromRepresentation(x, Representation.GENERIC, 8, 8);
 
         // Num of biclusters

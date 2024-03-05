@@ -18,6 +18,9 @@ import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
 import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 import moeba.StaticUtils.AlgorithmResult;
 import moeba.operator.crossover.GenericCrossover;
+import moeba.operator.crossover.biclustersbinary.impl.BicUniformCrossover;
+import moeba.operator.crossover.cellbinary.impl.CellUniformCrossover;
+import moeba.operator.crossover.rowpermutation.impl.CycleCrossover;
 import moeba.operator.mutation.GenericMutation;
 import moeba.utils.fitnessevolution.ProblemFitnessEvolution;
 import moeba.utils.solutionlistoutputwithheader.SolutionListOutputWithHeader;
@@ -91,7 +94,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
         // Evolución central con representación genérica
         Problem problem = new ProblemFitnessEvolution(data, types, strFitnessFormulas, populationSize);
-        CrossoverOperator<IntegerSolution> crossover = new GenericCrossover(crossoverProbability, 2, 2);
+        CrossoverOperator<IntegerSolution> crossover = new GenericCrossover(crossoverProbability, data.length, new CycleCrossover(), new BicUniformCrossover(), new CellUniformCrossover());
         MutationOperator<IntegerSolution> mutation = new GenericMutation(mutationProbability);
         NaryTournamentSelection<IntegerSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
         AlgorithmResult result = StaticUtils.executeEvolutionaryAlgorithm(

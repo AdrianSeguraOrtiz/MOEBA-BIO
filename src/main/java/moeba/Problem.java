@@ -38,7 +38,7 @@ public class Problem extends AbstractIntegerProblem {
         IntegerSolution solution = new DefaultIntegerSolution(getNumberOfObjectives(), getBoundsForVariables());
         
         if (representation == Representation.GENERIC) {
-            List<Integer> rowIndexes = IntStream.rangeClosed(1, data.length).boxed().collect(Collectors.toList());
+            List<Integer> rowIndexes = IntStream.rangeClosed(0, data.length - 1).boxed().collect(Collectors.toList());
             Collections.shuffle(rowIndexes);
             for (int i = 0; i < data.length; i++) {
                 solution.variables().set(i, rowIndexes.get(i));
@@ -52,7 +52,7 @@ public class Problem extends AbstractIntegerProblem {
     @Override
     public IntegerSolution evaluate(IntegerSolution solution) {
         
-        Integer[] x = new Integer[getNumberOfVariables()];
+        int[] x = new int[getNumberOfVariables()];
         for (int i = 0; i < getNumberOfVariables(); i++) {
             x[i] = solution.variables().get(i);
         }

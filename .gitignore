@@ -30,4 +30,4 @@ replay_pid*
 target/
 
 # Test files and folders
-test*
+test_*
