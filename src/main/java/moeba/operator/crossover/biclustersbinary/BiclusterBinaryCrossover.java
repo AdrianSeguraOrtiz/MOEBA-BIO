@@ -4,5 +4,5 @@ import java.util.BitSet;
 
 public interface BiclusterBinaryCrossover {
 
-    public BitSet[] execute(BitSet s1, BitSet s2);
+    public void execute(BitSet s1, BitSet s2);
 }

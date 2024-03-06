@@ -30,8 +30,11 @@ import org.uma.jmetal.experimental.componentbasedalgorithm.catalogue.replacement
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.mutation.MutationOperator;
 import org.uma.jmetal.operator.selection.impl.NaryTournamentSelection;
+import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
+import org.uma.jmetal.solution.binarysolution.BinarySolution;
 import org.uma.jmetal.util.SolutionListUtils;
+import org.uma.jmetal.util.binarySet.BinarySet;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
 import org.uma.jmetal.util.termination.Termination;
 import org.uma.jmetal.util.termination.impl.TerminationByEvaluations;
@@ -160,7 +163,7 @@ public final class StaticUtils {
         // Execution time of the algorithm
         public long computingTime;
         // Population at the last iteration of the algorithm
-        public List<IntegerSolution> population;
+        public List<CompositeSolution> population;
 
         /**
          * Constructs an instance of AlgorithmResult.
@@ -168,7 +171,7 @@ public final class StaticUtils {
          * @param computingTime The total execution time of the algorithm
          * @param population The population at the last iteration of the algorithm
          */
-        public AlgorithmResult(long computingTime, List<IntegerSolution> population) {
+        public AlgorithmResult(long computingTime, List<CompositeSolution> population) {
             this.computingTime = computingTime;
             this.population = population;
         }
@@ -193,18 +196,18 @@ public final class StaticUtils {
             int populationSize,
             int maxEvaluations,
             String strAlgorithm,
-            NaryTournamentSelection<IntegerSolution> selection,
-            CrossoverOperator<IntegerSolution> crossover,
-            MutationOperator<IntegerSolution> mutation,
+            NaryTournamentSelection<CompositeSolution> selection,
+            CrossoverOperator<CompositeSolution> crossover,
+            MutationOperator<CompositeSolution> mutation,
             int numThreads) {
 
         long computingTime;
-        List<IntegerSolution> population;
+        List<CompositeSolution> population;
 
         // Defines the termination condition for the algorithm
         Termination termination = new TerminationByEvaluations(maxEvaluations);
         // Replacement strategy for creating the next generation
-        Replacement<IntegerSolution> replacement = new MuPlusLambdaReplacement<>(new ObjectiveComparator<>(0));
+        Replacement<CompositeSolution> replacement = new MuPlusLambdaReplacement<>(new ObjectiveComparator<>(0));
         int offspringPopulationSize = populationSize;
 
         // Executes the algorithm based on the problem's number of objectives and specified algorithm name
@@ -212,7 +215,7 @@ public final class StaticUtils {
             // Single-objective problem logic
             if (strAlgorithm.equals("GA-SingleThread")) {
                 // Instantiates and executes a single-threaded genetic algorithm
-                GeneticAlgorithm<IntegerSolution> algorithm = new GeneticAlgorithm<>(
+                GeneticAlgorithm<CompositeSolution> algorithm = new GeneticAlgorithm<>(
                         problem,
                         populationSize,
                         offspringPopulationSize,
@@ -229,7 +232,7 @@ public final class StaticUtils {
                 // Instantiates and executes an asynchronous parallel genetic algorithm
                 long initTime = System.currentTimeMillis();
 
-                AsyncMultiThreadGAParents<IntegerSolution> algorithm = new AsyncMultiThreadGAParents<>(
+                AsyncMultiThreadGAParents<CompositeSolution> algorithm = new AsyncMultiThreadGAParents<>(
                         numThreads,
                         problem,
                         populationSize,
@@ -251,7 +254,7 @@ public final class StaticUtils {
             // Multi-objective problem logic
             if (strAlgorithm.equals("NSGAII-SingleThread")) {
                 // Instantiates and executes a single-threaded NSGA-II algorithm
-                Algorithm<List<IntegerSolution>> algorithm = new NSGAIIBuilder<>(problem, crossover, mutation, populationSize)
+                Algorithm<List<CompositeSolution>> algorithm = new NSGAIIBuilder<>(problem, crossover, mutation, populationSize)
                         .setSelectionOperator(selection)
                         .setMaxEvaluations(maxEvaluations)
                         .build();
@@ -264,7 +267,7 @@ public final class StaticUtils {
                 // Instantiates and executes an asynchronous parallel NSGA-II algorithm
                 long initTime = System.currentTimeMillis();
 
-                AsyncMultiThreadNSGAIIParents<IntegerSolution> algorithm = new AsyncMultiThreadNSGAIIParents<>(
+                AsyncMultiThreadNSGAIIParents<CompositeSolution> algorithm = new AsyncMultiThreadNSGAIIParents<>(
                         numThreads,
                         problem,
                         populationSize,
@@ -281,7 +284,7 @@ public final class StaticUtils {
                 // Instantiates and executes an asynchronous parallel NSGA-II algorithm with external file support
                 long initTime = System.currentTimeMillis();
 
-                AsyncMultiThreadNSGAIIParentsExternalFile<IntegerSolution> algorithm = new AsyncMultiThreadNSGAIIParentsExternalFile<>(
+                AsyncMultiThreadNSGAIIParentsExternalFile<CompositeSolution> algorithm = new AsyncMultiThreadNSGAIIParentsExternalFile<>(
                         numThreads,
                         problem,
                         populationSize,
@@ -337,52 +340,57 @@ public final class StaticUtils {
     }
 
     /**
-     * Extracts biclusters from the given representation.
+     * Extracts biclusters from the given composite solution and representation.
      * 
-     * @param x the input data
+     * @param solution the composite solution
      * @param representation the representation type
      * @param numRows the number of rows
      * @param numCols the number of columns
-     * @return the list of biclusters
+     * @return a list of biclusters represented as ArrayList of ArrayList of Integers
      */
     @SuppressWarnings("unchecked")
-    public static ArrayList<ArrayList<Integer>[]> getBiclustersFromRepresentation(int[] x, Representation representation, int numRows, int numCols) {
-        // List to store the resulting biclusters
+    public static ArrayList<ArrayList<Integer>[]> getBiclustersFromRepresentation(CompositeSolution solution, Representation representation, int numRows, int numCols) {
+        
+        // Initialize the result list
         ArrayList<ArrayList<Integer>[]> res = new ArrayList<>();
-
+        
+        // Extract integer and binary variables from the composite solution
+        List<Integer> integerVariables = ((IntegerSolution) solution.variables().get(0)).variables();
+        List<BinarySet> binaryVariables = ((BinarySolution) solution.variables().get(1)).variables();
+        
         // Check if the representation is generic
         if (representation == Representation.GENERIC) {
-            // List to store the rows and columns of a bicluster
+            
+            // Initialize rows, cols, and precalculatedSums
             ArrayList<Integer> rows = new ArrayList<>();
             ArrayList<Integer> cols = new ArrayList<>();
-            
-            // Array to store precalculated sums for each column
             int[][] precalculatedSums = new int[numCols][numRows + 1];
             
-            // Calculate precalculated sums for each column
+            // Calculate precalculatedSums
             for (int j = 0; j < numCols; j++) {
                 precalculatedSums[j][0] = 0;
                 for (int i = 1; i <= numRows; i++) {
-                    precalculatedSums[j][i] = precalculatedSums[j][i - 1] + x[2*numRows + j*numRows + x[i - 1]];
+                    precalculatedSums[j][i] = precalculatedSums[j][i - 1] + (binaryVariables.get(j+1).get(integerVariables.get(i-1)) ? 1 : 0);
                 }
             }
 
-            // Iterate through the rows to find biclusters
+            // Extract biclusters
             for (int i = 0; i < numRows; i++) {
-                rows.add(x[i]);
-                if (x[i + numRows] == 1 || i == numRows - 1) {
+                rows.add(integerVariables.get(i));
+                if (binaryVariables.get(0).get(i) || i == numRows - 1) {
                     for (int j = 0; j < numCols; j++) {
                         if (((float) (precalculatedSums[j][i + 1] - precalculatedSums[j][i - rows.size() + 1]) / rows.size()) > 0.5) {
                             cols.add(j);
                         }
                     }
-                    // Create a bicluster and add it to the result list
+                    
+                    // Create and add bicluster to the result list
                     ArrayList<Integer>[] bicluster = new ArrayList[2];
                     bicluster[0] = new ArrayList<>(rows);
                     bicluster[1] = new ArrayList<>(cols);
                     res.add(bicluster);
 
-                    // Clear the rows and columns for the next bicluster
+                    // Clear rows and cols for next iteration
                     rows.clear();
                     cols.clear();
                 }

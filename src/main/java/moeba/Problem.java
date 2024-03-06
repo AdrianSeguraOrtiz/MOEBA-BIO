@@ -1,17 +1,21 @@
 package moeba;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.uma.jmetal.problem.integerproblem.impl.AbstractIntegerProblem;
+import org.uma.jmetal.solution.binarysolution.BinarySolution;
+import org.uma.jmetal.solution.binarysolution.impl.DefaultBinarySolution;
+import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
 import org.uma.jmetal.solution.integersolution.impl.DefaultIntegerSolution;
 import moeba.fitnessfunction.FitnessFunction;
+import moeba.problem.AbstractMixedIntegerBinaryProblem;
 
-public class Problem extends AbstractIntegerProblem {
+public class Problem extends AbstractMixedIntegerBinaryProblem {
 
     private Object [][] data;
     private Class<?> [] types;
@@ -20,12 +24,14 @@ public class Problem extends AbstractIntegerProblem {
 
     // Generic Representation
     public Problem(Object[][] data, Class<?> [] types, String strFitnessFunctions) {
+        super(data.length, 1 + data[0].length, 0, data.length - 1, data.length);
         representation = Representation.GENERIC;
         initialize(data, types, strFitnessFunctions, -1);
     }
 
     // Specific Representation
     public Problem(Object[][] data, Class<?> [] types, String strFitnessFunctions, int numBiclusters) {
+        super(data.length, numBiclusters, 0, numBiclusters - 1, data[0].length);
         if (numBiclusters < 2 || numBiclusters >= data.length) {
             throw new IllegalArgumentException("The number of biclusters must be between 2 and " + (data.length - 1) + ".");
         }
@@ -34,30 +40,25 @@ public class Problem extends AbstractIntegerProblem {
     }
 
     @Override
-    public IntegerSolution createSolution() {
-        IntegerSolution solution = new DefaultIntegerSolution(getNumberOfObjectives(), getBoundsForVariables());
-        
+    public CompositeSolution createSolution() {
+        IntegerSolution integerSolution = new DefaultIntegerSolution(getNumberOfObjectives(), getNumberOfConstraints(), super.integerBounds);
+        BinarySolution binarySolution = new DefaultBinarySolution(super.numBitsPerVariable, getNumberOfObjectives());
+
         if (representation == Representation.GENERIC) {
             List<Integer> rowIndexes = IntStream.rangeClosed(0, data.length - 1).boxed().collect(Collectors.toList());
             Collections.shuffle(rowIndexes);
             for (int i = 0; i < data.length; i++) {
-                solution.variables().set(i, rowIndexes.get(i));
+                integerSolution.variables().set(i, rowIndexes.get(i));
             }
         }
-        
-        return solution;
+
+        return new CompositeSolution(Arrays.asList(integerSolution, binarySolution));
     }
     
     // Evaluate an individual
     @Override
-    public IntegerSolution evaluate(IntegerSolution solution) {
-        
-        int[] x = new int[getNumberOfVariables()];
-        for (int i = 0; i < getNumberOfVariables(); i++) {
-            x[i] = solution.variables().get(i);
-        }
-
-        ArrayList<ArrayList<Integer>[]> biclusters = StaticUtils.getBiclustersFromRepresentation(x, representation, data.length, data[0].length);
+    public CompositeSolution evaluate(CompositeSolution solution) {
+        ArrayList<ArrayList<Integer>[]> biclusters = StaticUtils.getBiclustersFromRepresentation(solution, representation, data.length, data[0].length);
         for (int i = 0; i < fitnessFunctions.length; i++){
             solution.objectives()[i] = fitnessFunctions[i].run(biclusters);
         }
@@ -79,22 +80,9 @@ public class Problem extends AbstractIntegerProblem {
 
         // Configure jMetal Problem
         int numRows = data.length;
-        setNumberOfVariables((representation == Representation.GENERIC) ? (2 * numRows + numRows * data[0].length) : (numRows + numRows * numBiclusters));
+        setNumberOfVariables((representation == Representation.GENERIC) ? (numRows + 1 + data[0].length) : (numRows + numBiclusters));
         setNumberOfObjectives(this.fitnessFunctions.length);
         setName("Problem");
-
-        // Set bounds for selected representation
-        List<Integer> lowerLimit = new ArrayList<>(getNumberOfVariables());
-        List<Integer> upperLimit = new ArrayList<>(getNumberOfVariables());
-        for (int i = 0; i < numRows; i++) {
-            lowerLimit.add(0);
-            upperLimit.add((representation == Representation.GENERIC) ? numRows - 1 : numBiclusters - 1);
-        }
-        for (int i = numRows; i < getNumberOfVariables(); i++) {
-            lowerLimit.add(0);
-            upperLimit.add(1);
-        }
-        setVariableBounds(lowerLimit, upperLimit);
     }
 
 }

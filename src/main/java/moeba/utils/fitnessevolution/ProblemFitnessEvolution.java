@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.uma.jmetal.solution.integersolution.IntegerSolution;
+import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import com.google.common.util.concurrent.AtomicDoubleArray;
 import moeba.Problem;
 
@@ -97,8 +97,8 @@ public class ProblemFitnessEvolution extends Problem {
      * @return The evaluated solution with updated objective values.
      */
     @Override
-    public IntegerSolution evaluate(IntegerSolution solution) {
-        IntegerSolution result = super.evaluate(solution);
+    public CompositeSolution evaluate(CompositeSolution solution) {
+        CompositeSolution result = super.evaluate(solution);
 
         // Increment the evaluation count and update the best fitness values if necessary.
         int cnt = parallelCount.incrementAndGet();

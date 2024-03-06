@@ -12,7 +12,7 @@ import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.mutation.MutationOperator;
 import org.uma.jmetal.operator.selection.impl.BinaryTournamentSelection;
 import org.uma.jmetal.operator.selection.impl.NaryTournamentSelection;
-import org.uma.jmetal.solution.integersolution.IntegerSolution;
+import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import org.uma.jmetal.util.AbstractAlgorithmRunner;
 import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
 import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
@@ -94,9 +94,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
         // Evolución central con representación genérica
         Problem problem = new ProblemFitnessEvolution(data, types, strFitnessFormulas, populationSize);
-        CrossoverOperator<IntegerSolution> crossover = new GenericCrossover(crossoverProbability, data.length, new CycleCrossover(), new BicUniformCrossover(), new CellUniformCrossover());
-        MutationOperator<IntegerSolution> mutation = new GenericMutation(mutationProbability);
-        NaryTournamentSelection<IntegerSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
+        CrossoverOperator<CompositeSolution> crossover = new GenericCrossover(crossoverProbability, data.length, data[0].length, new CycleCrossover(), new BicUniformCrossover(), new CellUniformCrossover());
+        MutationOperator<CompositeSolution> mutation = new GenericMutation(mutationProbability);
+        NaryTournamentSelection<CompositeSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
         AlgorithmResult result = StaticUtils.executeEvolutionaryAlgorithm(
                 problem,
                 populationSize,

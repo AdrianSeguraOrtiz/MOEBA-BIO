@@ -1,9 +1,9 @@
 package moeba.operator.mutation;
 
 import org.uma.jmetal.operator.mutation.MutationOperator;
-import org.uma.jmetal.solution.integersolution.IntegerSolution;
+import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 
-public class GenericMutation implements MutationOperator<IntegerSolution> {
+public class GenericMutation implements MutationOperator<CompositeSolution> {
     private double mutationProbability;
 
     public GenericMutation(double mutationProbability) {
@@ -11,7 +11,7 @@ public class GenericMutation implements MutationOperator<IntegerSolution> {
     }
 
     @Override
-    public IntegerSolution execute(IntegerSolution source) {
+    public CompositeSolution execute(CompositeSolution source) {
         // TODO Implement mutation
         return source;
     }

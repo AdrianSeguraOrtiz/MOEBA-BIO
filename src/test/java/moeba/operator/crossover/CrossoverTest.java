@@ -23,9 +23,11 @@ public class CrossoverTest {
         }
         
         BiclusterBinaryCrossover crossoverOperator = new BicUniformCrossover();
-        BitSet[] result = crossoverOperator.execute(parent1, parent2);
-        assertEquals(result[0], parent1);
-        assertEquals(result[1], parent2);
+        BitSet child1 = (BitSet) parent1.clone();
+        BitSet child2 = (BitSet) parent2.clone();
+        crossoverOperator.execute(child1, child2);
+        assertEquals(child1, parent1);
+        assertEquals(child2, parent2);
     }
 
     @Test
