@@ -53,7 +53,7 @@ public class GenericCrossover implements CrossoverOperator<CompositeSolution> {
             biclusterBinaryCrossover.execute(offSpring1BinSol.variables().get(0), offSpring2BinSol.variables().get(0));
 
             // Cells binary crossover
-            for (int i = 1; i < offSpring1BinSol.variables().size() + 1; i++) {
+            for (int i = 1; i < offSpring1BinSol.variables().size(); i++) {
                 cellBinaryCrossover.execute(offSpring1BinSol.variables().get(i), offSpring2BinSol.variables().get(i));
             }
         } 
