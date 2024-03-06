@@ -94,7 +94,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
         // Evolución central con representación genérica
         Problem problem = new ProblemFitnessEvolution(data, types, strFitnessFormulas, populationSize);
-        CrossoverOperator<CompositeSolution> crossover = new GenericCrossover(crossoverProbability, data.length, data[0].length, new CycleCrossover(), new BicUniformCrossover(), new CellUniformCrossover());
+        CrossoverOperator<CompositeSolution> crossover = new GenericCrossover(crossoverProbability, new CycleCrossover(), new BicUniformCrossover(), new CellUniformCrossover());
         MutationOperator<CompositeSolution> mutation = new GenericMutation(mutationProbability);
         NaryTournamentSelection<CompositeSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
         AlgorithmResult result = StaticUtils.executeEvolutionaryAlgorithm(

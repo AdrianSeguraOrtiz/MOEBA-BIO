@@ -16,17 +16,13 @@ import org.uma.jmetal.util.errorchecking.Check;
 
 public class GenericCrossover implements CrossoverOperator<CompositeSolution> {
     private double crossoverProbability;
-    private int numRows;
-    private int numCols;
     private RowPermutationCrossover rowPermutationCrossover;
     private BiclusterBinaryCrossover biclusterBinaryCrossover;
     private CellBinaryCrossover cellBinaryCrossover;
     private JMetalRandom random;  
 
-    public GenericCrossover(double crossoverProbability, int numRows, int numCols, RowPermutationCrossover rowPermutationCrossover, BiclusterBinaryCrossover biclusterBinaryCrossover, CellBinaryCrossover cellBinaryCrossover) {
+    public GenericCrossover(double crossoverProbability, RowPermutationCrossover rowPermutationCrossover, BiclusterBinaryCrossover biclusterBinaryCrossover, CellBinaryCrossover cellBinaryCrossover) {
         this.crossoverProbability = crossoverProbability;
-        this.numRows = numRows;
-        this.numCols = numCols;
         this.rowPermutationCrossover = rowPermutationCrossover;
         this.biclusterBinaryCrossover = biclusterBinaryCrossover;
         this.cellBinaryCrossover = cellBinaryCrossover;
@@ -39,33 +35,25 @@ public class GenericCrossover implements CrossoverOperator<CompositeSolution> {
         Check.that(source.size() == 2, "There must be two parents instead of " + source.size());
 
         List<CompositeSolution> offspring = new ArrayList<>();
+
         CompositeSolution offSpring1 = (CompositeSolution) source.get(0).copy();
         IntegerSolution offSpring1IntSol = (IntegerSolution) offSpring1.variables().get(0);
         BinarySolution offSpring1BinSol = (BinarySolution) offSpring1.variables().get(1);
+
         CompositeSolution offSpring2 = (CompositeSolution) source.get(1).copy();
         IntegerSolution offSpring2IntSol = (IntegerSolution) offSpring2.variables().get(0);
         BinarySolution offSpring2BinSol = (BinarySolution) offSpring2.variables().get(1);
+
         if (random.nextDouble(0, 1) <= this.crossoverProbability) {
             
             // Rows permutation crossover
-            int[] parent1RowPerm = new int[numRows];
-            int[] parent2RowPerm = new int[numRows];
-            for (int i = 0; i < numRows; i++) {
-                parent1RowPerm[i] = offSpring1IntSol.variables().get(i);
-                parent2RowPerm[i] = offSpring2IntSol.variables().get(i);
-            }
-            int[][] offSpringRowPerm = rowPermutationCrossover.execute(parent1RowPerm, parent2RowPerm);
-            for (int i = 0; i < numRows; i++) {
-                offSpring1IntSol.variables().set(i, offSpringRowPerm[0][i]);
-                offSpring2IntSol.variables().set(i, offSpringRowPerm[1][i]);
-            }
+            rowPermutationCrossover.execute(offSpring1IntSol, offSpring2IntSol);
 
             // Biclusters binary crossover
             biclusterBinaryCrossover.execute(offSpring1BinSol.variables().get(0), offSpring2BinSol.variables().get(0));
 
-
             // Cells binary crossover
-            for (int i = 1; i < numCols + 1; i++) {
+            for (int i = 1; i < offSpring1BinSol.variables().size() + 1; i++) {
                 cellBinaryCrossover.execute(offSpring1BinSol.variables().get(i), offSpring2BinSol.variables().get(i));
             }
         } 
