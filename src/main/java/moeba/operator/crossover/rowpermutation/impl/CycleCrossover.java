@@ -12,6 +12,10 @@ public class CycleCrossover implements RowPermutationCrossover {
         this.random = new Random();
     }
 
+    public CycleCrossover(Random random) {
+        this.random = random;
+    }
+
 
     @Override
     public void execute(IntegerSolution parent1, IntegerSolution parent2) {
@@ -41,7 +45,7 @@ public class CycleCrossover implements RowPermutationCrossover {
         } while (index != start);
 
         // Fill the gaps with elements from the other parent
-        int v1, v2 = 0;
+        int v1, v2;
         for (int i = 0; i < length; i++) {
             v1 = parent1.variables().get(i);
             v2 = parent2.variables().get(i);
