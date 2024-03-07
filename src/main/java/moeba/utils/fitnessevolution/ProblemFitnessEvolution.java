@@ -102,6 +102,8 @@ public class ProblemFitnessEvolution extends Problem {
 
         // Increment the evaluation count and update the best fitness values if necessary.
         int cnt = parallelCount.incrementAndGet();
+        boolean isPopulationMultiple = (cnt % populationSize == 0);
+        if (isPopulationMultiple) System.out.println(cnt);
         for (int i = 0; i < fitnessFunctions.length; i++) {
             double currentMin = progressiveValues.get(i);
             if (result.objectives()[i] < currentMin) {
@@ -109,7 +111,7 @@ public class ProblemFitnessEvolution extends Problem {
             }
 
             // Add the current best fitness to the tracking list at the end of each generation.
-            if (cnt % populationSize == 0) {
+            if (isPopulationMultiple) {
                 generationFitness[i].add(progressiveValues.get(i));
             }
         }
