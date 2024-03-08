@@ -23,7 +23,8 @@ import moeba.operator.crossover.cellbinary.impl.CellUniformCrossover;
 import moeba.operator.crossover.rowpermutation.impl.CycleCrossover;
 import moeba.operator.mutation.GenericMutation;
 import moeba.utils.observer.ProblemFitnessEvolution;
-import moeba.utils.output.SolutionListOutputWithHeader;
+import moeba.utils.output.SolutionListTranslatedVAR;
+import moeba.utils.output.SolutionListVARWithHeader;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -130,10 +131,15 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         for (int i = 2*data.length; i < varLabels.length; i++) {
             varLabels[i] = "Cell-R" + (i % data.length) + "-C" + ((i / data.length) - 2);
         }
-        new SolutionListOutputWithHeader(result.population, strFitnessFormulas.split(";"), varLabels)
+        new SolutionListVARWithHeader(result.population, strFitnessFormulas.split(";"), varLabels)
                 .setVarFileOutputContext(new DefaultFileOutputContext(outputFolder + "/VAR.csv", ","))
                 .setFunFileOutputContext(new DefaultFileOutputContext(outputFolder + "/FUN.csv", ","))
                 .print();
+
+        // Write translated VAR
+        new SolutionListTranslatedVAR(Representation.GENERIC, data.length, data[0].length)
+            .printTranslatedVAR(new File(outputFolder + "/VAR-translated.csv"), result.population);
+
 
         System.out.println("Threads used: " + numThreads);
         System.out.println("Total execution time: " + result.computingTime + "ms");

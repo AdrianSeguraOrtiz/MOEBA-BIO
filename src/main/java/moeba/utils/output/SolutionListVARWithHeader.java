@@ -15,7 +15,7 @@ import org.uma.jmetal.util.fileoutput.SolutionListOutput;
  * making the files more readable and informative. It is designed for use with JMetal,
  * a framework for multi-objective optimization.
  */
-public class SolutionListOutputWithHeader extends SolutionListOutput {
+public class SolutionListVARWithHeader extends SolutionListOutput {
     // Array containing the formulas or descriptions of the fitness functions
     private String[] funLabels;
     
@@ -29,7 +29,7 @@ public class SolutionListOutputWithHeader extends SolutionListOutput {
      * @param funLabels       Descriptions or formulas of the fitness functions, used as headers in the objectives file.
      * @param varLabels       Labels for the solution variables, used as headers in the variables file.
      */
-    public SolutionListOutputWithHeader(List<? extends Solution<?>> solutionList, String[] funLabels, String[] varLabels) {
+    public SolutionListVARWithHeader(List<? extends Solution<?>> solutionList, String[] funLabels, String[] varLabels) {
         super(solutionList);
         this.funLabels = funLabels;
         this.varLabels = varLabels;
