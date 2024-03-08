@@ -21,7 +21,9 @@ import moeba.operator.crossover.biclustersbinary.impl.BicUniformCrossover;
 import moeba.operator.crossover.cellbinary.impl.CellUniformCrossover;
 import moeba.operator.crossover.rowpermutation.impl.CycleCrossover;
 import moeba.operator.mutation.GenericMutation;
-import moeba.utils.observer.ProblemFitnessEvolution;
+import moeba.utils.observer.ProblemObserver;
+import moeba.utils.observer.ProblemObserver.ObserverInterface;
+import moeba.utils.observer.impl.FitnessEvolutionObserver;
 import moeba.utils.output.SolutionListTranslatedVAR;
 import moeba.utils.output.SolutionListVARWithHeader;
 import picocli.CommandLine;
@@ -93,7 +95,10 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // Evolución central con representación genérica
-        Problem problem = new ProblemFitnessEvolution(data, types, strFitnessFormulas, populationSize);
+        String[] fitnessFunctions = strFitnessFormulas.split(";");
+        FitnessEvolutionObserver fitnessEvolutionObserver = new FitnessEvolutionObserver(populationSize, fitnessFunctions.length);
+        ObserverInterface[] observers = new ObserverInterface[]{fitnessEvolutionObserver};
+        Problem problem = new ProblemObserver(observers, data, types, fitnessFunctions, populationSize);
         CrossoverOperator<CompositeSolution> crossover = new GenericCrossover(crossoverProbability, new CycleCrossover(), new BicUniformCrossover(), new CellUniformCrossover());
         MutationOperator<CompositeSolution> mutation = new GenericMutation(mutationProbability);
         NaryTournamentSelection<CompositeSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
@@ -116,7 +121,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // Write the evolution of fitness values to an output txt file
-        ((ProblemFitnessEvolution) problem).writeFitnessEvolution(outputFolder + "/fitness_evolution.txt");
+        for (ObserverInterface observer : observers) {
+            observer.writeToFile(outputFolder + observer.getClass().getSimpleName() +".txt");
+        }
 
         // Write the data of the last population (pareto front approximation)
         String[] varLabels = new String[2 * data.length + data.length * data[0].length];
