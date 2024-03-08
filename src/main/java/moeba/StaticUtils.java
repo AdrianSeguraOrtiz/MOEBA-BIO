@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
@@ -349,7 +350,9 @@ public final class StaticUtils {
                     
                     // Create and add bicluster to the result list
                     ArrayList<Integer>[] bicluster = new ArrayList[2];
+                    Collections.sort(rows);
                     bicluster[0] = new ArrayList<>(rows);
+                    Collections.sort(cols);
                     bicluster[1] = new ArrayList<>(cols);
                     res.add(bicluster);
 
