@@ -9,7 +9,6 @@ import org.uma.jmetal.util.errorchecking.JMetalException;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,14 +39,14 @@ public class SolutionListTranslatedVAR {
      * Writes the translated variables of a list of solutions to a specified file.
      * This method iterates over each solution, translating and writing its content.
      *
-     * @param file The file to write the translated variables to.
+     * @param strFile The file to write the translated variables to.
      * @param solutionList A list of solutions to be translated and written.
      * @throws JMetalException if there's an error during writing or closing the file.
      */
-    public void printTranslatedVAR(File file, List<? extends Solution<?>> solutionList) {
+    public void printTranslatedVAR(String strFile, List<? extends Solution<?>> solutionList) {
         BufferedWriter bufferedWriter = null;
         try {
-            bufferedWriter = new BufferedWriter(new FileWriter(file));
+            bufferedWriter = new BufferedWriter(new FileWriter(strFile));
             // Iterate over each solution, writing its translated variables.
             for (Solution<?> solution : solutionList) {
                 writeTranslatedSolution(bufferedWriter, solution);

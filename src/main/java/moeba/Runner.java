@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
 
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.mutation.MutationOperator;
@@ -117,8 +116,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // Write the evolution of fitness values to an output txt file
-        Map<String, Double[]> fitnessEvolution = ((ProblemFitnessEvolution) problem).getFitnessEvolution();
-        StaticUtils.writeFitnessEvolution(outputFolder + "/fitness_evolution.txt", fitnessEvolution);
+        ((ProblemFitnessEvolution) problem).writeFitnessEvolution(outputFolder + "/fitness_evolution.txt");
 
         // Write the data of the last population (pareto front approximation)
         String[] varLabels = new String[2 * data.length + data.length * data[0].length];
@@ -138,7 +136,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
         // Write translated VAR
         new SolutionListTranslatedVAR(Representation.GENERIC, data.length, data[0].length)
-            .printTranslatedVAR(new File(outputFolder + "/VAR-translated.csv"), result.population);
+            .printTranslatedVAR(outputFolder + "/VAR-translated.csv", result.population);
 
 
         System.out.println("Threads used: " + numThreads);

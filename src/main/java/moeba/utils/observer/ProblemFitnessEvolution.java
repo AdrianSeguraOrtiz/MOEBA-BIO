@@ -3,7 +3,12 @@ package moeba.utils.observer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.BufferedWriter;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import com.google.common.util.concurrent.AtomicDoubleArray;
 import moeba.Problem;
@@ -117,5 +122,38 @@ public class ProblemFitnessEvolution extends Problem {
         }
 
         return result;
+    }
+
+    /**
+     * Writes the evolution of fitness values to a specified output text file.
+     * Each line in the output file corresponds to a series of fitness values
+     * for a particular individual or solution, with values separated by commas.
+     *
+     * @param strFile The path and name of the output file where fitness evolution data will be written.
+     */
+    public void writeFitnessEvolution(String strFile) {
+        try {
+            // Create a File object representing the specified output file.
+            File outputFile = new File(strFile);
+            // Initialize a BufferedWriter to write text to the output file, wrapping a FileWriter for efficient writing.
+            BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile));
+
+            // Iterate through each entry in the fitnessEvolution map.
+            Map<String, Double[]> fitnessEvolution = getFitnessEvolution();
+            for (Map.Entry<String, Double[]> entry : fitnessEvolution.entrySet()) {
+                // Convert the array of Double fitness values to a string representation, removing the brackets.
+                String strVector = Arrays.toString(entry.getValue());
+                // Write the string representation of the fitness values array to the file, followed by a newline.
+                bw.write(strVector.substring(1, strVector.length() - 1) + "\n");
+            }
+
+            // Flush any buffered content to the file.
+            bw.flush();
+            // Close the BufferedWriter to release system resources.
+            bw.close();
+        } catch (IOException ioe) {
+            // In case of an IOException, wrap and rethrow it as a RuntimeException.
+            throw new RuntimeException(ioe);
+        }
     }
 }
