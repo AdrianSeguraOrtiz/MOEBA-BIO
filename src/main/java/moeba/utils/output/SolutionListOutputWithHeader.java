@@ -1,4 +1,4 @@
-package moeba.utils.solutionlistoutputwithheader;
+package moeba.utils.output;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
