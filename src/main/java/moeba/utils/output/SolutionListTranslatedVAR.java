@@ -85,18 +85,18 @@ public class SolutionListTranslatedVAR {
             for (int i = 0; i < bicArray[0].size(); i++) {
                 bufferedWriter.write(bicArray[0].get(i).toString());
                 if (i < bicArray[0].size() - 1) { // Add a comma unless it's the last element.
-                    bufferedWriter.write(", ");
+                    bufferedWriter.write(" ");
                 }
             }
             // Write the bicluster's columns.
-            bufferedWriter.write("], cols: [");
+            bufferedWriter.write("] cols: [");
             for (int i = 0; i < bicArray[1].size(); i++) {
                 bufferedWriter.write(bicArray[1].get(i).toString());
                 if (i < bicArray[1].size() - 1) { // Add a comma unless it's the last element.
-                    bufferedWriter.write(", ");
+                    bufferedWriter.write(" ");
                 }
             }
-            bufferedWriter.write("]); ");
+            bufferedWriter.write("]), ");
         }
     }
 }

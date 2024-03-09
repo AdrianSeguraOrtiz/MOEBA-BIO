@@ -1,6 +1,7 @@
 package moeba.utils.observer;
 
 import moeba.Problem;
+import moeba.utils.observer.impl.BiclusterCountObserver;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 
 /**
@@ -44,6 +45,11 @@ public class ProblemObserver extends Problem {
      */
     public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, int numBiclusters) {
         super(data, types, strFitnessFunctions, numBiclusters);
+        for (ObserverInterface observer : observers) {
+            if (observer instanceof BiclusterCountObserver) {
+                throw new IllegalArgumentException("Specific representation does not support BiclusterSizeObserver.");
+            }
+        }
         this.observers = observers;
     }
 
