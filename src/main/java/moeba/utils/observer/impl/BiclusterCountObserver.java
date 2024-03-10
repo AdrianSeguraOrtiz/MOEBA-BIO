@@ -84,7 +84,7 @@ public class BiclusterCountObserver implements ObserverInterface {
                 double[] percentages = entry.getValue();
                 int limit = this.cnt / this.populationSize;
                 // Write percentages for each generation
-                for (int i = 0; i < limit; i++) {
+                for (int i = 1; i < limit; i++) {
                     bw.write(String.format("%.2f", percentages[i]) + (i == limit - 1 ? "" : ", "));
                 }
                 bw.write("\n");
