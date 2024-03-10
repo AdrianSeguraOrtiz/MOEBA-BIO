@@ -113,7 +113,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
         // Initialize fitness functions based on provided string identifiers
         this.fitnessFunctions = new FitnessFunction[strFitnessFunctions.length];
         for (int i = 0; i < strFitnessFunctions.length; i++) {
-            this.fitnessFunctions[i] = StaticUtils.getFitnessFunctionFromString(strFitnessFunctions[i], data, types);
+            this.fitnessFunctions[i] = StaticUtils.getFitnessFunctionFromString(strFitnessFunctions[i], data, types, null);
         }
 
         // Configure the problem's parameters based on the representation

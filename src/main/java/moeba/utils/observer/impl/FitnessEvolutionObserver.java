@@ -66,8 +66,6 @@ public class FitnessEvolutionObserver implements ObserverInterface {
     public void register(CompositeSolution result){
         // Increment the evaluation count and update the best fitness values if necessary.
         int cnt = this.parallelCount.incrementAndGet();
-        boolean isPopulationMultiple = (cnt % this.populationSize == 0);
-        if (isPopulationMultiple) System.out.println(cnt);
         for (int i = 0; i < this.numObjectives; i++) {
             double currentMin = this.progressiveValues.get(i);
             if (result.objectives()[i] < currentMin) {
@@ -75,7 +73,7 @@ public class FitnessEvolutionObserver implements ObserverInterface {
             }
 
             // Add the current best fitness to the tracking list at the end of each generation.
-            if (isPopulationMultiple) {
+            if (cnt % this.populationSize == 0) {
                 this.generationFitness[i].add(this.progressiveValues.get(i));
             }
         }

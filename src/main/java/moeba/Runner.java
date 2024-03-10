@@ -25,6 +25,7 @@ import moeba.utils.observer.ProblemObserver;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.observer.impl.BiclusterCountObserver;
 import moeba.utils.observer.impl.FitnessEvolutionObserver;
+import moeba.utils.observer.impl.NumEvaluationsObserver;
 import moeba.utils.output.SolutionListTranslatedVAR;
 import moeba.utils.output.SolutionListVARWithHeader;
 import picocli.CommandLine;
@@ -99,7 +100,8 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         String[] fitnessFunctions = strFitnessFormulas.split(";");
         FitnessEvolutionObserver fitnessEvolutionObserver = new FitnessEvolutionObserver(populationSize, fitnessFunctions.length);
         BiclusterCountObserver biclusterSizesObserver = new BiclusterCountObserver(populationSize, maxEvaluations / populationSize);
-        ObserverInterface[] observers = new ObserverInterface[]{fitnessEvolutionObserver, biclusterSizesObserver};
+        NumEvaluationsObserver numEvaluationsObserver = new NumEvaluationsObserver(populationSize);
+        ObserverInterface[] observers = new ObserverInterface[]{fitnessEvolutionObserver, biclusterSizesObserver, numEvaluationsObserver};
         Problem problem = new ProblemObserver(observers, data, types, fitnessFunctions);
         CrossoverOperator<CompositeSolution> crossover = new GenericCrossover(crossoverProbability, new CycleCrossover(), new BicUniformCrossover(), new CellUniformCrossover());
         MutationOperator<CompositeSolution> mutation = new GenericMutation(mutationProbability);

@@ -44,15 +44,15 @@ public final class StaticUtils {
      * @param str identifier string for the fitness function
      * @param data 2D array of data
      * @param types array of data types
-     * @param representation the representation used
+     * @param cache the internal cache of the fitness function
      * @return a FitnessFunction object
      */
-    public static FitnessFunction getFitnessFunctionFromString(String str, Object[][] data, Class<?>[] types) {
+    public static FitnessFunction getFitnessFunctionFromString(String str, Object[][] data, Class<?>[] types, Map<String, Double> cache) {
         FitnessFunction res;
         switch (str.toLowerCase()) {
 
             case "biclustersize":
-                res = new BiclusterSize(data, types);
+                res = new BiclusterSize(data, types, cache);
                 break;
             /**
             case "biclustervariance":
