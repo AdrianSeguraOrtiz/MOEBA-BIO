@@ -12,13 +12,27 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSize;
-
+import moeba.operator.crossover.biclustersbinary.BiclusterBinaryCrossover;
+import moeba.operator.crossover.biclustersbinary.impl.BicUniformCrossover;
+import moeba.operator.crossover.cellbinary.CellBinaryCrossover;
+import moeba.operator.crossover.cellbinary.impl.CellUniformCrossover;
+import moeba.operator.crossover.rowpermutation.RowPermutationCrossover;
+import moeba.operator.crossover.rowpermutation.impl.CycleCrossover;
+import moeba.operator.crossover.rowpermutation.impl.EdgeRecombinationCrossover;
+import moeba.operator.crossover.rowpermutation.impl.PartiallyMappedCrossover;
+import moeba.utils.observer.ProblemObserver.ObserverInterface;
+import moeba.utils.observer.impl.BiclusterCountObserver;
+import moeba.utils.observer.impl.ExternalCacheObserver;
+import moeba.utils.observer.impl.FitnessEvolutionObserver;
+import moeba.utils.observer.impl.InternalCacheObserver;
+import moeba.utils.observer.impl.NumEvaluationsObserver;
 import org.uma.jmetal.algorithm.Algorithm;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAIIBuilder;
 import org.uma.jmetal.example.AlgorithmRunner;
@@ -47,7 +61,7 @@ public final class StaticUtils {
      * @param cache the internal cache of the fitness function
      * @return a FitnessFunction object
      */
-    public static FitnessFunction getFitnessFunctionFromString(String str, Object[][] data, Class<?>[] types, Map<String, Double> cache) {
+    public static FitnessFunction getFitnessFunctionFromString(String str, Object[][] data, Class<?>[] types, ConcurrentHashMap<String, Double> cache) {
         FitnessFunction res;
         switch (str.toLowerCase()) {
 
@@ -84,6 +98,104 @@ public final class StaticUtils {
                 throw new RuntimeException("The fitness function " + str + " is not implemented.");
         }
 
+        return res;
+    }
+
+    /**
+     * Returns an observer from its string representation.
+     *
+     * @param str string representation of the desired observer
+     * @param populationSize the size of the population in the genetic algorithm
+     * @param fitnessFunctions an array of strings representing the fitness functions
+     * @param numGenerations the number of generations of the genetic algorithm
+     * @param externalCache a map of external cache data
+     * @param internalCaches an array of internal caches
+     * @return an observer
+     * @throws RuntimeException if the observer is not implemented
+     */
+    public static ObserverInterface getObserverFromString(String str, int populationSize, String[] fitnessFunctions, int numGenerations, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches) {
+        ObserverInterface res;
+        switch (str.toLowerCase()) {
+            case "biclustercountobserver":
+                res = new BiclusterCountObserver(populationSize, numGenerations);
+                break;
+            case "externalcacheobserver":
+                res = new ExternalCacheObserver(populationSize, externalCache);
+                break;
+            case "fitnessevolutionobserver":
+                res = new FitnessEvolutionObserver(populationSize, fitnessFunctions.length);
+                break;
+            case "internalcacheobserver":
+                res = new InternalCacheObserver(populationSize, fitnessFunctions, internalCaches);
+                break;
+            case "numevaluationsobserver":
+                res = new NumEvaluationsObserver(populationSize);
+                break;
+            default:
+                throw new RuntimeException("The observer " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    /**
+     * Creates a row permutation crossover operator from its string representation.
+     * @param str string representation of the desired crossover operator
+     * @return a row permutation crossover operator
+     * @throws RuntimeException if the crossover operator is not implemented
+     */
+    public static RowPermutationCrossover getRowPermutationCrossoverFromString(String str) {
+        RowPermutationCrossover res;
+        switch (str.toLowerCase()) {
+            case "cyclecrossover":
+                res = new CycleCrossover();
+                break;
+            case "edgerecombinationcrossover":
+                res = new EdgeRecombinationCrossover();
+                break;
+            case "partiallymappedcrossover":
+                res = new PartiallyMappedCrossover();
+                break;
+            default:
+                throw new RuntimeException("The row permutation crossover " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    /**
+     * Creates a bicluster binary crossover operator from its string representation.
+     * @param str string representation of the desired crossover operator
+     * @return a bicluster binary crossover operator
+     * @throws RuntimeException if the crossover operator is not implemented
+     */
+    public static BiclusterBinaryCrossover getBiclusterBinaryCrossoverFromString(String str) {
+        BiclusterBinaryCrossover res;
+        switch (str.toLowerCase()) {
+            case "bicuniformcrossover":
+                res = new BicUniformCrossover();
+                break;
+            default:
+                throw new RuntimeException(
+                        "The bicluster binary crossover " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    /**
+     * Creates a cell binary crossover operator from its string representation.
+     * @param str string representation of the desired crossover operator
+     * @return a cell binary crossover operator
+     * @throws RuntimeException if the crossover operator is not implemented
+     */
+    public static CellBinaryCrossover getCellBinaryCrossoverFromString(String str) {
+        CellBinaryCrossover res;
+        switch (str.toLowerCase()) {
+            case "celluniformcrossover":
+                res = new CellUniformCrossover(); // Selects a subset of rows and columns to be included in the offspring cell
+                break;
+            default:
+                throw new RuntimeException(
+                        "The cell binary crossover " + str + " is not implemented.");
+        }
         return res;
     }
 
@@ -367,5 +479,47 @@ public final class StaticUtils {
             return null;
         }
     }
-    
+
+    /**
+     * Converts a bicluster to a string representation
+     * 
+     * @param bicArray the bicluster
+     * @return the string representation of the bicluster
+     */
+    public static String biclusterToString(ArrayList<Integer>[] bicArray) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(rows: [");
+        for (int i = 0; i < bicArray[0].size(); i++) {
+            builder.append(bicArray[0].get(i).toString());
+            if (i < bicArray[0].size() - 1) {
+                builder.append(" ");
+            }
+        }
+        builder.append("] cols: [");
+        for (int i = 0; i < bicArray[1].size(); i++) {
+            builder.append(bicArray[1].get(i).toString());
+            if (i < bicArray[1].size() - 1) {
+                builder.append(" ");
+            }
+        }
+        builder.append("])");
+        return builder.toString();
+    }
+
+    /**
+     * Converts a list of biclusters to a string representation. The string representation
+     * is a comma separated list of the string representation of each bicluster.
+     * 
+     * @param biclusters The list of biclusters to convert to a string
+     * @return The string representation of the list of biclusters
+     */
+    public static String biclustersToString(ArrayList<ArrayList<Integer>[]> biclusters) {
+        StringBuilder builder = new StringBuilder();
+        for (ArrayList<Integer>[] bicluster : biclusters) {
+            builder.append(biclusterToString(bicluster));
+            builder.append(", ");
+        }
+        String res = builder.toString();
+        return res.substring(0, res.length() - 2); // Remove last comma and space
+    }
 }

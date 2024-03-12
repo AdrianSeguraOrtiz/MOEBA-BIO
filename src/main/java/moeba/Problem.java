@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.uma.jmetal.solution.binarysolution.BinarySolution;
 import org.uma.jmetal.solution.binarysolution.impl.DefaultBinarySolution;
@@ -24,7 +25,14 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
     private Object [][] data;
     private Class<?> [] types;
     private FitnessFunction[] fitnessFunctions;
-    private Representation representation;
+    protected Representation representation;
+    protected ConcurrentHashMap<String, Double[]> externalCache;
+    protected ConcurrentHashMap<String, Double>[] internalCaches;
+    private EvaluateFunction evaluateFunction;
+
+    public interface EvaluateFunction {
+        public CompositeSolution evaluate(CompositeSolution solution, ArrayList<ArrayList<Integer>[]> biclusters);
+    }
 
     /**
      * Constructor for the generic representation of the problem.
@@ -33,11 +41,13 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
      * @param data The dataset used in the problem.
      * @param types The data types of each column in the dataset.
      * @param strFitnessFunctions The string identifiers of the fitness functions to be used.
+     * @param externalCache A cache for storing externally computed values to avoid recalculations.
+     * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      */
-    public Problem(Object[][] data, Class<?> [] types, String[] strFitnessFunctions) {
+    public Problem(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches) {
         super(data.length, 1 + data[0].length, 0, data.length - 1, data.length);
         representation = Representation.GENERIC;
-        initialize(data, types, strFitnessFunctions, -1);
+        initialize(data, types, strFitnessFunctions, externalCache, internalCaches, -1);
     }
 
     /**
@@ -47,15 +57,17 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
      * @param data The dataset used in the problem.
      * @param types The data types of each column in the dataset.
      * @param strFitnessFunctions The string identifiers of the fitness functions to be used.
+     * @param externalCache A cache for storing externally computed values to avoid recalculations.
+     * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      * @param numBiclusters The number of biclusters to be considered in the problem.
      */
-    public Problem(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, int numBiclusters) {
+    public Problem(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches, int numBiclusters) {
         super(data.length, numBiclusters, 0, numBiclusters - 1, data[0].length);
         if (numBiclusters < 2 || numBiclusters >= data.length) {
             throw new IllegalArgumentException("The number of biclusters must be between 2 and " + (data.length - 1) + ".");
         }
         representation = Representation.SPECIFIC;
-        initialize(data, types, strFitnessFunctions, numBiclusters);
+        initialize(data, types, strFitnessFunctions, externalCache, internalCaches, numBiclusters);
     }
 
     /**
@@ -90,11 +102,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
     @Override
     public CompositeSolution evaluate(CompositeSolution solution) {
         ArrayList<ArrayList<Integer>[]> biclusters = StaticUtils.getBiclustersFromRepresentation(solution, representation, data.length, data[0].length);
-        for (int i = 0; i < fitnessFunctions.length; i++){
-            solution.objectives()[i] = fitnessFunctions[i].run(biclusters);
-        }
-
-        return solution;
+        return evaluateFunction.evaluate(solution, biclusters);
     }
 
     /**
@@ -104,16 +112,21 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
      * @param data The dataset used in the problem.
      * @param types The data types of each column in the dataset.
      * @param strFitnessFunctions The string identifiers of the fitness functions to be used.
+     * @param externalCache A cache for storing externally computed values to avoid recalculations.
+     * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      * @param numBiclusters The number of biclusters, relevant for specific representation.
      */
-    private void initialize(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, int numBiclusters) {
+    private void initialize(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches, int numBiclusters) {
         this.data = data;
         this.types = types;
+        this.externalCache = externalCache;
+        this.internalCaches = internalCaches;
+        this.evaluateFunction = externalCache == null ? this::evaluateWithoutCache : this::evaluateWithCache;
         
         // Initialize fitness functions based on provided string identifiers
         this.fitnessFunctions = new FitnessFunction[strFitnessFunctions.length];
         for (int i = 0; i < strFitnessFunctions.length; i++) {
-            this.fitnessFunctions[i] = StaticUtils.getFitnessFunctionFromString(strFitnessFunctions[i], data, types, null);
+            this.fitnessFunctions[i] = StaticUtils.getFitnessFunctionFromString(strFitnessFunctions[i], data, types, internalCaches == null ? null : internalCaches[i]);
         }
 
         // Configure the problem's parameters based on the representation
@@ -121,6 +134,46 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
         setNumberOfVariables((representation == Representation.GENERIC) ? (numRows + 1 + data[0].length) : (numRows + numBiclusters));
         setNumberOfObjectives(this.fitnessFunctions.length);
         setName("Problem");
+    }
+
+    /**
+     * Evaluates the solution without using the cache, directly applying the fitness functions.
+     *
+     * @param solution The CompositeSolution instance to be evaluated.
+     * @param biclusters The biclusters obtained from the solution representation.
+     * @return CompositeSolution The evaluated solution with updated objective values.
+     */
+    public CompositeSolution evaluateWithoutCache(CompositeSolution solution, ArrayList<ArrayList<Integer>[]> biclusters){
+        // Apply each fitness function to the biclusters and update the solution objectives
+        for (int i = 0; i < fitnessFunctions.length; i++){
+            solution.objectives()[i] = fitnessFunctions[i].run(biclusters);
+        }
+        return solution;
+    }
+
+    /**
+     * Evaluates the solution using the external cache to avoid recalculating known results.
+     * 
+     * @param solution The solution to evaluate.
+     * @param biclusters The biclusters derived from the solution.
+     * @return The evaluated solution with updated objectives, potentially leveraging cached values.
+     */
+    public CompositeSolution evaluateWithCache(CompositeSolution solution, ArrayList<ArrayList<Integer>[]> biclusters){
+        String key = StaticUtils.biclustersToString(biclusters);
+        if (externalCache.containsKey(key)){
+            for (int i = 0; i < fitnessFunctions.length; i++){
+                solution.objectives()[i] = externalCache.get(key)[i];
+            }
+        } else {
+            solution = evaluateWithoutCache(solution, biclusters);
+            Double[] scores = new Double[fitnessFunctions.length];
+            for (int i = 0; i < fitnessFunctions.length; i++){
+                scores[i] = solution.objectives()[i];
+            }
+            externalCache.put(key, scores);
+        }
+
+        return solution;
     }
 
 }

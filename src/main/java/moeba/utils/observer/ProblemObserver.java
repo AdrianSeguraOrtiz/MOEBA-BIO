@@ -1,7 +1,12 @@
 package moeba.utils.observer;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import moeba.Problem;
+import moeba.Representation;
 import moeba.utils.observer.impl.BiclusterCountObserver;
+import moeba.utils.observer.impl.ExternalCacheObserver;
+import moeba.utils.observer.impl.InternalCacheObserver;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 
 /**
@@ -29,10 +34,13 @@ public class ProblemObserver extends Problem {
      * @param data Problem-specific data required for initialization.
      * @param types Array of Class types related to the problem setup.
      * @param strFitnessFunctions Array of strings representing fitness functions for the problem.
+     * @param externalCache A cache for storing externally computed values to avoid recalculations.
+     * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      */
-    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions) {
-        super(data, types, strFitnessFunctions);
+    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches) {
+        super(data, types, strFitnessFunctions, externalCache, internalCaches);
         this.observers = observers;
+        checkObservers();
     }
 
     /**
@@ -41,16 +49,14 @@ public class ProblemObserver extends Problem {
      * @param data Problem-specific data required for initialization.
      * @param types Array of Class types related to the problem setup.
      * @param strFitnessFunctions Array of strings representing fitness functions for the problem.
+     * @param externalCache A cache for storing externally computed values to avoid recalculations.
+     * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      * @param numBiclusters Number of biclusters to be considered, specific to the problem domain.
      */
-    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, int numBiclusters) {
-        super(data, types, strFitnessFunctions, numBiclusters);
-        for (ObserverInterface observer : observers) {
-            if (observer instanceof BiclusterCountObserver) {
-                throw new IllegalArgumentException("Specific representation does not support BiclusterSizeObserver.");
-            }
-        }
+    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches, int numBiclusters) {
+        super(data, types, strFitnessFunctions, externalCache, internalCaches, numBiclusters);
         this.observers = observers;
+        checkObservers();
     }
 
     /**
@@ -69,4 +75,25 @@ public class ProblemObserver extends Problem {
         // Return the evaluated solution
         return result;
     }
+
+    /**
+     * Checks that the given observers can be used with the current problem settings.
+     *
+     * @throws IllegalArgumentException if an observer cannot be used with the current problem
+     * representation
+     */
+    public void checkObservers() {
+        for (ObserverInterface observer : this.observers) {
+            if (super.representation == Representation.SPECIFIC && observer instanceof BiclusterCountObserver) {
+                throw new IllegalArgumentException("Specific representation does not support BiclusterSizeObserver.");
+            }
+            if (observer instanceof ExternalCacheObserver && super.externalCache == null) {
+                throw new IllegalArgumentException("External cache observer requires external cache.");
+            }
+            if (observer instanceof InternalCacheObserver && super.internalCaches == null) {
+                throw new IllegalArgumentException("Internal cache observer requires internal cache.");
+            }
+        }
+    }
+
 }
