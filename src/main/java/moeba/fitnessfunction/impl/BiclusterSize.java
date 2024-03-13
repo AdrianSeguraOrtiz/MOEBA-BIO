@@ -18,7 +18,7 @@ public class BiclusterSize extends FitnessFunction {
         for (ArrayList<Integer>[] bic : biclusters) {
             res += getBiclusterScore(bic);
         }
-        return 1 - res/(data.length * data[0].length);
+        return 1 - res/(data.length * data[0].length * biclusters.size());
     }
 
     @Override
