@@ -5,6 +5,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
@@ -50,7 +52,8 @@ public class BiclusterCountObserver implements ObserverInterface {
     public void register(CompositeSolution result) {
         synchronized(lockObject) {
             // Extracts the number of biclusters from the binary part of the solution
-            int numBiclusters = ((BinarySet) result.variables().get(1).variables().get(0)).cardinality() + 1;
+            BinarySet binarySet = (BinarySet) result.variables().get(1).variables().get(0);
+            int numBiclusters = binarySet.cardinality() + (binarySet.get(result.variables().get(0).variables().size() -1) ? 0 : 1);
             // Updates the count of biclusters
             biclusterCounts.merge(numBiclusters, 1, Integer::sum);
             // Initializes the percentage array if not already done
@@ -77,11 +80,12 @@ public class BiclusterCountObserver implements ObserverInterface {
     public void writeToFile(String strFile) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(strFile))) {
             // Iterate over each bicluster size and its percentage array
-            for (Map.Entry<Integer, double[]> entry : biclusterPercentages.entrySet()) {
-                int biclusterCount = entry.getKey();
-                bw.write(biclusterCount + ", ");
+            ArrayList<Integer> keys = new ArrayList<>(biclusterPercentages.keySet());
+            Collections.sort(keys);
+            for (int k : keys) {
+                bw.write(k + ", ");
 
-                double[] percentages = entry.getValue();
+                double[] percentages = biclusterPercentages.get(k);
                 int limit = this.cnt / this.populationSize;
                 // Write percentages for each generation
                 for (int i = 1; i < limit; i++) {
