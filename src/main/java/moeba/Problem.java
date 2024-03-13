@@ -3,6 +3,7 @@ package moeba;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -82,10 +83,21 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
         BinarySolution binarySolution = new DefaultBinarySolution(super.numBitsPerVariable, getNumberOfObjectives());
 
         if (representation == Representation.GENERIC) {
+            // Ensure that the initial number of clusters is varied within an acceptable range
+            Random random = new Random();
+            binarySolution.variables().get(0).clear();
+            float limit = random.nextFloat()/5 + 0.05f;
+
+            // Ensure that the integer part is a permutation
             List<Integer> rowIndexes = IntStream.rangeClosed(0, data.length - 1).boxed().collect(Collectors.toList());
             Collections.shuffle(rowIndexes);
+
+            // Take advantage of the loop to perform both operations simultaneously
             for (int i = 0; i < data.length; i++) {
                 integerSolution.variables().set(i, rowIndexes.get(i));
+                if (random.nextFloat() < limit) {
+                    binarySolution.variables().get(0).set(i);
+                }
             }
         }
 
