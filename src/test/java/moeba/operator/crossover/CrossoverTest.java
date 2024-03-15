@@ -14,6 +14,7 @@ import org.mockito.Mockito;
 
 import moeba.operator.crossover.biclustersbinary.BiclusterBinaryCrossover;
 import moeba.operator.crossover.biclustersbinary.impl.BicUniformCrossover;
+import moeba.operator.crossover.rowbiclustermixed.impl.GroupedBasedCrossover;
 import moeba.operator.crossover.rowpermutation.RowPermutationCrossover;
 import moeba.operator.crossover.rowpermutation.impl.CycleCrossover;
 import moeba.operator.crossover.rowpermutation.impl.EdgeRecombinationCrossover;
@@ -157,5 +158,38 @@ public class CrossoverTest {
         // Assert that the resulting offspring match the expected outcomes.
         assert(Arrays.equals(child1, expectedOffsprint1));
         assert(Arrays.equals(child2, expectedOffsprint2));
+    }
+
+    /**
+     * Tests the grouped based crossover operator. The crossover should swap
+     * two rows in the parents and leave the rows outside the groups untouched.
+     */
+    @Test
+    public void testGroupedBasedCrossover() {
+        BitSet bs1 = new BitSet(9);
+        BitSet bs2 = new BitSet(9);
+        for (int i = 2; i < 9; i+=3) {
+            bs1.set(i);
+            bs2.set(i);
+        }
+
+        int[] parent1 = new int[]{0,1,2,3,4,5,6,7,8};
+        IntegerSolution is1 = createIntegerSolution(parent1);
+        int[] parent2 = new int[]{0,1,8,3,4,7,6,2,5};
+        IntegerSolution is2 = createIntegerSolution(parent2);
+
+        Random mockRandom = Mockito.mock(Random.class);
+        Mockito.when(mockRandom.nextFloat()).thenReturn(1.0f);
+        GroupedBasedCrossover crossoverOperator = new GroupedBasedCrossover(1, 0, 0, mockRandom);
+        crossoverOperator.execute(is1, is2, bs1, bs2);
+
+        int[] child1 = is1.variables().stream().mapToInt(Integer::intValue).toArray();
+        int[] child2 = is2.variables().stream().mapToInt(Integer::intValue).toArray();
+        int[] expectedOffsprint1 = new int[]{0,1,2,8,3,4,5,7,6};
+        int[] expectedOffsprint2 = new int[]{0,1,8,2,3,4,7,5,6};
+        assert(Arrays.equals(child1, expectedOffsprint1));
+        assert(Arrays.equals(child2, expectedOffsprint2));
+        assertEquals("{4, 8, 9}", bs1.toString());
+        assertEquals("{4, 8, 9}", bs2.toString());
     }
 }
