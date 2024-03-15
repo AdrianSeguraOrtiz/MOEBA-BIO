@@ -1,5 +1,5 @@
 package moeba;
 
 public enum Representation {
-    GENERIC, SPECIFIC
+    GENERIC, SPECIFIC, INDIVIDUAL, DYNAMIC
 }
