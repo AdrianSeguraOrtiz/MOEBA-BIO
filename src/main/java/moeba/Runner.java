@@ -17,10 +17,6 @@ import org.uma.jmetal.util.AbstractAlgorithmRunner;
 import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
 import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 import moeba.StaticUtils.AlgorithmResult;
-import moeba.operator.crossover.GenericCrossover;
-import moeba.operator.crossover.biclustersbinary.BiclusterBinaryCrossover;
-import moeba.operator.crossover.cellbinary.CellBinaryCrossover;
-import moeba.operator.crossover.rowpermutation.RowPermutationCrossover;
 import moeba.operator.mutation.GenericMutation;
 import moeba.utils.observer.ProblemObserver;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
@@ -38,6 +34,12 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
     @Option(names = {"--input-column-types"}, description = "Path to the input JSON file which specifies the names of the columns in order and the type of data of each of them", required = true)
     private File inputColumnTypes;
+
+    @Option(names = {"--representation"}, description = "Representation as a string. Possible values: GENERIC, SPECIFIC, INDIVIDUAL, DYNAMIC", defaultValue = "GENERIC")
+    private Representation representation;
+
+    @Option(names = {"--num-biclusters"}, description = "Number of biclusters. Only for SPECIFIC representation", defaultValue = "-1")
+    private int numBiclusters;
 
     @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSize, BiclusterVariance, BiclusterRowVariance, MeanSquaredResidue, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSize;BiclusterRowVariance;MeanSquaredResidue")
     private String strFitnessFormulas;
@@ -57,14 +59,24 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--mutation-probability"}, description = "Mutation probability", defaultValue = "0.1")
     private double mutationProbability;
 
-    @Option(names = {"--row-permutation-crossover"}, description = "Row permutation crossover operator. Possible values: CycleCrossover, EdgeRecombinationCrossover, PartiallyMappedCrossover", defaultValue = "EdgeRecombinationCrossover")
-    private String strRowPermutationCrossover;
+    @Option(names = {"--crossover-operator"}, 
+            description = "Crossover operator. The following are configuration templates according to each type of representation:\n" + //
+                "\t-GENERIC: RowPermutationCrossover;BiclusterBinaryCrossover;CellBinaryCrossover or RowBiclusterMixedCrossover;CellBinaryCrossover\n" + //
+                "\t-SPECIFIC: ...\n" + //
+                "\t-INDIVIDUAL: ...\n" + //
+                "\t-DYNAMIC: GENERIC-SPECIFIC\n" + //
+                "In case any operator requires additional parameters, they shall be specified in brackets in the following way OperatorName(parameter1=value, parameter2=value, ...)",
+            defaultValue = "GroupedBasedCrossover;CellUniformCrossover")
+    private String strCrossoverOperator;
 
-    @Option(names = {"--bicluster-binary-crossover"}, description = "Bicluster binary crossover operator. Possible values: BicUniformCrossover", defaultValue = "BicUniformCrossover")
-    private String strBinaryBiclusterCrossover;
-
-    @Option(names = {"--cell-binary-crossover"}, description = "Cell binary crossover operator. Possible values: CellUniformCrossover", defaultValue = "CellUniformCrossover")
-    private String strBinaryCellCrossover;
+    @Option(names = {"--mutation-operator"}, 
+            description = "Mutation operator. Same explanation as for the crossover operator:\n" + //
+                "\t-GENERIC: ...\n" + //
+                "\t-SPECIFIC: ...\n" + //
+                "\t-INDIVIDUAL: ...\n" + //
+                "\t-DYNAMIC: GENERIC-SPECIFIC", 
+            defaultValue = "GenericMutation")
+    private String strMutationOperator;
 
     @Option(names = {"--have-external-cache"}, description = "Whether the external cache is used")
     private boolean haveExternalCache;
@@ -86,6 +98,11 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     public void run() {
         // Config sort. NOTE: https://github.com/jMetal/jMetal/issues/446
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+
+        // If the representation is not SPECIFIC the number of biclusters cant be set
+        if (this.representation != Representation.SPECIFIC && this.numBiclusters != -1) {
+            throw new IllegalArgumentException("No se puede fijar el número de biclusters para la representación " + this.representation);
+        }
 
         // Read input dataset
         Object[][] data = null;
@@ -141,10 +158,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
         // Operators
         // 1. Crossover
-        RowPermutationCrossover rowPermutationCrossover = StaticUtils.getRowPermutationCrossoverFromString(strRowPermutationCrossover);
-        BiclusterBinaryCrossover biclusterBinaryCrossover = StaticUtils.getBiclusterBinaryCrossoverFromString(strBinaryBiclusterCrossover);
-        CellBinaryCrossover cellBinaryCrossover = StaticUtils.getCellBinaryCrossoverFromString(strBinaryCellCrossover);
-        CrossoverOperator<CompositeSolution> crossover = new GenericCrossover(crossoverProbability, rowPermutationCrossover, biclusterBinaryCrossover, cellBinaryCrossover);
+        CrossoverOperator<CompositeSolution> crossover = StaticUtils.getCrossoverFromString(crossoverProbability, strCrossoverOperator, representation, (int) Math.round(maxEvaluations * crossoverProbability));
         
         // 2. Mutation
         MutationOperator<CompositeSolution> mutation = new GenericMutation(mutationProbability);

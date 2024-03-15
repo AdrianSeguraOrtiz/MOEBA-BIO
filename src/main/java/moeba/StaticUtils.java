@@ -19,10 +19,13 @@ import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSize;
+import moeba.operator.crossover.GenericCrossover;
 import moeba.operator.crossover.biclustersbinary.BiclusterBinaryCrossover;
 import moeba.operator.crossover.biclustersbinary.impl.BicUniformCrossover;
 import moeba.operator.crossover.cellbinary.CellBinaryCrossover;
 import moeba.operator.crossover.cellbinary.impl.CellUniformCrossover;
+import moeba.operator.crossover.rowbiclustermixed.RowBiclusterMixedCrossover;
+import moeba.operator.crossover.rowbiclustermixed.impl.GroupedBasedCrossover;
 import moeba.operator.crossover.rowpermutation.RowPermutationCrossover;
 import moeba.operator.crossover.rowpermutation.impl.CycleCrossover;
 import moeba.operator.crossover.rowpermutation.impl.EdgeRecombinationCrossover;
@@ -138,6 +141,46 @@ public final class StaticUtils {
     }
 
     /**
+     * Creates a crossover operator from its string representation.
+     * The string representation of the crossover operator is a semicolon-separated list
+     * of crossover operators.
+     * @param crossoverProbability probability of applying the crossover operator
+     * @param strCrossoverOperator string representation of the desired crossover operator
+     * @param representation representation of the problem
+     * @param numApproxCrossovers number of approximate crossovers to perform
+     * @return a crossover operator
+     * @throws RuntimeException if the crossover operator is not implemented or the number of crossover operators is not supported for the representation
+     */
+    public static CrossoverOperator<CompositeSolution> getCrossoverFromString(double crossoverProbability, String strCrossoverOperator, Representation representation, int numApproxCrossovers) {
+        CrossoverOperator<CompositeSolution> res;
+        String[] listStrCrossovers = strCrossoverOperator.split(";");
+        if (representation == Representation.GENERIC) {
+            if (listStrCrossovers.length == 2) {
+                RowBiclusterMixedCrossover rowBiclusterMixedCrossover = getRowBiclusterMixedCrossoverFromString(listStrCrossovers[0], numApproxCrossovers);
+                CellBinaryCrossover cellBinaryCrossover = getCellBinaryCrossoverFromString(listStrCrossovers[1]);
+                res = new GenericCrossover(crossoverProbability, rowBiclusterMixedCrossover, cellBinaryCrossover);
+            } else if (listStrCrossovers.length == 3) {
+                RowPermutationCrossover rowPermutationCrossover = getRowPermutationCrossoverFromString(listStrCrossovers[0]);
+                BiclusterBinaryCrossover biclusterBinaryCrossover = getBiclusterBinaryCrossoverFromString(listStrCrossovers[1]);
+                CellBinaryCrossover cellBinaryCrossover = getCellBinaryCrossoverFromString(listStrCrossovers[2]);
+                res = new GenericCrossover(crossoverProbability, rowPermutationCrossover, biclusterBinaryCrossover, cellBinaryCrossover);
+            } else {
+                throw new RuntimeException("The number of crossover operators is not supported for the " + representation + " representation.");
+            }
+        } else if (representation == Representation.SPECIFIC) {
+            // TODO: implement
+            res = null;
+        } else if (representation == Representation.INDIVIDUAL) {
+            // TODO: implement
+            res = null;
+        } else {
+            throw new RuntimeException("The representation " + representation + " does not have crossover operators.");
+        }
+
+        return res;
+    }
+
+    /**
      * Creates a row permutation crossover operator from its string representation.
      * @param str string representation of the desired crossover operator
      * @return a row permutation crossover operator
@@ -198,6 +241,45 @@ public final class StaticUtils {
         }
         return res;
     }
+
+    /**
+     * Creates a row bicluster mixed crossover operator from its string representation.
+     *
+     * @param str string representation of the desired crossover operator
+     * @param numApproxCrossovers number of approximate crossovers to perform
+     * @return a row bicluster mixed crossover operator
+     * @throws RuntimeException if the crossover operator is not implemented
+     */
+    public static RowBiclusterMixedCrossover getRowBiclusterMixedCrossoverFromString(String str, int numApproxCrossovers) {
+        RowBiclusterMixedCrossover res;
+        float shuffleEnd = 0.75f;
+        float dynamicStartAmount = 0.25f;
+        switch (str.toLowerCase()) {
+            case "groupedbasedcrossover":
+                res = new GroupedBasedCrossover(numApproxCrossovers, shuffleEnd, dynamicStartAmount);
+                break;
+            default:
+                if (str.toLowerCase().matches("groupedbasedcrossover((.*))")) {
+                    String[] strParams = str.split("[()=, ]");
+                    for (int i = 0; i < strParams.length; i++) {
+                        switch (strParams[i].toLowerCase()) {
+                            case "shuffleend":
+                                shuffleEnd = Float.parseFloat(strParams[i + 1]);
+                                break;
+                            case "dynamicstartamount":
+                                dynamicStartAmount = Float.parseFloat(strParams[i + 1]);
+                                break;
+                        }
+                    }
+                    res = new GroupedBasedCrossover(numApproxCrossovers, shuffleEnd, dynamicStartAmount);
+                } else {
+                    throw new RuntimeException(
+                        "The row bicluster mixed crossover " + str + " is not implemented.");
+                }
+        }
+        return res;
+    }
+
 
     /**
      * Converts a CSV file to a bidimensional array of objects.
