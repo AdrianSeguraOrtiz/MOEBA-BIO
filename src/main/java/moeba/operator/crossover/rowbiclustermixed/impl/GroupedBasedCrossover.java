@@ -9,13 +9,25 @@ import java.util.ArrayList;
 import moeba.operator.crossover.rowbiclustermixed.RowBiclusterMixedCrossover;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
 
+/**
+ * Implements a grouped-based crossover strategy specific to the Row Bicluster Mixed Crossover interface.
+ * This class is designed to mix genetic information between two IntegerSolution parents, using a dynamic and adaptable crossover strategy.
+ */
 public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
-    private Random random;
-    private AtomicInteger numOperations;
-    private int numApproxCrossovers;
-    private float shuffleEnd;
-    private float dynamicStartAmount;
+    private Random random; // Used for generating random numbers throughout the crossover process
+    private AtomicInteger numOperations; // Atomic counter to keep track of the number of crossover operations performed
+    private int numApproxCrossovers; // Total number of approximate crossovers to perform
+    private float shuffleEnd; // Determines the point in the crossover process where shuffling ends
+    private float dynamicStartAmount; // Used to dynamically adjust the amount of biclusters to be crossed
 
+    /**
+     * Constructor for the GroupedBasedCrossover class without a predefined random object.
+     * Initializes the class with specified parameters for the crossover process.
+     * 
+     * @param numApproxCrossovers The total number of approximate crossovers to perform.
+     * @param shuffleEnd The point in the crossover process where shuffling ends.
+     * @param dynamicStartAmount Used to dynamically adjust the amount of biclusters to be crossed.
+     */
     public GroupedBasedCrossover(int numApproxCrossovers, float shuffleEnd, float dynamicStartAmount) {
         this.numApproxCrossovers = numApproxCrossovers;
         this.shuffleEnd = shuffleEnd;
@@ -24,6 +36,15 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         this.numOperations = new AtomicInteger();
     }
 
+    /**
+     * Constructor for the GroupedBasedCrossover class with a predefined random object.
+     * This allows for a controlled randomization, useful in testing or specific scenarios.
+     * 
+     * @param numApproxCrossovers The total number of approximate crossovers to perform.
+     * @param shuffleEnd The point in the crossover process where shuffling ends.
+     * @param dynamicStartAmount Used to dynamically adjust the amount of biclusters to be crossed.
+     * @param random The Random object to use for generating random numbers.
+     */
     public GroupedBasedCrossover(int numApproxCrossovers, float shuffleEnd, float dynamicStartAmount, Random random) {
         this.numApproxCrossovers = numApproxCrossovers;
         this.shuffleEnd = shuffleEnd;
@@ -32,31 +53,41 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         this.numOperations = new AtomicInteger();
     }
 
+    /**
+     * Executes the crossover operation between two parents.
+     * This method uses dynamic parameters to adjust the crossover process based on the progress of the operation,
+     * aiming to dynamically control the amount of genetic information exchanged.
+     * 
+     * @param is1 The first parent (IntegerSolution) involved in the crossover.
+     * @param is2 The second parent (IntegerSolution) involved in the crossover.
+     * @param bs1 A BitSet representing the genetic information of the first parent that will be crossed.
+     * @param bs2 A BitSet representing the genetic information of the second parent that will be crossed.
+     */
     @Override
     public void execute(IntegerSolution is1, IntegerSolution is2, BitSet bs1, BitSet bs2) {
         
-        // Calculamos el porcentaje de operaciones de cruce realizados hasta ahora
+        // Calculate the percentage of crossover operations completed to adjust the dynamic parameters
         float doned = (float) numOperations.getAndIncrement() / this.numApproxCrossovers;
 
-        // En función del porcentaje de operaciones, calculamos el porcentaje de biclusters que vamos a cruzar
+        // Determine the amount of biclusters to cross based on the dynamic start amount and the progress
         float amount = (1 - dynamicStartAmount) * doned + dynamicStartAmount;
 
-        // Marcamos el último bit de cada individuo a true para poder igualar su cardinalidad al número de biclusters
+        // Ensure the last bit of each individual is set to true to match their cardinality with the number of biclusters
         int n = is1.variables().size();
         bs1.set(n-1);
         bs2.set(n-1);
 
-        // El número de biclusters a cruzar para cada individuo es el 'amount' porciento del total del individuo, siendo como mínimo 1
+        // Determine the number of biclusters to cross for each individual, ensuring at least one is crossed
         int numBicsP1 = Math.max((int) (bs1.cardinality() * amount), 1);
         int numBicsP2 = Math.max((int) (bs2.cardinality() * amount), 1);
 
-        // Obtenemos el rango de posiciones que ocupa el conjunto de biclusters a cruzar
+        // Calculate the range of positions for the biclusters to be crossed
         int[] limits1 = amount != 1 ? getLimits(bs1, random.nextInt(n-1)+1, numBicsP1, n) : new int[] {0, n};
         int[] limits2 = amount != 1 ? getLimits(bs2, random.nextInt(n-1)+1, numBicsP2, n) : new int[] {0, n};
         
-        // El vector bics almacena en la posición i el identificador del bicluster al que pertenece la fila i. Si la fila i ha quedado fuera del rango, se le asignará el valor 0
-        // El vector cuts almacena en la posición i el punto de corte del bicluster i. Dado que el bicluster 0 representa las sobras fuera de rango, se dejará en cuts[0] el valor por defecto 0
-        // Para el individuo 1:
+        // The bics vector stores at position i the identifier of the bicluster to which row i belongs. If row i has been out of range, it will be assigned the value 0
+        // The cuts vector stores at position i the cut point of bicluster i. Since bicluster 0 represents out-of-range leftovers, cuts[0] will be left at the default value of 0.
+        // For individual 1:
         int b1 = 1;
         int[] bicsP1 = new int[n];
         int[] cutsP1 = new int[numBicsP1 + 1];
@@ -68,7 +99,7 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
             }
         }
 
-        // Para el individuo 2:
+        // For individual 2:
         int b2 = 1;
         int[] bicsP2 = new int[n];
         int[] cutsP2 = new int[numBicsP2 + 1];
@@ -80,7 +111,7 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
             }
         }
 
-        // En la matriz matches se almacena en la fila i columna j el número de filas que tiene en comun el bicluster i en el individuo principal y el bicluster j en el individuo complementario
+        // In the matches matrix, the number of rows that the bicluster 'i' in the main individual and the bicluster 'j' in the complementary individual have in common are stored in position [i][j].
         int[][] matchesP1 = new int[numBicsP1+1][numBicsP2+1];
         int[][] matchesP2 = new int[numBicsP2+1][numBicsP1+1];
         for (int i = 0; i < n; i++) {
@@ -88,12 +119,12 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
             matchesP2[bicsP2[i]][bicsP1[i]]++;
         }
 
-        // Para cada bicluster finalmente se escoge el bicluster del complementario que más filas tiene en común (excluyendo el bicluster 0 con los sobrantes fuera de rango)
+        // For each bicluster, the complementary bicluster that has the most rows in common is finally chosen (excluding bicluster 0 with the remainder out of range).
         int[] bestMatchesP1 = getBestMatches(matchesP1);
         int[] bestMatchesP2 = getBestMatches(matchesP2);
 
-        // En el vector visited se almacenan las filas ya añadidas a la solución para asegurar el mantenimiento de la permutación. En este caso se inicializa poniendo a true las filas que no participan en el cruce y que se quedan fuera del rango
-        // Para el individuo 1:
+        // The rows already added to the solution are stored in the visited vector to ensure the maintenance of the permutation. In this case, it is initialized by setting to true the rows that do not participate in the crossing and that remain outside the range
+        // For individual 1:
         boolean[] visitedO1 = new boolean[n];
         for (int i = 0; i < limits1[0]; i++) {
             visitedO1[is1.variables().get(i)] = true;
@@ -102,7 +133,7 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
             visitedO1[is1.variables().get(i)] = true;
         }
 
-        // Para el individuo 2:
+        // For individual 2:
         boolean[] visitedO2 = new boolean[n];
         for (int i = 0; i < limits2[0]; i++) {
             visitedO2[is2.variables().get(i)] = true;
@@ -111,17 +142,26 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
             visitedO2[is2.variables().get(i)] = true;
         }
 
-        // Se extraen copias del contenido genético de los padres en los rangos a cruzar
+        // Copies of the genetic content of the parents are extracted in the ranges to be crossed
         int[] p1 = is1.variables().stream().skip(limits1[0]).limit(limits1[1] - limits1[0]).mapToInt(Integer::intValue).toArray();
         int[] p2 = is2.variables().stream().skip(limits2[0]).limit(limits2[1] - limits2[0]).mapToInt(Integer::intValue).toArray();
 
-        // Reseteamos los bits de la zona de actuación y actualizamos la permutación agrupando matches
+        // Reset the bits of the action zone and update the permutation by grouping matches
         bs1.clear(limits1[0], limits1[1]);
         updateSolutions(is1, limits1[0], limits2[0], p1, p2, bs1, cutsP1, cutsP2, bestMatchesP1, visitedO1, doned);
         bs2.clear(limits2[0], limits2[1]);
         updateSolutions(is2, limits2[0], limits1[0], p2, p1, bs2, cutsP2, cutsP1, bestMatchesP2, visitedO2, doned);
     }
 
+    /**
+     * This method determines the start and end positions of the biclusters that will be involved in the crossover process.
+     * 
+     * @param bs A BitSet representing the biclusters cuts.
+     * @param seed The starting position for the crossover within the BitSet.
+     * @param numBics The number of biclusters to include in the crossover.
+     * @param n The total number of positions within the BitSet.
+     * @return An array of two integers specifying the start and end positions of the range to be crossed.
+     */
     public int[] getLimits (BitSet bs, int seed, int numBics, int n) {
         int[] res = new int[2];
 
@@ -129,28 +169,28 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         int nextEnd;
         res[0] = seed;
         res[1] = seed;
-        // Si la semilla cae en un 1, cuando se logre la primera expansión por ambos lados se generan 2 biclusters, por lo tanto está bien en 0
-        // Si la semilla cae en un 0, cuando se logre la primera expansión por ambos lados se genera 1 solo bicluster, por lo que lo iniciamos a -1 para que cuando se sumen se quede a 1
+        // If the seed falls on a 1, when the first expansion is achieved on both sides, 2 biclusters are generated, therefore it is fine at 0
+        // If the seed falls on 0, when the first expansion is achieved on both sides, a single bicluster is generated, so we start it at -1 so that when they are added it remains at 1
         int nb = bs.get(seed) ? 0 : -1;
         while (nb < numBics) {
             nextStart = bs.previousSetBit(res[0]-1);
             nextEnd = bs.nextSetBit(res[1]+1);
             if (nb % 2 == 0) {
-                // Si el bit anterior puesto a true es distinto de -1, se ha añadido un bicluster por detrás
+                // If the previous bit set to true is other than -1, a bicluster has been added behind
                 if (nextStart != -1) {
                     res[0] = nextStart;
                 } 
-                // Si es -1 por primera vez significa que hemos llegado al primer 1 o que la semilla ha caido entre el inicio y el primer 1
-                // Si la semilla ha caido entre el inicio y el primer 1, se añade el primer bicluster para no coger solo una parte
+                // If it is -1 for the first time it means that we have reached the first 1 or that the seed has fallen between the start and the first 1
+                // If the seed has fallen between the beginning and the first 1, the first bicluster is added so as not to take only a part
                 else if (res[0] == seed) {
                     res[0] = 0;
                 } 
-                // Si el bit siguiente es distinto de -1, se ha anadido un bicluster por delante
+                // If the next bit is other than -1, a bicluster has been added ahead
                 else if (nextEnd != -1) {
                     res[1] = nextEnd;
                 }
             } else {
-                // Igual que antes pero dándole prioridad a la cola
+                // Same as before but giving priority to the queue
                 if (nextEnd != -1) {
                     res[1] = nextEnd;
                 } else if (nextStart != -1) {
@@ -167,6 +207,14 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         return res;
     }
     
+    /**
+     * Identifies the best matching bicluster for each bicluster based on the number of common rows.
+     * This method analyzes the matches matrix to find the bicluster with the highest number of common rows for each bicluster,
+     * facilitating the crossover by identifying the best biclusters to match.
+     * 
+     * @param matches A 2D array representing the number of common rows between biclusters of two parents.
+     * @return An array containing the indices of the best matching bicluster for each bicluster.
+     */
     public int[] getBestMatches(int[][] matches) {
         int[] bestMatches = new int[matches.length];
         int max, sum;
@@ -187,6 +235,22 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         return bestMatches;
     }
 
+    /**
+     * Updates the solutions with the crossed genetic material, taking into account the best matches and ensuring that
+     * the resulting solution maintains permutation properties.
+     * 
+     * @param is The IntegerSolution to be updated with crossed genetic material.
+     * @param start The starting position for the update in the solution.
+     * @param startComp The starting position in the complementary parent solution.
+     * @param p The genetic material from the parent within the crossover range.
+     * @param pComp The genetic material from the complementary parent within the crossover range.
+     * @param bs A BitSet representing the genetic structure of the solution after crossover.
+     * @param cuts The cut points for biclusters in the parent solution.
+     * @param cutsComp The cut points for biclusters in the complementary parent solution.
+     * @param bestMatches The indices of the best matching biclusters between the two parents.
+     * @param visited An array tracking which rows have already been added to the solution.
+     * @param doned The percentage of crossover operations completed.
+     */
     public void updateSolutions(IntegerSolution is, int start, int startComp, int[] p, int[] pComp, BitSet bs, int[] cuts, int[] cutsComp, int[] bestMatches, boolean[] visited, float doned) {
         int bm;
         int cut, prevCut = start;
