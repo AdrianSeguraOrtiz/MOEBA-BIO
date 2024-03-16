@@ -161,11 +161,10 @@ public class CrossoverTest {
     }
 
     /**
-     * Tests the grouped based crossover operator. The crossover should swap
-     * two rows in the parents and leave the rows outside the groups untouched.
+     * Tests the grouped based crossover with all biclusters selected.
      */
     @Test
-    public void testGroupedBasedCrossover() {
+    public void testGroupedBasedCrossoverAll() {
         BitSet bs1 = new BitSet(9);
         BitSet bs2 = new BitSet(9);
         for (int i = 2; i < 9; i+=3) {
@@ -179,8 +178,8 @@ public class CrossoverTest {
         IntegerSolution is2 = createIntegerSolution(parent2);
 
         Random mockRandom = Mockito.mock(Random.class);
-        Mockito.when(mockRandom.nextFloat()).thenReturn(1.0f);
-        GroupedBasedCrossover crossoverOperator = new GroupedBasedCrossover(1, 0, 0, mockRandom);
+        Mockito.when(mockRandom.nextInt(anyInt())).thenReturn(2);
+        GroupedBasedCrossover crossoverOperator = new GroupedBasedCrossover(1, 0, 1, mockRandom);
         crossoverOperator.execute(is1, is2, bs1, bs2);
 
         int[] child1 = is1.variables().stream().mapToInt(Integer::intValue).toArray();
@@ -191,5 +190,37 @@ public class CrossoverTest {
         assert(Arrays.equals(child2, expectedOffsprint2));
         assertEquals("{4, 8, 9}", bs1.toString());
         assertEquals("{4, 8, 9}", bs2.toString());
+    }
+
+    /**
+     * Tests the grouped based crossover with partial biclusters selected.
+     */
+    @Test
+    public void testGroupedBasedCrossoverPartial() {
+        BitSet bs1 = new BitSet(9);
+        BitSet bs2 = new BitSet(9);
+        for (int i = 2; i < 9; i+=3) {
+            bs1.set(i);
+            bs2.set(i);
+        }
+
+        int[] parent1 = new int[]{0,1,2,3,4,5,6,7,8};
+        IntegerSolution is1 = createIntegerSolution(parent1);
+        int[] parent2 = new int[]{0,1,8,3,4,7,6,2,5};
+        IntegerSolution is2 = createIntegerSolution(parent2);
+
+        Random mockRandom = Mockito.mock(Random.class);
+        Mockito.when(mockRandom.nextInt(anyInt())).thenReturn(6);
+        GroupedBasedCrossover crossoverOperator = new GroupedBasedCrossover(1, 0, 0.75f, mockRandom);
+        crossoverOperator.execute(is1, is2, bs1, bs2);
+
+        int[] child1 = is1.variables().stream().mapToInt(Integer::intValue).toArray();
+        int[] child2 = is2.variables().stream().mapToInt(Integer::intValue).toArray();
+        int[] expectedOffsprint1 = new int[]{0,1,2,3,4,5,7,6,8};
+        int[] expectedOffsprint2 = new int[]{0,1,8,3,4,7,5,6,2};
+        assert(Arrays.equals(child1, expectedOffsprint1));
+        assert(Arrays.equals(child2, expectedOffsprint2));
+        assertEquals("{2, 7, 9}", bs1.toString());
+        assertEquals("{2, 7, 9}", bs2.toString());
     }
 }
