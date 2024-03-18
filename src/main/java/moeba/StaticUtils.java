@@ -472,7 +472,7 @@ public final class StaticUtils {
                 computingTime = endTime - initTime;
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
 
-            } else if (strAlgorithm.equals("NSGAIIExternalFile-AsyncParallel")) {
+            } else if (strAlgorithm.equals("NSGAII-ExternalFile-AsyncParallel")) {
                 // Instantiates and executes an asynchronous parallel NSGA-II algorithm with external file support
                 long initTime = System.currentTimeMillis();
 

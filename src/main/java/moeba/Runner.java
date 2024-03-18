@@ -53,7 +53,12 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--max-evaluations"}, description = "Max number of evaluations", defaultValue = "25000")
     private int maxEvaluations;
 
-    @Option(names = {"--str-algorithm"}, description = "Algorithm as a string. Possible values: GA-AsyncParallel (mono-objective), NSGAII-AsyncParallel (multi-objective), NSGAIIExternalFile-AsyncParallel (many-objective)", defaultValue = "NSGAII-AsyncParallel")
+    @Option(names = {"--str-algorithm"}, 
+            description = "Algorithm as a string. Possible values: \n" + //
+                "\t- Single Objective: GA-AsyncParallel, GA-SingleThread \n" + //
+                "\t- Multi Objective: NSGAII-AsyncParallel, NSGAII-SingleThread \n" + //
+                "\t- Many Objective: NSGAII-ExternalFile-AsyncParallel", 
+            defaultValue = "NSGAII-AsyncParallel")
     private String strAlgorithm;
 
     @Option(names = {"--crossover-probability"}, description = "Crossover probability", defaultValue = "0.9")
@@ -64,20 +69,20 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
     @Option(names = {"--crossover-operator"}, 
             description = "Crossover operator. The following are configuration templates according to each type of representation:\n" + //
-                "\t-GENERIC: RowPermutationCrossover;BiclusterBinaryCrossover;CellBinaryCrossover or RowBiclusterMixedCrossover;CellBinaryCrossover\n" + //
-                "\t-SPECIFIC: ...\n" + //
-                "\t-INDIVIDUAL: ...\n" + //
-                "\t-DYNAMIC: GENERIC-SPECIFIC\n" + //
+                "\t- GENERIC: RowPermutationCrossover;BiclusterBinaryCrossover;CellBinaryCrossover or RowBiclusterMixedCrossover;CellBinaryCrossover\n" + //
+                "\t- SPECIFIC: ...\n" + //
+                "\t- INDIVIDUAL: ...\n" + //
+                "\t- DYNAMIC: GENERIC-SPECIFIC\n" + //
                 "In case any operator requires additional parameters, they shall be specified in brackets in the following way OperatorName(parameter1=value, parameter2=value, ...)",
             defaultValue = "GroupedBasedCrossover;CellUniformCrossover")
     private String strCrossoverOperator;
 
     @Option(names = {"--mutation-operator"}, 
             description = "Mutation operator. Same explanation as for the crossover operator:\n" + //
-                "\t-GENERIC: ...\n" + //
-                "\t-SPECIFIC: ...\n" + //
-                "\t-INDIVIDUAL: ...\n" + //
-                "\t-DYNAMIC: GENERIC-SPECIFIC", 
+                "\t- GENERIC: ...\n" + //
+                "\t- SPECIFIC: ...\n" + //
+                "\t- INDIVIDUAL: ...\n" + //
+                "\t- DYNAMIC: GENERIC-SPECIFIC", 
             defaultValue = "GenericMutation")
     private String strMutationOperator;
 
