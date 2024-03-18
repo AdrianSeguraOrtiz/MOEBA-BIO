@@ -3,21 +3,21 @@ package moeba.utils.observer.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.ConcurrentHashMap;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
+import moeba.utils.storage.CacheStorage;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 
 public class ExternalCacheObserver implements ObserverInterface {
     private int populationSize;
-    private ConcurrentHashMap<String, Double[]> externalCache;
+    private CacheStorage<String, Double[]> externalCache;
     private AtomicInteger parallelCount;
     private ArrayList<Integer> generationCacheCalls;
 
-    public ExternalCacheObserver(int populationSize, ConcurrentHashMap<String, Double[]> externalCache) {
+    public ExternalCacheObserver(int populationSize, CacheStorage<String, Double[]> externalCache) {
         this.populationSize = populationSize;
         this.externalCache = externalCache;
         this.parallelCount = new AtomicInteger();
@@ -26,10 +26,8 @@ public class ExternalCacheObserver implements ObserverInterface {
 
     @Override
     public void register(CompositeSolution result) {
-        int size = this.externalCache.size();
-        int cnt = this.parallelCount.incrementAndGet();
-        if (cnt % this.populationSize == 0) {
-            this.generationCacheCalls.add(cnt - size);
+        if (this.parallelCount.incrementAndGet() % this.populationSize == 0) {
+            this.generationCacheCalls.add(externalCache.getNumGetters());
         }
     }
 

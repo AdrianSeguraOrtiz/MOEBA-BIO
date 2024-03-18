@@ -1,14 +1,14 @@
 package moeba.fitnessfunction.impl;
 
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
 
 import moeba.StaticUtils;
 import moeba.fitnessfunction.FitnessFunction;
+import moeba.utils.storage.CacheStorage;
 
 public class BiclusterSize extends FitnessFunction {
 
-    public BiclusterSize(Object[][] data, Class<?>[] types, ConcurrentHashMap<String, Double> internalCache) {
+    public BiclusterSize(Object[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache) {
         super(data, types, internalCache);
     }
 

@@ -6,8 +6,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.concurrent.ConcurrentHashMap;
 
+import org.ehcache.CacheManager;
+import org.ehcache.config.builders.CacheManagerBuilder;
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.mutation.MutationOperator;
 import org.uma.jmetal.operator.selection.impl.BinaryTournamentSelection;
@@ -22,6 +23,8 @@ import moeba.utils.observer.ProblemObserver;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.output.SolutionListTranslatedVAR;
 import moeba.utils.output.SolutionListVARWithHeader;
+import moeba.utils.storage.CacheStorage;
+import moeba.utils.storage.impl.HybridCache;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -130,19 +133,23 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
             e.printStackTrace();
         }
 
+        // Create Hybrid Caches Manager
+        CacheManager hybridCacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
+        hybridCacheManager.init();
+
         // Evolución central con representación genérica
         // 1. Array de funciones de fitness
         String[] fitnessFunctions = strFitnessFormulas.split(";");
 
         // 2. Caché externa
-        ConcurrentHashMap<String, Double[]> externalCache = haveExternalCache ? new ConcurrentHashMap<>() : null;
+        CacheStorage<String, Double[]> externalCache = haveExternalCache ? new HybridCache<>(hybridCacheManager, "ExternalCache", String.class, Double[].class, 1000) : null;
 
         // 3. Cachés internas
-        ConcurrentHashMap<String, Double>[] internalCaches = null;
+        CacheStorage<String, Double>[] internalCaches = null;
         if (haveInternalCache) {
-            internalCaches = new ConcurrentHashMap[fitnessFunctions.length];
+            internalCaches = new CacheStorage[fitnessFunctions.length];
             for (int i = 0; i < internalCaches.length; i++) {
-                internalCaches[i] = new ConcurrentHashMap<>();
+                internalCaches[i] = new HybridCache<>(hybridCacheManager, fitnessFunctions[i] + "Cache", String.class, Double.class, 1000);
             }
         }
 

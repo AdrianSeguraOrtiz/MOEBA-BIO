@@ -1,12 +1,11 @@
 package moeba.utils.observer;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 import moeba.Problem;
 import moeba.Representation;
 import moeba.utils.observer.impl.BiclusterCountObserver;
 import moeba.utils.observer.impl.ExternalCacheObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
+import moeba.utils.storage.CacheStorage;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 
 /**
@@ -37,7 +36,7 @@ public class ProblemObserver extends Problem {
      * @param externalCache A cache for storing externally computed values to avoid recalculations.
      * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      */
-    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches) {
+    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches) {
         super(data, types, strFitnessFunctions, externalCache, internalCaches);
         this.observers = observers;
         checkObservers();
@@ -53,7 +52,7 @@ public class ProblemObserver extends Problem {
      * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      * @param numBiclusters Number of biclusters to be considered, specific to the problem domain.
      */
-    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches, int numBiclusters) {
+    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches, int numBiclusters) {
         super(data, types, strFitnessFunctions, externalCache, internalCaches, numBiclusters);
         this.observers = observers;
         checkObservers();

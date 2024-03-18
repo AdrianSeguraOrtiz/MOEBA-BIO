@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.concurrent.ConcurrentHashMap;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
@@ -36,6 +35,7 @@ import moeba.utils.observer.impl.ExternalCacheObserver;
 import moeba.utils.observer.impl.FitnessEvolutionObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
 import moeba.utils.observer.impl.NumEvaluationsObserver;
+import moeba.utils.storage.CacheStorage;
 import org.uma.jmetal.algorithm.Algorithm;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAIIBuilder;
 import org.uma.jmetal.example.AlgorithmRunner;
@@ -64,7 +64,7 @@ public final class StaticUtils {
      * @param cache the internal cache of the fitness function
      * @return a FitnessFunction object
      */
-    public static FitnessFunction getFitnessFunctionFromString(String str, Object[][] data, Class<?>[] types, ConcurrentHashMap<String, Double> cache) {
+    public static FitnessFunction getFitnessFunctionFromString(String str, Object[][] data, Class<?>[] types, CacheStorage<String, Double> cache) {
         FitnessFunction res;
         switch (str.toLowerCase()) {
 
@@ -116,7 +116,7 @@ public final class StaticUtils {
      * @return an observer
      * @throws RuntimeException if the observer is not implemented
      */
-    public static ObserverInterface getObserverFromString(String str, int populationSize, String[] fitnessFunctions, int numGenerations, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches) {
+    public static ObserverInterface getObserverFromString(String str, int populationSize, String[] fitnessFunctions, int numGenerations, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches) {
         ObserverInterface res;
         switch (str.toLowerCase()) {
             case "biclustercountobserver":

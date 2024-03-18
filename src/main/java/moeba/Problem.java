@@ -7,7 +7,6 @@ import java.util.Random;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.uma.jmetal.solution.binarysolution.BinarySolution;
 import org.uma.jmetal.solution.binarysolution.impl.DefaultBinarySolution;
@@ -16,6 +15,7 @@ import org.uma.jmetal.solution.integersolution.IntegerSolution;
 import org.uma.jmetal.solution.integersolution.impl.DefaultIntegerSolution;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.problem.AbstractMixedIntegerBinaryProblem;
+import moeba.utils.storage.CacheStorage;
 
 /**
  * Extends AbstractMixedIntegerBinaryProblem to define a custom problem with both integer and binary solution components.
@@ -27,8 +27,8 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
     private Class<?> [] types;
     private FitnessFunction[] fitnessFunctions;
     protected Representation representation;
-    protected ConcurrentHashMap<String, Double[]> externalCache;
-    protected ConcurrentHashMap<String, Double>[] internalCaches;
+    protected CacheStorage<String, Double[]> externalCache;
+    protected CacheStorage<String, Double>[] internalCaches;
     private EvaluateFunction evaluateFunction;
 
     public interface EvaluateFunction {
@@ -45,7 +45,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
      * @param externalCache A cache for storing externally computed values to avoid recalculations.
      * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      */
-    public Problem(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches) {
+    public Problem(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches) {
         super(data.length, 1 + data[0].length, 0, data.length - 1, data.length);
         representation = Representation.GENERIC;
         initialize(data, types, strFitnessFunctions, externalCache, internalCaches, -1);
@@ -62,7 +62,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
      * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      * @param numBiclusters The number of biclusters to be considered in the problem.
      */
-    public Problem(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches, int numBiclusters) {
+    public Problem(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches, int numBiclusters) {
         super(data.length, numBiclusters, 0, numBiclusters - 1, data[0].length);
         if (numBiclusters < 2 || numBiclusters >= data.length) {
             throw new IllegalArgumentException("The number of biclusters must be between 2 and " + (data.length - 1) + ".");
@@ -128,7 +128,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
      * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
      * @param numBiclusters The number of biclusters, relevant for specific representation.
      */
-    private void initialize(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, ConcurrentHashMap<String, Double[]> externalCache, ConcurrentHashMap<String, Double>[] internalCaches, int numBiclusters) {
+    private void initialize(Object[][] data, Class<?> [] types, String[] strFitnessFunctions, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches, int numBiclusters) {
         this.data = data;
         this.types = types;
         this.externalCache = externalCache;

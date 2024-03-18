@@ -1,19 +1,20 @@
 package moeba.fitnessfunction;
 
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
+
+import moeba.utils.storage.CacheStorage;
 
 public abstract class FitnessFunction {
     protected Object[][] data;
     protected Class<?>[] types;
-    protected ConcurrentHashMap<String, Double> internalCache;
+    protected CacheStorage<String, Double> internalCache;
     private RunnableFunc func;
 
     public interface RunnableFunc {
         double run(ArrayList<ArrayList<Integer>[]> biclusters);
     }
 
-    public FitnessFunction(Object[][] data, Class<?>[] types, ConcurrentHashMap<String, Double> internalCache) {
+    public FitnessFunction(Object[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache) {
         this.data = data;
         this.types = types;
         this.internalCache = internalCache;
