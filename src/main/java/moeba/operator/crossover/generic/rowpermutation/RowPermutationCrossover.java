@@ -1,4 +1,4 @@
-package moeba.operator.crossover.rowpermutation;
+package moeba.operator.crossover.generic.rowpermutation;
 
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
 

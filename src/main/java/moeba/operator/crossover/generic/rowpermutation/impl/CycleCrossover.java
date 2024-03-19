@@ -1,10 +1,11 @@
-package moeba.operator.crossover.rowpermutation.impl;
+package moeba.operator.crossover.generic.rowpermutation.impl;
 
-import moeba.operator.crossover.rowpermutation.RowPermutationCrossover;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import moeba.operator.crossover.generic.rowpermutation.RowPermutationCrossover;
 
 /**
  * Implements the cycle crossover algorithm for row permutation crossovers.

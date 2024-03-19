@@ -1,12 +1,14 @@
-package moeba.operator.crossover.rowbiclustermixed.impl;
+package moeba.operator.crossover.generic.rowbiclustermixed.impl;
 
-import java.util.BitSet;
+import org.uma.jmetal.util.binarySet.BinarySet;
 import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import moeba.operator.crossover.generic.rowbiclustermixed.RowBiclusterMixedCrossover;
+
 import java.util.ArrayList;
 
-import moeba.operator.crossover.rowbiclustermixed.RowBiclusterMixedCrossover;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
 
 /**
@@ -60,11 +62,11 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
      * 
      * @param is1 The first parent (IntegerSolution) involved in the crossover.
      * @param is2 The second parent (IntegerSolution) involved in the crossover.
-     * @param bs1 A BitSet representing the genetic information of the first parent that will be crossed.
-     * @param bs2 A BitSet representing the genetic information of the second parent that will be crossed.
+     * @param bs1 A BinarySet representing the genetic information of the first parent that will be crossed.
+     * @param bs2 A BinarySet representing the genetic information of the second parent that will be crossed.
      */
     @Override
-    public void execute(IntegerSolution is1, IntegerSolution is2, BitSet bs1, BitSet bs2) {
+    public void execute(IntegerSolution is1, IntegerSolution is2, BinarySet bs1, BinarySet bs2) {
         
         // Calculate the percentage of crossover operations completed to adjust the dynamic parameters
         float doned = (float) numOperations.getAndIncrement() / this.numApproxCrossovers;
@@ -156,13 +158,13 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
     /**
      * This method determines the start and end positions of the biclusters that will be involved in the crossover process.
      * 
-     * @param bs A BitSet representing the biclusters cuts.
-     * @param seed The starting position for the crossover within the BitSet.
+     * @param bs A BinarySet representing the biclusters cuts.
+     * @param seed The starting position for the crossover within the BinarySet.
      * @param numBics The number of biclusters to include in the crossover.
-     * @param n The total number of positions within the BitSet.
+     * @param n The total number of positions within the BinarySet.
      * @return An array of two integers specifying the start and end positions of the range to be crossed.
      */
-    public int[] getLimits (BitSet bs, int seed, int numBics, int n) {
+    public int[] getLimits (BinarySet bs, int seed, int numBics, int n) {
         int[] res = new int[2];
 
         int nextStart;
@@ -244,14 +246,14 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
      * @param startComp The starting position in the complementary parent solution.
      * @param p The genetic material from the parent within the crossover range.
      * @param pComp The genetic material from the complementary parent within the crossover range.
-     * @param bs A BitSet representing the genetic structure of the solution after crossover.
+     * @param bs A BinarySet representing the genetic structure of the solution after crossover.
      * @param cuts The cut points for biclusters in the parent solution.
      * @param cutsComp The cut points for biclusters in the complementary parent solution.
      * @param bestMatches The indices of the best matching biclusters between the two parents.
      * @param visited An array tracking which rows have already been added to the solution.
      * @param doned The percentage of crossover operations completed.
      */
-    public void updateSolutions(IntegerSolution is, int start, int startComp, int[] p, int[] pComp, BitSet bs, int[] cuts, int[] cutsComp, int[] bestMatches, boolean[] visited, float doned) {
+    public void updateSolutions(IntegerSolution is, int start, int startComp, int[] p, int[] pComp, BinarySet bs, int[] cuts, int[] cutsComp, int[] bestMatches, boolean[] visited, float doned) {
         int bm;
         int cut, prevCut = start;
         int cutComp, prevCutComp = 0;
@@ -284,12 +286,12 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
                 is.variables().set(start + cnt + j, rows.get(j));
             }
             r = random.nextInt(3);
-            bs.set(start + cnt + numRows);
+            bs.set(start + cnt + numRows - 1);
             if (r == 0) {
-                bs.set(start + cnt + numRows/3);
-                bs.set(start + cnt + 2*numRows/3);
+                bs.set(start + cnt + numRows/3 - 1);
+                bs.set(start + cnt + 2*numRows/3 - 1);
             } else if (r == 1) {
-                bs.set(start + cnt + numRows/2);
+                bs.set(start + cnt + numRows/2 - 1);
             }
             cnt += numRows;
             prevCut = cut + 1;

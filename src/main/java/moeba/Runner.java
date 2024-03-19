@@ -18,7 +18,7 @@ import org.uma.jmetal.util.AbstractAlgorithmRunner;
 import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
 import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 import moeba.StaticUtils.AlgorithmResult;
-import moeba.operator.mutation.GenericMutation;
+import moeba.operator.mutation.generic.GenericMutation;
 import moeba.utils.observer.ProblemObserver;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.output.SolutionListTranslatedVAR;

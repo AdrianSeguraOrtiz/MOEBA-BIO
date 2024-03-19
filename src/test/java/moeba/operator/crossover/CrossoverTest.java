@@ -5,20 +5,19 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
+import org.uma.jmetal.util.binarySet.BinarySet;
 import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Random;
 
 import org.mockito.Mockito;
-
-import moeba.operator.crossover.biclustersbinary.BiclusterBinaryCrossover;
-import moeba.operator.crossover.biclustersbinary.impl.BicUniformCrossover;
-import moeba.operator.crossover.rowbiclustermixed.impl.GroupedBasedCrossover;
-import moeba.operator.crossover.rowpermutation.RowPermutationCrossover;
-import moeba.operator.crossover.rowpermutation.impl.CycleCrossover;
-import moeba.operator.crossover.rowpermutation.impl.EdgeRecombinationCrossover;
-import moeba.operator.crossover.rowpermutation.impl.PartiallyMappedCrossover;
+import moeba.operator.crossover.generic.biclustersbinary.BiclusterBinaryCrossover;
+import moeba.operator.crossover.generic.biclustersbinary.impl.BicUniformCrossover;
+import moeba.operator.crossover.generic.rowbiclustermixed.impl.GroupedBasedCrossover;
+import moeba.operator.crossover.generic.rowpermutation.RowPermutationCrossover;
+import moeba.operator.crossover.generic.rowpermutation.impl.CycleCrossover;
+import moeba.operator.crossover.generic.rowpermutation.impl.EdgeRecombinationCrossover;
+import moeba.operator.crossover.generic.rowpermutation.impl.PartiallyMappedCrossover;
 import org.testng.annotations.Test;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
 import org.uma.jmetal.solution.integersolution.impl.DefaultIntegerSolution;
@@ -56,17 +55,17 @@ public class CrossoverTest {
      */
     @Test
     public void testUniformCrossover() {
-        BitSet parent1 = new BitSet(20);
-        BitSet parent2 = new BitSet(20);
-        // Initialize parent BitSets with alternating true and false values.
-        for (int i = 0; i < parent1.size(); i++) {
+        BinarySet parent1 = new BinarySet(20);
+        BinarySet parent2 = new BinarySet(20);
+        // Initialize parent BinarySets with alternating true and false values.
+        for (int i = 0; i < 20; i++) {
             parent1.set(i, i % 2 == 0);
             parent2.set(i, i % 2 == 0);
         }
         
         BiclusterBinaryCrossover crossoverOperator = new BicUniformCrossover();
-        BitSet child1 = (BitSet) parent1.clone();
-        BitSet child2 = (BitSet) parent2.clone();
+        BinarySet child1 = (BinarySet) parent1.clone();
+        BinarySet child2 = (BinarySet) parent2.clone();
         crossoverOperator.execute(child1, child2);
         // Verify that children remain identical to their respective parents post-crossover.
         assertEquals(child1, parent1);
@@ -165,8 +164,8 @@ public class CrossoverTest {
      */
     @Test
     public void testGroupedBasedCrossoverAll() {
-        BitSet bs1 = new BitSet(9);
-        BitSet bs2 = new BitSet(9);
+        BinarySet bs1 = new BinarySet(9);
+        BinarySet bs2 = new BinarySet(9);
         for (int i = 2; i < 9; i+=3) {
             bs1.set(i);
             bs2.set(i);
@@ -188,8 +187,8 @@ public class CrossoverTest {
         int[] expectedOffsprint2 = new int[]{0,1,8,2,3,4,7,5,6};
         assert(Arrays.equals(child1, expectedOffsprint1));
         assert(Arrays.equals(child2, expectedOffsprint2));
-        assertEquals("{4, 8, 9}", bs1.toString());
-        assertEquals("{4, 8, 9}", bs2.toString());
+        assertEquals("000100011", bs1.toString());
+        assertEquals("000100011", bs2.toString());
     }
 
     /**
@@ -197,8 +196,8 @@ public class CrossoverTest {
      */
     @Test
     public void testGroupedBasedCrossoverPartial() {
-        BitSet bs1 = new BitSet(9);
-        BitSet bs2 = new BitSet(9);
+        BinarySet bs1 = new BinarySet(9);
+        BinarySet bs2 = new BinarySet(9);
         for (int i = 2; i < 9; i+=3) {
             bs1.set(i);
             bs2.set(i);
@@ -220,7 +219,7 @@ public class CrossoverTest {
         int[] expectedOffsprint2 = new int[]{0,1,8,3,4,7,5,6,2};
         assert(Arrays.equals(child1, expectedOffsprint1));
         assert(Arrays.equals(child2, expectedOffsprint2));
-        assertEquals("{2, 7, 9}", bs1.toString());
-        assertEquals("{2, 7, 9}", bs2.toString());
+        assertEquals("001000101", bs1.toString());
+        assertEquals("001000101", bs2.toString());
     }
 }

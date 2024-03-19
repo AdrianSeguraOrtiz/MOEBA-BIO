@@ -1,0 +1,32 @@
+package moeba.operator.mutation.generic.biclusterbinary.impl;
+
+import org.uma.jmetal.util.binarySet.BinarySet;
+import java.util.Random;
+
+import moeba.operator.mutation.generic.biclusterbinary.BiclusterBinaryMutation;
+
+public class BicUniformMutation implements BiclusterBinaryMutation {
+    
+    private float probability;
+    private Random random;
+    
+    public BicUniformMutation(float probability) {
+        this.probability = probability;
+        this.random = new Random();
+    }
+
+    public BicUniformMutation(float probability, Random random) {
+        this.probability = probability;
+        this.random = random;
+    }
+
+    @Override
+    public void execute(BinarySet bs) {
+        for (int i = 0; i < bs.getBinarySetLength(); i++) {
+            if (random.nextFloat() < probability) {
+                bs.set(i, !bs.get(i));
+            }
+        }
+    }
+    
+}

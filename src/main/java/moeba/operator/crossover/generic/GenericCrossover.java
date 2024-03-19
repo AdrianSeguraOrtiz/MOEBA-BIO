@@ -1,13 +1,12 @@
-package moeba.operator.crossover;
+package moeba.operator.crossover.generic;
 
 import java.util.List;
 import java.util.ArrayList;
 
-import moeba.operator.crossover.biclustersbinary.BiclusterBinaryCrossover;
-import moeba.operator.crossover.cellbinary.CellBinaryCrossover;
-import moeba.operator.crossover.rowbiclustermixed.RowBiclusterMixedCrossover;
-import moeba.operator.crossover.rowpermutation.RowPermutationCrossover;
-
+import moeba.operator.crossover.generic.biclustersbinary.BiclusterBinaryCrossover;
+import moeba.operator.crossover.generic.cellbinary.CellBinaryCrossover;
+import moeba.operator.crossover.generic.rowbiclustermixed.RowBiclusterMixedCrossover;
+import moeba.operator.crossover.generic.rowpermutation.RowPermutationCrossover;
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.solution.binarysolution.BinarySolution;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;

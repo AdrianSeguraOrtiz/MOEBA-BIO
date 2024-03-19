@@ -1,4 +1,4 @@
-package moeba.operator.mutation;
+package moeba.operator.mutation.specific;
 
 import org.uma.jmetal.operator.mutation.MutationOperator;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
