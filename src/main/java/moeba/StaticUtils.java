@@ -7,11 +7,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
@@ -519,9 +522,11 @@ public final class StaticUtils {
         // Check if the representation is generic
         if (representation == Representation.GENERIC) {
             
-            // Initialize rows, cols, and precalculatedSums
+            // Initialize rows, cols, minRows, minRow and precalculatedSums
             ArrayList<Integer> rows = new ArrayList<>();
             ArrayList<Integer> cols = new ArrayList<>();
+            ArrayList<Integer> minRows = new ArrayList<>();
+            int minRow = numRows;
             int[][] precalculatedSums = new int[numCols][numRows + 1];
             
             // Calculate precalculatedSums
@@ -534,7 +539,9 @@ public final class StaticUtils {
 
             // Extract biclusters
             for (int i = 0; i < numRows; i++) {
-                rows.add(integerVariables.get(i));
+                int row = integerVariables.get(i);
+                rows.add(row);
+                if (row < minRow) minRow = row;
                 if (binaryVariables.get(0).get(i) || i == numRows - 1) {
                     for (int j = 0; j < numCols; j++) {
                         if (((float) (precalculatedSums[j][i + 1] - precalculatedSums[j][i - rows.size() + 1]) / rows.size()) > 0.5) {
@@ -553,12 +560,81 @@ public final class StaticUtils {
                     // Clear rows and cols for next iteration
                     rows.clear();
                     cols.clear();
+
+                    // Add minRow to list and reset for next iteration
+                    minRows.add(minRow);
+                    minRow = numRows;
                 }
             }
-            return res;
+
+            // Sort list of biclusters depending on the smallest row
+            List<Integer> indexes = new ArrayList<>();
+            for (int i = 0; i < minRows.size(); i++) {
+                indexes.add(i);
+            }
+            Collections.sort(indexes, Comparator.comparing(minRows::get));
+            ArrayList<ArrayList<Integer>[]> resOrdered = new ArrayList<>();
+            for (int index : indexes) {
+                resOrdered.add(res.get(index));
+            }
+
+            return resOrdered;
         } else {
             // TODO: Implement specific representation
             return null;
+        }
+    }
+
+    /**
+     * Merges biclusters with the same columns, preserving the order of the rows
+     * and the order of the columns. The merged biclusters are added to the
+     * given solution.
+     *
+     * @param biclusters the biclusters to merge
+     * @param solution the composite solution where the merged biclusters are
+     * added
+     */
+    @SuppressWarnings("unchecked")
+    public static void mergeBiclustersSameColumns(ArrayList<ArrayList<Integer>[]> biclusters, CompositeSolution solution) {
+
+        // Mapa para agrupar filas por sus columnas correspondientes
+        Map<String, ArrayList<Integer>> map = new LinkedHashMap<>();
+
+        // For each bicluster, add its rows to the map with the columns as key
+        for (ArrayList<Integer>[] bicluster : biclusters) {
+            String key = bicluster[1].toString(); // column list as string
+            map.computeIfAbsent(key, k -> new ArrayList<>())
+                .addAll(bicluster[0]); // add rows to column list
+        }
+
+        // Clear old biclusters list
+        biclusters.clear();
+
+        // Extract integer and binary variables from the composite solution
+        List<Integer> integerVariables = ((IntegerSolution) solution.variables().get(0)).variables();
+        integerVariables.clear();
+        BinarySet binaryVariables = ((BinarySolution) solution.variables().get(1)).variables().get(0);
+        binaryVariables.clear();
+
+        // For each group of rows with the same columns, create a new bicluster
+        for (Map.Entry<String, ArrayList<Integer>> entry : map.entrySet()) {
+            // Get rows and sort them
+            ArrayList<Integer> rows = entry.getValue();
+            Collections.sort(rows);
+
+            // Reconstruct columns from the key
+            String key = entry.getKey();
+            ArrayList<Integer> cols = new ArrayList<>(Arrays.asList(key.substring(1, key.length() - 1).split(", ")))
+                .stream().map(Integer::parseInt)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+            // Create and add the new bicluster
+            ArrayList<Integer>[] bicluster = new ArrayList[2];
+            bicluster[0] = rows;
+            integerVariables.addAll(rows);
+            binaryVariables.set(integerVariables.size()-1);
+            bicluster[1] = cols;
+            biclusters.add(bicluster);
         }
     }
 

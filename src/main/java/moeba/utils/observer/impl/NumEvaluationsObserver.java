@@ -1,7 +1,6 @@
 package moeba.utils.observer.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -33,7 +32,7 @@ public class NumEvaluationsObserver implements ObserverInterface {
     @Override
     public void writeToFile(String strFile) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(strFile))) {
-            String strVector = Arrays.toString(this.evaluations.toArray());
+            String strVector = this.evaluations.toString();
             bw.write(strVector.substring(1, strVector.length() - 1) + "\n");
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);

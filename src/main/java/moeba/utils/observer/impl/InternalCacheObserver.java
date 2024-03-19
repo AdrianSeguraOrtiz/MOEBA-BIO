@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
@@ -43,7 +42,7 @@ public class InternalCacheObserver implements ObserverInterface {
     public void writeToFile(String strFile) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(strFile))) {
             for(int i = 0; i < fitnessFunctions.length; i++) {
-                String strVector = Arrays.toString(this.generationCacheCalls[i].toArray());
+                String strVector = this.generationCacheCalls[i].toString();
                 bw.write(this.fitnessFunctions[i] + ", " + strVector.substring(1, strVector.length() - 1) + "\n");
             }
         } catch (IOException ioe) {

@@ -114,6 +114,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
     @Override
     public CompositeSolution evaluate(CompositeSolution solution) {
         ArrayList<ArrayList<Integer>[]> biclusters = StaticUtils.getBiclustersFromRepresentation(solution, representation, data.length, data[0].length);
+        StaticUtils.mergeBiclustersSameColumns(biclusters, solution);
         return evaluateFunction.evaluate(solution, biclusters);
     }
 

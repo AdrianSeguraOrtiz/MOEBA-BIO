@@ -1,7 +1,6 @@
 package moeba.utils.observer.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -34,7 +33,7 @@ public class ExternalCacheObserver implements ObserverInterface {
     @Override
     public void writeToFile(String strFile) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(strFile))) {
-            String strVector = Arrays.toString(this.generationCacheCalls.toArray());
+            String strVector = this.generationCacheCalls.toString();
             bw.write(strVector.substring(1, strVector.length() - 1) + "\n");
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
