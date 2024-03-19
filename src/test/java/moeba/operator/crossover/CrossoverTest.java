@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Random;
 
 import org.mockito.Mockito;
-import moeba.operator.crossover.generic.biclustersbinary.BiclusterBinaryCrossover;
-import moeba.operator.crossover.generic.biclustersbinary.impl.BicUniformCrossover;
+import moeba.operator.crossover.generic.biclusterbinary.BiclusterBinaryCrossover;
+import moeba.operator.crossover.generic.biclusterbinary.impl.BicUniformCrossover;
 import moeba.operator.crossover.generic.rowbiclustermixed.impl.GroupedBasedCrossover;
 import moeba.operator.crossover.generic.rowpermutation.RowPermutationCrossover;
 import moeba.operator.crossover.generic.rowpermutation.impl.CycleCrossover;

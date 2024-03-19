@@ -18,7 +18,6 @@ import org.uma.jmetal.util.AbstractAlgorithmRunner;
 import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
 import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 import moeba.StaticUtils.AlgorithmResult;
-import moeba.operator.mutation.generic.GenericMutation;
 import moeba.utils.observer.ProblemObserver;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.output.SolutionListTranslatedVAR;
@@ -79,11 +78,11 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
     @Option(names = {"--mutation-operator"}, 
             description = "Mutation operator. Same explanation as for the crossover operator:\n" + //
-                "\t- GENERIC: ...\n" + //
+                "\t- GENERIC: RowPermutationMutation;BiclusterBinaryMutation;CellBinaryMutation\n" + //
                 "\t- SPECIFIC: ...\n" + //
                 "\t- INDIVIDUAL: ...\n" + //
                 "\t- DYNAMIC: GENERIC-SPECIFIC", 
-            defaultValue = "GenericMutation")
+            defaultValue = "SwapMutation;BicUniformMutation;CellUniformMutation")
     private String strMutationOperator;
 
     @Option(names = {"--have-external-cache"}, description = "Whether the external cache is used")
@@ -173,7 +172,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         CrossoverOperator<CompositeSolution> crossover = StaticUtils.getCrossoverFromString(crossoverProbability, strCrossoverOperator, representation, (int) Math.round(maxEvaluations * crossoverProbability));
         
         // 2. Mutation
-        MutationOperator<CompositeSolution> mutation = new GenericMutation(mutationProbability);
+        MutationOperator<CompositeSolution> mutation = StaticUtils.getMutationFromString(mutationProbability, strMutationOperator, representation);
 
         // 3. Selection
         NaryTournamentSelection<CompositeSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());

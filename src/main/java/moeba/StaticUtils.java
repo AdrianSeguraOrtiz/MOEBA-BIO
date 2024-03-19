@@ -22,8 +22,8 @@ import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSize;
 import moeba.operator.crossover.generic.GenericCrossover;
-import moeba.operator.crossover.generic.biclustersbinary.BiclusterBinaryCrossover;
-import moeba.operator.crossover.generic.biclustersbinary.impl.BicUniformCrossover;
+import moeba.operator.crossover.generic.biclusterbinary.BiclusterBinaryCrossover;
+import moeba.operator.crossover.generic.biclusterbinary.impl.BicUniformCrossover;
 import moeba.operator.crossover.generic.cellbinary.CellBinaryCrossover;
 import moeba.operator.crossover.generic.cellbinary.impl.CellUniformCrossover;
 import moeba.operator.crossover.generic.rowbiclustermixed.RowBiclusterMixedCrossover;
@@ -32,6 +32,13 @@ import moeba.operator.crossover.generic.rowpermutation.RowPermutationCrossover;
 import moeba.operator.crossover.generic.rowpermutation.impl.CycleCrossover;
 import moeba.operator.crossover.generic.rowpermutation.impl.EdgeRecombinationCrossover;
 import moeba.operator.crossover.generic.rowpermutation.impl.PartiallyMappedCrossover;
+import moeba.operator.mutation.generic.GenericMutation;
+import moeba.operator.mutation.generic.biclusterbinary.BiclusterBinaryMutation;
+import moeba.operator.mutation.generic.biclusterbinary.impl.BicUniformMutation;
+import moeba.operator.mutation.generic.cellbinary.CellBinaryMutation;
+import moeba.operator.mutation.generic.cellbinary.impl.CellUniformMutation;
+import moeba.operator.mutation.generic.rowpermutation.RowPermutationMutation;
+import moeba.operator.mutation.generic.rowpermutation.impl.SwapMutation;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.observer.impl.BiclusterCountObserver;
 import moeba.utils.observer.impl.ExternalCacheObserver;
@@ -283,6 +290,104 @@ public final class StaticUtils {
         return res;
     }
 
+    /**
+     * Returns a MutationOperator object based on a given string representation.
+     * The string representation of the mutation operator is a semicolon-separated list
+     * of mutation operators.
+     *
+     * @param mutationProbability probability of applying the mutation operator
+     * @param strMutationOperator string representation of the desired mutation operator
+     * @param representation representation of the problem
+     * @return a MutationOperator object
+     * @throws RuntimeException if the mutation operator is not implemented or the number of mutation operators is not supported for the representation
+     */
+    public static MutationOperator<CompositeSolution> getMutationFromString(double mutationProbability, String strMutationOperator, Representation representation) {
+        MutationOperator<CompositeSolution> res;
+        String[] listStrMutations = strMutationOperator.split(";");
+        if (representation == Representation.GENERIC) {
+            if (listStrMutations.length == 3) {
+                RowPermutationMutation rowPermutationMutation = getRowPermutationMutationFromString(listStrMutations[0], mutationProbability);
+                BiclusterBinaryMutation biclusterBinaryMutation = getBiclusterBinaryMutationFromString(listStrMutations[1], mutationProbability);
+                CellBinaryMutation cellBinaryMutation = getCellBinaryMutationFromString(listStrMutations[2], mutationProbability);
+                res = new GenericMutation(mutationProbability, rowPermutationMutation, biclusterBinaryMutation, cellBinaryMutation);
+            } else {
+                throw new RuntimeException("The number of mutation operators is not supported for the " + representation + " representation.");
+            }
+        } else if (representation == Representation.SPECIFIC) {
+            // TODO: implement
+            res = null;
+        } else if (representation == Representation.INDIVIDUAL) {
+            // TODO: implement
+            res = null;
+        } else {
+            throw new RuntimeException("The representation " + representation + " does not have mutation operators.");
+        }
+
+        return res;
+    }
+
+    /**
+     * Creates a bicluster binary mutation from the given string.
+     *
+     * @param str The string representation of the mutation.
+     * @param mutationProbability The probability of applying the mutation to each element of the solution.
+     * @return The created bicluster binary mutation.
+     * @throws RuntimeException If the mutation is not implemented.
+     */
+    public static BiclusterBinaryMutation getBiclusterBinaryMutationFromString(String str, double mutationProbability) {
+        BiclusterBinaryMutation res;
+        switch (str.toLowerCase()) {
+            case "bicuniformmutation":
+                res = new BicUniformMutation(mutationProbability);
+                break;
+            default:
+                throw new RuntimeException(
+                        "The bicluster binary mutation " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    /**
+     * Creates a cell binary mutation from the given string.
+     *
+     * @param str The string representation of the mutation.
+     * @param mutationProbability The probability of applying the mutation to each element of the solution.
+     * @return The created cell binary mutation.
+     * @throws RuntimeException If the mutation is not implemented.
+     */
+    public static CellBinaryMutation getCellBinaryMutationFromString(String str, double mutationProbability) {
+        CellBinaryMutation res;
+        switch (str.toLowerCase()) {
+            case "celluniformmutation":
+                res = new CellUniformMutation(mutationProbability);
+                break;
+            default:
+                throw new RuntimeException(
+                        "The cell binary mutation " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    /**
+     * Creates a row permutation mutation from the given string.
+     *
+     * @param str The string representation of the mutation. Valid options are "swapMutation".
+     * @param mutationProbability The probability of applying the mutation to each row of the solution.
+     * @return The created row permutation mutation.
+     * @throws RuntimeException If the mutation is not implemented.
+     */
+    public static RowPermutationMutation getRowPermutationMutationFromString(String str, double mutationProbability) {
+        RowPermutationMutation res;
+        switch (str.toLowerCase()) {
+            case "swapmutation":
+                res = new SwapMutation(mutationProbability);
+                break;
+            default:
+                throw new RuntimeException(
+                        "The row permutation mutation " + str + " is not implemented.");
+        }
+        return res;
+    }
 
     /**
      * Converts a CSV file to a bidimensional array of objects.

@@ -3,7 +3,7 @@ package moeba.operator.crossover.generic;
 import java.util.List;
 import java.util.ArrayList;
 
-import moeba.operator.crossover.generic.biclustersbinary.BiclusterBinaryCrossover;
+import moeba.operator.crossover.generic.biclusterbinary.BiclusterBinaryCrossover;
 import moeba.operator.crossover.generic.cellbinary.CellBinaryCrossover;
 import moeba.operator.crossover.generic.rowbiclustermixed.RowBiclusterMixedCrossover;
 import moeba.operator.crossover.generic.rowpermutation.RowPermutationCrossover;

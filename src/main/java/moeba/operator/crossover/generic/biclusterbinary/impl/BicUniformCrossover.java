@@ -1,9 +1,9 @@
-package moeba.operator.crossover.generic.biclustersbinary.impl;
+package moeba.operator.crossover.generic.biclusterbinary.impl;
 
 import org.uma.jmetal.util.binarySet.BinarySet;
 import java.util.Random;
 
-import moeba.operator.crossover.generic.biclustersbinary.BiclusterBinaryCrossover;
+import moeba.operator.crossover.generic.biclusterbinary.BiclusterBinaryCrossover;
 
 public class BicUniformCrossover implements BiclusterBinaryCrossover {
     private Random random;

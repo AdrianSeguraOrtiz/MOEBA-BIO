@@ -1,4 +1,4 @@
-package moeba.operator.crossover.generic.biclustersbinary;
+package moeba.operator.crossover.generic.biclusterbinary;
 
 import org.uma.jmetal.util.binarySet.BinarySet;
 
