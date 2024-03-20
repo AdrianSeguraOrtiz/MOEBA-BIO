@@ -63,8 +63,8 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--crossover-probability"}, description = "Crossover probability", defaultValue = "0.9")
     private double crossoverProbability;
 
-    @Option(names = {"--mutation-probability"}, description = "Mutation probability", defaultValue = "0.1")
-    private double mutationProbability;
+    @Option(names = {"--mutation-probability"}, description = "Mutation probability. If a progressive mutation is desired, a range must be defined by using '-' (e.g. 0.3-0.05).", defaultValue = "0.1")
+    private String mutationProbability;
 
     @Option(names = {"--crossover-operator"}, 
             description = "Crossover operator. The following are configuration templates according to each type of representation:\n" + //
@@ -172,7 +172,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         CrossoverOperator<CompositeSolution> crossover = StaticUtils.getCrossoverFromString(crossoverProbability, strCrossoverOperator, representation, (int) Math.round(maxEvaluations * crossoverProbability));
         
         // 2. Mutation
-        MutationOperator<CompositeSolution> mutation = StaticUtils.getMutationFromString(mutationProbability, strMutationOperator, representation);
+        MutationOperator<CompositeSolution> mutation = StaticUtils.getMutationFromString(mutationProbability, strMutationOperator, representation, (int) Math.round(populationSize * maxEvaluations));
 
         // 3. Selection
         NaryTournamentSelection<CompositeSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());

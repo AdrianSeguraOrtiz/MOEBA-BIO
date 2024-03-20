@@ -55,9 +55,9 @@ public class MutationTest {
         Random mockRandom = Mockito.mock(Random.class);
         Mockito.when(mockRandom.nextFloat()).thenReturn(0.4f, 0.6f);
         Mockito.when(mockRandom.nextBoolean()).thenReturn(false);
-        BicUniformMutation bicUniformMutation = new BicUniformMutation(0.5f, mockRandom);
+        BicUniformMutation bicUniformMutation = new BicUniformMutation(mockRandom);
 
-        bicUniformMutation.execute(bs);
+        bicUniformMutation.execute(bs, 0.5f);
         assertEquals(bs, expected);
     }
 
@@ -72,9 +72,9 @@ public class MutationTest {
         Random mockRandom = Mockito.mock(Random.class);
         Mockito.when(mockRandom.nextFloat()).thenReturn(0.4f, 0.6f);
         Mockito.when(mockRandom.nextInt(anyInt())).thenReturn(6);
-        SwapMutation swapMutation = new SwapMutation(0.5f, mockRandom);
+        SwapMutation swapMutation = new SwapMutation(mockRandom);
 
-        swapMutation.execute(s);
+        swapMutation.execute(s, 0.5f);
         int[] res = s.variables().stream().mapToInt(Integer::intValue).toArray();
         int[] expected = new int[]{8,6,2,1,5,4,3,7,0,9};
         assert(Arrays.equals(res, expected));

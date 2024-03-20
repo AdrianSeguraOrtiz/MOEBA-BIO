@@ -4,6 +4,6 @@ import org.uma.jmetal.util.binarySet.BinarySet;
 
 public interface BiclusterBinaryMutation {
 
-    public void execute(BinarySet bs);
+    public void execute(BinarySet bs, double mutationProbability);
     
 }

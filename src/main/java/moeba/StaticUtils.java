@@ -302,18 +302,19 @@ public final class StaticUtils {
      * @param mutationProbability probability of applying the mutation operator
      * @param strMutationOperator string representation of the desired mutation operator
      * @param representation representation of the problem
+     * @param numApproxMutations number of approximate mutations to perform
      * @return a MutationOperator object
      * @throws RuntimeException if the mutation operator is not implemented or the number of mutation operators is not supported for the representation
      */
-    public static MutationOperator<CompositeSolution> getMutationFromString(double mutationProbability, String strMutationOperator, Representation representation) {
+    public static MutationOperator<CompositeSolution> getMutationFromString(String mutationProbability, String strMutationOperator, Representation representation, int numApproxMutations) {
         MutationOperator<CompositeSolution> res;
         String[] listStrMutations = strMutationOperator.split(";");
         if (representation == Representation.GENERIC) {
             if (listStrMutations.length == 3) {
-                RowPermutationMutation rowPermutationMutation = getRowPermutationMutationFromString(listStrMutations[0], mutationProbability);
-                BiclusterBinaryMutation biclusterBinaryMutation = getBiclusterBinaryMutationFromString(listStrMutations[1], mutationProbability);
-                CellBinaryMutation cellBinaryMutation = getCellBinaryMutationFromString(listStrMutations[2], mutationProbability);
-                res = new GenericMutation(mutationProbability, rowPermutationMutation, biclusterBinaryMutation, cellBinaryMutation);
+                RowPermutationMutation rowPermutationMutation = getRowPermutationMutationFromString(listStrMutations[0]);
+                BiclusterBinaryMutation biclusterBinaryMutation = getBiclusterBinaryMutationFromString(listStrMutations[1]);
+                CellBinaryMutation cellBinaryMutation = getCellBinaryMutationFromString(listStrMutations[2]);
+                res = new GenericMutation(mutationProbability, numApproxMutations, rowPermutationMutation, biclusterBinaryMutation, cellBinaryMutation);
             } else {
                 throw new RuntimeException("The number of mutation operators is not supported for the " + representation + " representation.");
             }
@@ -334,15 +335,14 @@ public final class StaticUtils {
      * Creates a bicluster binary mutation from the given string.
      *
      * @param str The string representation of the mutation.
-     * @param mutationProbability The probability of applying the mutation to each element of the solution.
      * @return The created bicluster binary mutation.
      * @throws RuntimeException If the mutation is not implemented.
      */
-    public static BiclusterBinaryMutation getBiclusterBinaryMutationFromString(String str, double mutationProbability) {
+    public static BiclusterBinaryMutation getBiclusterBinaryMutationFromString(String str) {
         BiclusterBinaryMutation res;
         switch (str.toLowerCase()) {
             case "bicuniformmutation":
-                res = new BicUniformMutation(mutationProbability);
+                res = new BicUniformMutation();
                 break;
             default:
                 throw new RuntimeException(
@@ -355,15 +355,14 @@ public final class StaticUtils {
      * Creates a cell binary mutation from the given string.
      *
      * @param str The string representation of the mutation.
-     * @param mutationProbability The probability of applying the mutation to each element of the solution.
      * @return The created cell binary mutation.
      * @throws RuntimeException If the mutation is not implemented.
      */
-    public static CellBinaryMutation getCellBinaryMutationFromString(String str, double mutationProbability) {
+    public static CellBinaryMutation getCellBinaryMutationFromString(String str) {
         CellBinaryMutation res;
         switch (str.toLowerCase()) {
             case "celluniformmutation":
-                res = new CellUniformMutation(mutationProbability);
+                res = new CellUniformMutation();
                 break;
             default:
                 throw new RuntimeException(
@@ -376,15 +375,14 @@ public final class StaticUtils {
      * Creates a row permutation mutation from the given string.
      *
      * @param str The string representation of the mutation. Valid options are "swapMutation".
-     * @param mutationProbability The probability of applying the mutation to each row of the solution.
      * @return The created row permutation mutation.
      * @throws RuntimeException If the mutation is not implemented.
      */
-    public static RowPermutationMutation getRowPermutationMutationFromString(String str, double mutationProbability) {
+    public static RowPermutationMutation getRowPermutationMutationFromString(String str) {
         RowPermutationMutation res;
         switch (str.toLowerCase()) {
             case "swapmutation":
-                res = new SwapMutation(mutationProbability);
+                res = new SwapMutation();
                 break;
             default:
                 throw new RuntimeException(

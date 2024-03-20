@@ -7,21 +7,18 @@ import moeba.operator.mutation.generic.cellbinary.CellBinaryMutation;
 
 public class CellUniformMutation implements CellBinaryMutation {
 
-    private double mutationProbability;
     private Random random;
 
-    public CellUniformMutation(double mutationProbability) {
-        this.mutationProbability = mutationProbability;
+    public CellUniformMutation() {
         this.random = new Random();
     }
 
-    public CellUniformMutation(double mutationProbability, Random random) {
-        this.mutationProbability = mutationProbability;
+    public CellUniformMutation(Random random) {
         this.random = random;
     }
 
     @Override
-    public void execute(BinarySet bs) {
+    public void execute(BinarySet bs, double mutationProbability) {
         for (int i = 0; i < bs.getBinarySetLength(); i++) {
             if (random.nextFloat() < mutationProbability) {
                 bs.set(i, !bs.get(i));

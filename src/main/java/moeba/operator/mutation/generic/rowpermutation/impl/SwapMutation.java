@@ -7,21 +7,18 @@ import org.uma.jmetal.solution.integersolution.IntegerSolution;
 
 public class SwapMutation implements RowPermutationMutation {
 
-    private double mutationProbability;
     private Random random;
 
-    public SwapMutation(double mutationProbability) {
-        this.mutationProbability = mutationProbability;
+    public SwapMutation() {
         this.random = new Random();
     }
 
-    public SwapMutation(double mutationProbability, Random random) {
-        this.mutationProbability = mutationProbability;
+    public SwapMutation(Random random) {
         this.random = random;
     }
 
     @Override
-    public void execute(IntegerSolution s) {
+    public void execute(IntegerSolution s, double mutationProbability) {
         for (int i = 0; i < s.variables().size(); i++) {
             if (random.nextFloat() < mutationProbability) {
                 int index = random.nextInt(s.variables().size());

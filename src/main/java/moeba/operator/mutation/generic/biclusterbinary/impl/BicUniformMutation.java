@@ -7,21 +7,18 @@ import moeba.operator.mutation.generic.biclusterbinary.BiclusterBinaryMutation;
 
 public class BicUniformMutation implements BiclusterBinaryMutation {
     
-    private double mutationProbability;
     private Random random;
     
-    public BicUniformMutation(double mutationProbability) {
-        this.mutationProbability = mutationProbability;
+    public BicUniformMutation() {
         this.random = new Random();
     }
 
-    public BicUniformMutation(double mutationProbability, Random random) {
-        this.mutationProbability = mutationProbability;
+    public BicUniformMutation(Random random) {
         this.random = random;
     }
 
     @Override
-    public void execute(BinarySet bs) {
+    public void execute(BinarySet bs, double mutationProbability) {
         for (int i = 0; i < bs.getBinarySetLength(); i++) {
             if (random.nextFloat() < mutationProbability) {
                 boolean join = random.nextBoolean();
