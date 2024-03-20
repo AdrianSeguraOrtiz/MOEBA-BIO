@@ -6,9 +6,9 @@ import moeba.StaticUtils;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.utils.storage.CacheStorage;
 
-public class BiclusterSize extends FitnessFunction {
+public class BiclusterSizeWeighted extends FitnessFunction {
 
-    public BiclusterSize(Object[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache) {
+    public BiclusterSizeWeighted(Object[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache) {
         super(data, types, internalCache);
     }
 
@@ -18,7 +18,7 @@ public class BiclusterSize extends FitnessFunction {
         for (ArrayList<Integer>[] bic : biclusters) {
             res += getBiclusterScore(bic);
         }
-        return 1 - res/(data.length * data[0].length * biclusters.size());
+        return 1 - res/biclusters.size();
     }
 
     @Override
@@ -36,10 +36,10 @@ public class BiclusterSize extends FitnessFunction {
             }
             res += bicScore;
         }
-        return 1 - res/(data.length * data[0].length * biclusters.size());
+        return 1 - res/biclusters.size();
     }
 
     protected double getBiclusterScore(ArrayList<Integer>[] bicluster) {
-        return (double) (bicluster[0].size() * bicluster[1].size());
+        return (double) (bicluster[0].size()*0.75 / data.length + bicluster[1].size()*0.25/data[0].length);
     }
 }

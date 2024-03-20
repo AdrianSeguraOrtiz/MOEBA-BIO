@@ -21,6 +21,7 @@ import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSize;
+import moeba.fitnessfunction.impl.BiclusterSizeWeighted;
 import moeba.operator.crossover.generic.GenericCrossover;
 import moeba.operator.crossover.generic.biclusterbinary.BiclusterBinaryCrossover;
 import moeba.operator.crossover.generic.biclusterbinary.impl.BicUniformCrossover;
@@ -80,6 +81,9 @@ public final class StaticUtils {
 
             case "biclustersize":
                 res = new BiclusterSize(data, types, cache);
+                break;
+            case "biclustersizeweighted":
+                res = new BiclusterSizeWeighted(data, types, cache);
                 break;
             /**
             case "biclustervariance":
@@ -729,7 +733,7 @@ public final class StaticUtils {
 
             // Reconstruct columns from the key
             String key = entry.getKey();
-            ArrayList<Integer> cols = new ArrayList<>(Arrays.asList(key.substring(1, key.length() - 1).split(", ")))
+            ArrayList<Integer> cols = key.length() <= 2 ? new ArrayList<>() : new ArrayList<>(Arrays.asList(key.substring(1, key.length() - 1).split(", ")))
                 .stream().map(Integer::parseInt)
                 .collect(Collectors.toCollection(ArrayList::new));
 
