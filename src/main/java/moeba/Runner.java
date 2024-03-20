@@ -172,7 +172,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         CrossoverOperator<CompositeSolution> crossover = StaticUtils.getCrossoverFromString(crossoverProbability, strCrossoverOperator, representation, (int) Math.round(maxEvaluations * crossoverProbability));
         
         // 2. Mutation
-        MutationOperator<CompositeSolution> mutation = StaticUtils.getMutationFromString(mutationProbability, strMutationOperator, representation, (int) Math.round(populationSize * maxEvaluations));
+        MutationOperator<CompositeSolution> mutation = StaticUtils.getMutationFromString(mutationProbability, strMutationOperator, representation, maxEvaluations);
 
         // 3. Selection
         NaryTournamentSelection<CompositeSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
