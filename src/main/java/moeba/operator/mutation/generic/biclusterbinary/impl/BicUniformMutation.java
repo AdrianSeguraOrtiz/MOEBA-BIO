@@ -27,6 +27,7 @@ public class BicUniformMutation implements BiclusterBinaryMutation {
                 boolean join = random.nextBoolean();
                 int index = join ? bs.nextSetBit(i) : bs.nextClearBit(i);
                 if (index == -1) index = join ? bs.previousSetBit(i) : bs.previousClearBit(i);
+                if (index == -1) index = i;
                 bs.set(index, !bs.get(index));
             }
         }
