@@ -219,18 +219,13 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
      */
     public int[] getBestMatches(int[][] matches) {
         int[] bestMatches = new int[matches.length];
-        int max, sum;
+        int max;
         for (int i = 1; i < matches.length; i++) {
             max = 0;
-            sum = 0;
             for (int j = 1; j < matches[0].length; j++) {
-                sum += matches[i][j];
                 if (matches[i][j] >= max) {
                     max = matches[i][j];
                     bestMatches[i] = j;
-                }
-                if (max > (matches[0].length - sum) / 2) {
-                    break;
                 }
             }
         }
