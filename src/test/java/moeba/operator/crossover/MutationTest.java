@@ -54,6 +54,7 @@ public class MutationTest {
 
         Random mockRandom = Mockito.mock(Random.class);
         Mockito.when(mockRandom.nextFloat()).thenReturn(0.4f, 0.6f);
+        Mockito.when(mockRandom.nextBoolean()).thenReturn(false);
         BicUniformMutation bicUniformMutation = new BicUniformMutation(0.5f, mockRandom);
 
         bicUniformMutation.execute(bs);
