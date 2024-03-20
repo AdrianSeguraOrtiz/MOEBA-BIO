@@ -45,7 +45,7 @@ public class GenericMutation implements MutationOperator<CompositeSolution> {
     public CompositeSolution execute(CompositeSolution solution) {
         Check.notNull(solution);
         int doned = numOperations.incrementAndGet();
-        this.mutationProbability = minMutationProbability + (maxMutationProbability - minMutationProbability) * doned / numApproxMutations;
+        this.mutationProbability = minMutationProbability + (maxMutationProbability - minMutationProbability) * (numApproxMutations - doned) / numApproxMutations;
 
         IntegerSolution intSol = (IntegerSolution) solution.variables().get(0);
         BinarySolution binSol = (BinarySolution) solution.variables().get(1);
