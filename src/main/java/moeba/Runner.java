@@ -18,6 +18,7 @@ import org.uma.jmetal.util.AbstractAlgorithmRunner;
 import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
 import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 import moeba.StaticUtils.AlgorithmResult;
+import moeba.representationwrapper.RepresentationWrapper;
 import moeba.utils.observer.ProblemObserver;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.output.SolutionListTranslatedVAR;
@@ -165,14 +166,15 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // Problem
-        Problem problem = new ProblemObserver(observers, data, types, fitnessFunctions, externalCache, internalCaches);
+        RepresentationWrapper representationWrapper = StaticUtils.getRepresentationWrapperFromRepresentation(representation, data.length, data[0].length, numBiclusters);
+        Problem problem = new ProblemObserver(data, types, fitnessFunctions, externalCache, internalCaches, representationWrapper, observers);
 
         // Operators
         // 1. Crossover
-        CrossoverOperator<CompositeSolution> crossover = StaticUtils.getCrossoverFromString(crossoverProbability, strCrossoverOperator, representation, (int) Math.round(maxEvaluations * crossoverProbability));
+        CrossoverOperator<CompositeSolution> crossover = representationWrapper.getCrossoverFromString(strCrossoverOperator, crossoverProbability, (int) Math.round(maxEvaluations * crossoverProbability));
         
         // 2. Mutation
-        MutationOperator<CompositeSolution> mutation = StaticUtils.getMutationFromString(mutationProbability, strMutationOperator, representation, maxEvaluations);
+        MutationOperator<CompositeSolution> mutation = representationWrapper.getMutationFromString(strMutationOperator, mutationProbability, maxEvaluations);
 
         // 3. Selection
         NaryTournamentSelection<CompositeSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
@@ -218,7 +220,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
                 .print();
 
         // Write translated VAR
-        new SolutionListTranslatedVAR(Representation.GENERIC, data.length, data[0].length)
+        new SolutionListTranslatedVAR(representationWrapper)
             .printTranslatedVAR(outputFolder + "/VAR-translated.csv", result.population);
 
 

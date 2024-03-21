@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
@@ -22,24 +21,10 @@ import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSize;
 import moeba.fitnessfunction.impl.BiclusterSizeWeighted;
-import moeba.operator.crossover.generic.GenericCrossover;
-import moeba.operator.crossover.generic.biclusterbinary.BiclusterBinaryCrossover;
-import moeba.operator.crossover.generic.biclusterbinary.impl.BicUniformCrossover;
-import moeba.operator.crossover.generic.cellbinary.CellBinaryCrossover;
-import moeba.operator.crossover.generic.cellbinary.impl.CellUniformCrossover;
-import moeba.operator.crossover.generic.rowbiclustermixed.RowBiclusterMixedCrossover;
-import moeba.operator.crossover.generic.rowbiclustermixed.impl.GroupedBasedCrossover;
-import moeba.operator.crossover.generic.rowpermutation.RowPermutationCrossover;
-import moeba.operator.crossover.generic.rowpermutation.impl.CycleCrossover;
-import moeba.operator.crossover.generic.rowpermutation.impl.EdgeRecombinationCrossover;
-import moeba.operator.crossover.generic.rowpermutation.impl.PartiallyMappedCrossover;
-import moeba.operator.mutation.generic.GenericMutation;
-import moeba.operator.mutation.generic.biclusterbinary.BiclusterBinaryMutation;
-import moeba.operator.mutation.generic.biclusterbinary.impl.BicUniformMutation;
-import moeba.operator.mutation.generic.cellbinary.CellBinaryMutation;
-import moeba.operator.mutation.generic.cellbinary.impl.CellUniformMutation;
-import moeba.operator.mutation.generic.rowpermutation.RowPermutationMutation;
-import moeba.operator.mutation.generic.rowpermutation.impl.SwapMutation;
+import moeba.representationwrapper.RepresentationWrapper;
+import moeba.representationwrapper.impl.GenericRepresentationWrapper;
+import moeba.representationwrapper.impl.IndividualRepresentationWrapper;
+import moeba.representationwrapper.impl.SpecificRepresentationWrapper;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.observer.impl.BiclusterCountObserver;
 import moeba.utils.observer.impl.ExternalCacheObserver;
@@ -154,239 +139,31 @@ public final class StaticUtils {
         return res;
     }
 
-    /**
-     * Creates a crossover operator from its string representation.
-     * The string representation of the crossover operator is a semicolon-separated list
-     * of crossover operators.
-     * @param crossoverProbability probability of applying the crossover operator
-     * @param strCrossoverOperator string representation of the desired crossover operator
-     * @param representation representation of the problem
-     * @param numApproxCrossovers number of approximate crossovers to perform
-     * @return a crossover operator
-     * @throws RuntimeException if the crossover operator is not implemented or the number of crossover operators is not supported for the representation
-     */
-    public static CrossoverOperator<CompositeSolution> getCrossoverFromString(double crossoverProbability, String strCrossoverOperator, Representation representation, int numApproxCrossovers) {
-        CrossoverOperator<CompositeSolution> res;
-        String[] listStrCrossovers = strCrossoverOperator.split(";");
-        if (representation == Representation.GENERIC) {
-            if (listStrCrossovers.length == 2) {
-                RowBiclusterMixedCrossover rowBiclusterMixedCrossover = getRowBiclusterMixedCrossoverFromString(listStrCrossovers[0], numApproxCrossovers);
-                CellBinaryCrossover cellBinaryCrossover = getCellBinaryCrossoverFromString(listStrCrossovers[1]);
-                res = new GenericCrossover(crossoverProbability, rowBiclusterMixedCrossover, cellBinaryCrossover);
-            } else if (listStrCrossovers.length == 3) {
-                RowPermutationCrossover rowPermutationCrossover = getRowPermutationCrossoverFromString(listStrCrossovers[0]);
-                BiclusterBinaryCrossover biclusterBinaryCrossover = getBiclusterBinaryCrossoverFromString(listStrCrossovers[1]);
-                CellBinaryCrossover cellBinaryCrossover = getCellBinaryCrossoverFromString(listStrCrossovers[2]);
-                res = new GenericCrossover(crossoverProbability, rowPermutationCrossover, biclusterBinaryCrossover, cellBinaryCrossover);
-            } else {
-                throw new RuntimeException("The number of crossover operators is not supported for the " + representation + " representation.");
-            }
-        } else if (representation == Representation.SPECIFIC) {
-            // TODO: implement
-            res = null;
-        } else if (representation == Representation.INDIVIDUAL) {
-            // TODO: implement
-            res = null;
-        } else {
-            throw new RuntimeException("The representation " + representation + " does not have crossover operators.");
-        }
-
-        return res;
-    }
 
     /**
-     * Creates a row permutation crossover operator from its string representation.
-     * @param str string representation of the desired crossover operator
-     * @return a row permutation crossover operator
-     * @throws RuntimeException if the crossover operator is not implemented
+     * Returns a new representation wrapper instance based on the given representation.
+     * 
+     * @param rep The representation to create a wrapper for.
+     * @param numRows The number of rows in the dataset.
+     * @param numCols The number of columns in the dataset.
+     * @param numBiclusters The number of biclusters in the specific representation.
+     * @return A new representation wrapper instance.
+     * @throws RuntimeException If the given representation is not implemented.
      */
-    public static RowPermutationCrossover getRowPermutationCrossoverFromString(String str) {
-        RowPermutationCrossover res;
-        switch (str.toLowerCase()) {
-            case "cyclecrossover":
-                res = new CycleCrossover();
+    public static RepresentationWrapper getRepresentationWrapperFromRepresentation(Representation rep, int numRows, int numCols, int numBiclusters) {
+        RepresentationWrapper res;
+        switch (rep) {
+            case GENERIC:
+                res = new GenericRepresentationWrapper(numRows, numCols);
                 break;
-            case "edgerecombinationcrossover":
-                res = new EdgeRecombinationCrossover();
+            case SPECIFIC:
+                res = new SpecificRepresentationWrapper(numRows, numCols, numBiclusters);
                 break;
-            case "partiallymappedcrossover":
-                res = new PartiallyMappedCrossover();
+            case INDIVIDUAL:
+                res = new IndividualRepresentationWrapper(numRows, numCols);
                 break;
             default:
-                throw new RuntimeException("The row permutation crossover " + str + " is not implemented.");
-        }
-        return res;
-    }
-
-    /**
-     * Creates a bicluster binary crossover operator from its string representation.
-     * @param str string representation of the desired crossover operator
-     * @return a bicluster binary crossover operator
-     * @throws RuntimeException if the crossover operator is not implemented
-     */
-    public static BiclusterBinaryCrossover getBiclusterBinaryCrossoverFromString(String str) {
-        BiclusterBinaryCrossover res;
-        switch (str.toLowerCase()) {
-            case "bicuniformcrossover":
-                res = new BicUniformCrossover();
-                break;
-            default:
-                throw new RuntimeException(
-                        "The bicluster binary crossover " + str + " is not implemented.");
-        }
-        return res;
-    }
-
-    /**
-     * Creates a cell binary crossover operator from its string representation.
-     * @param str string representation of the desired crossover operator
-     * @return a cell binary crossover operator
-     * @throws RuntimeException if the crossover operator is not implemented
-     */
-    public static CellBinaryCrossover getCellBinaryCrossoverFromString(String str) {
-        CellBinaryCrossover res;
-        switch (str.toLowerCase()) {
-            case "celluniformcrossover":
-                res = new CellUniformCrossover(); // Selects a subset of rows and columns to be included in the offspring cell
-                break;
-            default:
-                throw new RuntimeException(
-                        "The cell binary crossover " + str + " is not implemented.");
-        }
-        return res;
-    }
-
-    /**
-     * Creates a row bicluster mixed crossover operator from its string representation.
-     *
-     * @param str string representation of the desired crossover operator
-     * @param numApproxCrossovers number of approximate crossovers to perform
-     * @return a row bicluster mixed crossover operator
-     * @throws RuntimeException if the crossover operator is not implemented
-     */
-    public static RowBiclusterMixedCrossover getRowBiclusterMixedCrossoverFromString(String str, int numApproxCrossovers) {
-        RowBiclusterMixedCrossover res;
-        float shuffleEnd = 0.75f;
-        float dynamicStartAmount = 0.25f;
-        switch (str.toLowerCase()) {
-            case "groupedbasedcrossover":
-                res = new GroupedBasedCrossover(numApproxCrossovers, shuffleEnd, dynamicStartAmount);
-                break;
-            default:
-                if (str.toLowerCase().matches("groupedbasedcrossover((.*))")) {
-                    String[] strParams = str.split("[()=, ]");
-                    for (int i = 0; i < strParams.length; i++) {
-                        switch (strParams[i].toLowerCase()) {
-                            case "shuffleend":
-                                shuffleEnd = Float.parseFloat(strParams[i + 1]);
-                                break;
-                            case "dynamicstartamount":
-                                dynamicStartAmount = Float.parseFloat(strParams[i + 1]);
-                                break;
-                        }
-                    }
-                    res = new GroupedBasedCrossover(numApproxCrossovers, shuffleEnd, dynamicStartAmount);
-                } else {
-                    throw new RuntimeException(
-                        "The row bicluster mixed crossover " + str + " is not implemented.");
-                }
-        }
-        return res;
-    }
-
-    /**
-     * Returns a MutationOperator object based on a given string representation.
-     * The string representation of the mutation operator is a semicolon-separated list
-     * of mutation operators.
-     *
-     * @param mutationProbability probability of applying the mutation operator
-     * @param strMutationOperator string representation of the desired mutation operator
-     * @param representation representation of the problem
-     * @param numApproxMutations number of approximate mutations to perform
-     * @return a MutationOperator object
-     * @throws RuntimeException if the mutation operator is not implemented or the number of mutation operators is not supported for the representation
-     */
-    public static MutationOperator<CompositeSolution> getMutationFromString(String mutationProbability, String strMutationOperator, Representation representation, int numApproxMutations) {
-        MutationOperator<CompositeSolution> res;
-        String[] listStrMutations = strMutationOperator.split(";");
-        if (representation == Representation.GENERIC) {
-            if (listStrMutations.length == 3) {
-                RowPermutationMutation rowPermutationMutation = getRowPermutationMutationFromString(listStrMutations[0]);
-                BiclusterBinaryMutation biclusterBinaryMutation = getBiclusterBinaryMutationFromString(listStrMutations[1]);
-                CellBinaryMutation cellBinaryMutation = getCellBinaryMutationFromString(listStrMutations[2]);
-                res = new GenericMutation(mutationProbability, numApproxMutations, rowPermutationMutation, biclusterBinaryMutation, cellBinaryMutation);
-            } else {
-                throw new RuntimeException("The number of mutation operators is not supported for the " + representation + " representation.");
-            }
-        } else if (representation == Representation.SPECIFIC) {
-            // TODO: implement
-            res = null;
-        } else if (representation == Representation.INDIVIDUAL) {
-            // TODO: implement
-            res = null;
-        } else {
-            throw new RuntimeException("The representation " + representation + " does not have mutation operators.");
-        }
-
-        return res;
-    }
-
-    /**
-     * Creates a bicluster binary mutation from the given string.
-     *
-     * @param str The string representation of the mutation.
-     * @return The created bicluster binary mutation.
-     * @throws RuntimeException If the mutation is not implemented.
-     */
-    public static BiclusterBinaryMutation getBiclusterBinaryMutationFromString(String str) {
-        BiclusterBinaryMutation res;
-        switch (str.toLowerCase()) {
-            case "bicuniformmutation":
-                res = new BicUniformMutation();
-                break;
-            default:
-                throw new RuntimeException(
-                        "The bicluster binary mutation " + str + " is not implemented.");
-        }
-        return res;
-    }
-
-    /**
-     * Creates a cell binary mutation from the given string.
-     *
-     * @param str The string representation of the mutation.
-     * @return The created cell binary mutation.
-     * @throws RuntimeException If the mutation is not implemented.
-     */
-    public static CellBinaryMutation getCellBinaryMutationFromString(String str) {
-        CellBinaryMutation res;
-        switch (str.toLowerCase()) {
-            case "celluniformmutation":
-                res = new CellUniformMutation();
-                break;
-            default:
-                throw new RuntimeException(
-                        "The cell binary mutation " + str + " is not implemented.");
-        }
-        return res;
-    }
-
-    /**
-     * Creates a row permutation mutation from the given string.
-     *
-     * @param str The string representation of the mutation. Valid options are "swapMutation".
-     * @return The created row permutation mutation.
-     * @throws RuntimeException If the mutation is not implemented.
-     */
-    public static RowPermutationMutation getRowPermutationMutationFromString(String str) {
-        RowPermutationMutation res;
-        switch (str.toLowerCase()) {
-            case "swapmutation":
-                res = new SwapMutation();
-                break;
-            default:
-                throw new RuntimeException(
-                        "The row permutation mutation " + str + " is not implemented.");
+                throw new RuntimeException("The representation " + rep.name() + " is not implemented.");
         }
         return res;
     }
@@ -605,92 +382,7 @@ public final class StaticUtils {
         }
 
         return new AlgorithmResult(computingTime, population);
-    }
-
-    /**
-     * Extracts biclusters from the given composite solution and representation.
-     * 
-     * @param solution the composite solution
-     * @param representation the representation type
-     * @param numRows the number of rows
-     * @param numCols the number of columns
-     * @return a list of biclusters represented as ArrayList of ArrayList of Integers
-     */
-    @SuppressWarnings("unchecked")
-    public static ArrayList<ArrayList<Integer>[]> getBiclustersFromRepresentation(CompositeSolution solution, Representation representation, int numRows, int numCols) {
-        
-        // Initialize the result list
-        ArrayList<ArrayList<Integer>[]> res = new ArrayList<>();
-        
-        // Extract integer and binary variables from the composite solution
-        List<Integer> integerVariables = ((IntegerSolution) solution.variables().get(0)).variables();
-        List<BinarySet> binaryVariables = ((BinarySolution) solution.variables().get(1)).variables();
-        
-        // Check if the representation is generic
-        if (representation == Representation.GENERIC) {
-            
-            // Initialize rows, cols, minRows, minRow and precalculatedSums
-            ArrayList<Integer> rows = new ArrayList<>();
-            ArrayList<Integer> cols = new ArrayList<>();
-            ArrayList<Integer> minRows = new ArrayList<>();
-            int minRow = numRows;
-            int[][] precalculatedSums = new int[numCols][numRows + 1];
-            
-            // Calculate precalculatedSums
-            for (int j = 0; j < numCols; j++) {
-                precalculatedSums[j][0] = 0;
-                for (int i = 1; i <= numRows; i++) {
-                    precalculatedSums[j][i] = precalculatedSums[j][i - 1] + (binaryVariables.get(j+1).get(integerVariables.get(i-1)) ? 1 : 0);
-                }
-            }
-
-            // Extract biclusters
-            for (int i = 0; i < numRows; i++) {
-                int row = integerVariables.get(i);
-                rows.add(row);
-                if (row < minRow) minRow = row;
-                if (binaryVariables.get(0).get(i) || i == numRows - 1) {
-                    for (int j = 0; j < numCols; j++) {
-                        if (((float) (precalculatedSums[j][i + 1] - precalculatedSums[j][i - rows.size() + 1]) / rows.size()) > 0.5) {
-                            cols.add(j);
-                        }
-                    }
-                    
-                    // Create and add bicluster to the result list
-                    ArrayList<Integer>[] bicluster = new ArrayList[2];
-                    Collections.sort(rows);
-                    bicluster[0] = new ArrayList<>(rows);
-                    Collections.sort(cols);
-                    bicluster[1] = new ArrayList<>(cols);
-                    res.add(bicluster);
-
-                    // Clear rows and cols for next iteration
-                    rows.clear();
-                    cols.clear();
-
-                    // Add minRow to list and reset for next iteration
-                    minRows.add(minRow);
-                    minRow = numRows;
-                }
-            }
-
-            // Sort list of biclusters depending on the smallest row
-            List<Integer> indexes = new ArrayList<>();
-            for (int i = 0; i < minRows.size(); i++) {
-                indexes.add(i);
-            }
-            Collections.sort(indexes, Comparator.comparing(minRows::get));
-            ArrayList<ArrayList<Integer>[]> resOrdered = new ArrayList<>();
-            for (int index : indexes) {
-                resOrdered.add(res.get(index));
-            }
-
-            return resOrdered;
-        } else {
-            // TODO: Implement specific representation
-            return null;
-        }
-    }
+    } 
 
     /**
      * Merges biclusters with the same columns, preserving the order of the rows

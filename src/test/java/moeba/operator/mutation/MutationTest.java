@@ -1,4 +1,4 @@
-package moeba.operator.crossover;
+package moeba.operator.mutation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyInt;

@@ -1,8 +1,7 @@
 package moeba.utils.observer;
 
 import moeba.Problem;
-import moeba.Representation;
-import moeba.utils.observer.impl.BiclusterCountObserver;
+import moeba.representationwrapper.RepresentationWrapper;
 import moeba.utils.observer.impl.ExternalCacheObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
 import moeba.utils.storage.CacheStorage;
@@ -27,35 +26,22 @@ public class ProblemObserver extends Problem {
         void writeToFile(String strFile);
     }
 
-    /**
-     * Constructor for ProblemObserver with basic setup.
-     * @param observers Array of ObserverInterface instances to be notified upon solution evaluations.
-     * @param data Problem-specific data required for initialization.
-     * @param types Array of Class types related to the problem setup.
-     * @param strFitnessFunctions Array of strings representing fitness functions for the problem.
-     * @param externalCache A cache for storing externally computed values to avoid recalculations.
-     * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
-     */
-    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches) {
-        super(data, types, strFitnessFunctions, externalCache, internalCaches);
-        this.observers = observers;
-        checkObservers();
-    }
+    public ProblemObserver(Object[][] data, Class<?>[] types, String[] strFitnessFunctions,
+            CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches,
+            RepresentationWrapper representationWrapper, ObserverInterface[] observers) {
 
-    /**
-     * Extended constructor for ProblemObserver including number of biclusters.
-     * @param observers Array of ObserverInterface instances to be notified upon solution evaluations.
-     * @param data Problem-specific data required for initialization.
-     * @param types Array of Class types related to the problem setup.
-     * @param strFitnessFunctions Array of strings representing fitness functions for the problem.
-     * @param externalCache A cache for storing externally computed values to avoid recalculations.
-     * @param internalCaches An array of caches for storing internally computed values, one per fitness function.
-     * @param numBiclusters Number of biclusters to be considered, specific to the problem domain.
-     */
-    public ProblemObserver(ObserverInterface[] observers, Object[][] data, Class<?>[] types, String[] strFitnessFunctions, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches, int numBiclusters) {
-        super(data, types, strFitnessFunctions, externalCache, internalCaches, numBiclusters);
+        super(data, types, strFitnessFunctions, externalCache, internalCaches, representationWrapper);
+
+        for (ObserverInterface observer : observers) {
+            if (observer instanceof ExternalCacheObserver && super.externalCache == null) {
+                throw new IllegalArgumentException("External cache observer requires external cache.");
+            }
+            if (observer instanceof InternalCacheObserver && super.internalCaches == null) {
+                throw new IllegalArgumentException("Internal cache observer requires internal cache.");
+            }
+        }
+
         this.observers = observers;
-        checkObservers();
     }
 
     /**
@@ -73,26 +59,6 @@ public class ProblemObserver extends Problem {
         }
         // Return the evaluated solution
         return result;
-    }
-
-    /**
-     * Checks that the given observers can be used with the current problem settings.
-     *
-     * @throws IllegalArgumentException if an observer cannot be used with the current problem
-     * representation
-     */
-    public void checkObservers() {
-        for (ObserverInterface observer : this.observers) {
-            if (super.representation == Representation.SPECIFIC && observer instanceof BiclusterCountObserver) {
-                throw new IllegalArgumentException("Specific representation does not support BiclusterSizeObserver.");
-            }
-            if (observer instanceof ExternalCacheObserver && super.externalCache == null) {
-                throw new IllegalArgumentException("External cache observer requires external cache.");
-            }
-            if (observer instanceof InternalCacheObserver && super.internalCaches == null) {
-                throw new IllegalArgumentException("Internal cache observer requires internal cache.");
-            }
-        }
     }
 
 }

@@ -1,0 +1,320 @@
+package moeba.representationwrapper.impl;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import moeba.operator.crossover.generic.GenericCrossover;
+import moeba.operator.crossover.generic.biclusterbinary.BiclusterBinaryCrossover;
+import moeba.operator.crossover.generic.biclusterbinary.impl.BicUniformCrossover;
+import moeba.operator.crossover.generic.cellbinary.CellBinaryCrossover;
+import moeba.operator.crossover.generic.cellbinary.impl.CellUniformCrossover;
+import moeba.operator.crossover.generic.rowbiclustermixed.RowBiclusterMixedCrossover;
+import moeba.operator.crossover.generic.rowbiclustermixed.impl.GroupedBasedCrossover;
+import moeba.operator.crossover.generic.rowpermutation.RowPermutationCrossover;
+import moeba.operator.crossover.generic.rowpermutation.impl.CycleCrossover;
+import moeba.operator.crossover.generic.rowpermutation.impl.EdgeRecombinationCrossover;
+import moeba.operator.crossover.generic.rowpermutation.impl.PartiallyMappedCrossover;
+import moeba.operator.mutation.generic.GenericMutation;
+import moeba.operator.mutation.generic.biclusterbinary.BiclusterBinaryMutation;
+import moeba.operator.mutation.generic.biclusterbinary.impl.BicUniformMutation;
+import moeba.operator.mutation.generic.cellbinary.CellBinaryMutation;
+import moeba.operator.mutation.generic.cellbinary.impl.CellUniformMutation;
+import moeba.operator.mutation.generic.rowpermutation.RowPermutationMutation;
+import moeba.operator.mutation.generic.rowpermutation.impl.SwapMutation;
+import moeba.representationwrapper.RepresentationWrapper;
+import org.uma.jmetal.operator.crossover.CrossoverOperator;
+import org.uma.jmetal.operator.mutation.MutationOperator;
+import org.uma.jmetal.solution.binarysolution.BinarySolution;
+import org.uma.jmetal.solution.compositesolution.CompositeSolution;
+import org.uma.jmetal.solution.integersolution.IntegerSolution;
+import org.uma.jmetal.util.binarySet.BinarySet;
+
+public class GenericRepresentationWrapper extends RepresentationWrapper {
+    private float minGeneticContent;
+    private float maxGeneticContent;
+    private Random random;
+
+    public GenericRepresentationWrapper(int numRows, int numColumns, float minGeneticContent, float maxGeneticContent) {
+        super(numRows, numColumns);
+        this.minGeneticContent = minGeneticContent;
+        this.maxGeneticContent = maxGeneticContent;
+        this.random = new Random();
+    }
+
+    public GenericRepresentationWrapper(int numRows, int numColumns) {
+        this(numRows, numColumns, 0.05f, 0.25f);
+    }
+
+    public CompositeSolution buildComposition(IntegerSolution integerSolution, BinarySolution binarySolution) {
+
+        // Ensure that the initial number of biclusters is varied within an acceptable range
+        binarySolution.variables().get(0).clear();
+        float limit = random.nextFloat()*(maxGeneticContent - minGeneticContent) + minGeneticContent;
+
+        // Ensure that the integer part is a permutation
+        List<Integer> rowIndexes = IntStream.rangeClosed(0, super.numRows - 1).boxed().collect(Collectors.toList());
+        Collections.shuffle(rowIndexes);
+
+        // Take advantage of the loop to perform both operations simultaneously
+        for (int i = 0; i < super.numRows; i++) {
+            integerSolution.variables().set(i, rowIndexes.get(i));
+            if (random.nextFloat() < limit) {
+                binarySolution.variables().get(0).set(i);
+            }
+        }
+
+        return new CompositeSolution(Arrays.asList(integerSolution, binarySolution));
+    }
+
+    @Override
+    public int getNumIntVariables() {
+        return super.numRows; 
+    }
+
+    @Override
+    public int getNumBinaryVariables() {
+        return 1 + super.numColumns;
+    }
+
+    @Override
+    public int getLowerIntegerBound() {
+        return 0;
+    }
+
+    @Override
+    public int getUpperIntegerBound() {
+        return super.numRows - 1;
+    }
+
+    @Override
+    public int getNumBitsPerVariable() {
+        return super.numRows;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public ArrayList<ArrayList<Integer>[]> getBiclustersFromRepresentation(CompositeSolution solution) {
+        
+        // Initialize the result list
+        ArrayList<ArrayList<Integer>[]> res = new ArrayList<>();
+        
+        // Extract integer and binary variables from the composite solution
+        List<Integer> integerVariables = ((IntegerSolution) solution.variables().get(0)).variables();
+        List<BinarySet> binaryVariables = ((BinarySolution) solution.variables().get(1)).variables();
+        
+        // Initialize rows, cols, minRows, minRow and precalculatedSums
+        ArrayList<Integer> rows = new ArrayList<>();
+        ArrayList<Integer> cols = new ArrayList<>();
+        ArrayList<Integer> minRows = new ArrayList<>();
+        int minRow = super.numRows;
+        int[][] precalculatedSums = new int[super.numColumns][super.numRows + 1];
+        
+        // Calculate precalculatedSums
+        for (int j = 0; j < super.numColumns; j++) {
+            precalculatedSums[j][0] = 0;
+            for (int i = 1; i <= super.numRows; i++) {
+                precalculatedSums[j][i] = precalculatedSums[j][i - 1] + (binaryVariables.get(j+1).get(integerVariables.get(i-1)) ? 1 : 0);
+            }
+        }
+
+        // Extract biclusters
+        for (int i = 0; i < super.numRows; i++) {
+            int row = integerVariables.get(i);
+            rows.add(row);
+            if (row < minRow) minRow = row;
+            if (binaryVariables.get(0).get(i) || i == super.numRows - 1) {
+                for (int j = 0; j < super.numColumns; j++) {
+                    if (((float) (precalculatedSums[j][i + 1] - precalculatedSums[j][i - rows.size() + 1]) / rows.size()) > 0.5) {
+                        cols.add(j);
+                    }
+                }
+                
+                // Create and add bicluster to the result list
+                ArrayList<Integer>[] bicluster = new ArrayList[2];
+                Collections.sort(rows);
+                bicluster[0] = new ArrayList<>(rows);
+                Collections.sort(cols);
+                bicluster[1] = new ArrayList<>(cols);
+                res.add(bicluster);
+
+                // Clear rows and cols for next iteration
+                rows.clear();
+                cols.clear();
+
+                // Add minRow to list and reset for next iteration
+                minRows.add(minRow);
+                minRow = super.numRows;
+            }
+        }
+
+        // Sort list of biclusters depending on the smallest row
+        List<Integer> indexes = new ArrayList<>();
+        for (int i = 0; i < minRows.size(); i++) {
+            indexes.add(i);
+        }
+        Collections.sort(indexes, Comparator.comparing(minRows::get));
+        ArrayList<ArrayList<Integer>[]> resOrdered = new ArrayList<>();
+        for (int index : indexes) {
+            resOrdered.add(res.get(index));
+        }
+
+        return resOrdered;
+    }
+
+    @Override
+    public CrossoverOperator<CompositeSolution> getCrossoverFromString(String strCrossoverOperator, double crossoverProbability, int numApproxCrossovers) {
+        CrossoverOperator<CompositeSolution> res;
+        String[] listStrCrossovers = strCrossoverOperator.split(";");
+
+        if (listStrCrossovers.length == 2) {
+            RowBiclusterMixedCrossover rowBiclusterMixedCrossover = getRowBiclusterMixedCrossoverFromString(listStrCrossovers[0], numApproxCrossovers);
+            CellBinaryCrossover cellBinaryCrossover = getCellBinaryCrossoverFromString(listStrCrossovers[1]);
+            res = new GenericCrossover(crossoverProbability, rowBiclusterMixedCrossover, cellBinaryCrossover);
+        } else if (listStrCrossovers.length == 3) {
+            RowPermutationCrossover rowPermutationCrossover = getRowPermutationCrossoverFromString(listStrCrossovers[0]);
+            BiclusterBinaryCrossover biclusterBinaryCrossover = getBiclusterBinaryCrossoverFromString(listStrCrossovers[1]);
+            CellBinaryCrossover cellBinaryCrossover = getCellBinaryCrossoverFromString(listStrCrossovers[2]);
+            res = new GenericCrossover(crossoverProbability, rowPermutationCrossover, biclusterBinaryCrossover, cellBinaryCrossover);
+        } else {
+            throw new RuntimeException("The number of crossover operators is not supported for GENERIC representation.");
+        }
+        return res;
+    }
+
+    @Override
+    public MutationOperator<CompositeSolution> getMutationFromString(String strMutationOperator, String mutationProbability, int numApproxMutations) {
+        MutationOperator<CompositeSolution> res;
+        String[] listStrMutations = strMutationOperator.split(";");
+
+        if (listStrMutations.length == 3) {
+            RowPermutationMutation rowPermutationMutation = getRowPermutationMutationFromString(listStrMutations[0]);
+            BiclusterBinaryMutation biclusterBinaryMutation = getBiclusterBinaryMutationFromString(listStrMutations[1]);
+            CellBinaryMutation cellBinaryMutation = getCellBinaryMutationFromString(listStrMutations[2]);
+            res = new GenericMutation(mutationProbability, numApproxMutations, rowPermutationMutation, biclusterBinaryMutation, cellBinaryMutation);
+        } else {
+            throw new RuntimeException("The number of mutation operators is not supported for the GENERIC representation.");
+        }
+
+        return res;
+    }
+
+    public RowPermutationCrossover getRowPermutationCrossoverFromString(String str) {
+        RowPermutationCrossover res;
+        switch (str.toLowerCase()) {
+            case "cyclecrossover":
+                res = new CycleCrossover();
+                break;
+            case "edgerecombinationcrossover":
+                res = new EdgeRecombinationCrossover();
+                break;
+            case "partiallymappedcrossover":
+                res = new PartiallyMappedCrossover();
+                break;
+            default:
+                throw new RuntimeException("The row permutation crossover " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    public BiclusterBinaryCrossover getBiclusterBinaryCrossoverFromString(String str) {
+        BiclusterBinaryCrossover res;
+        switch (str.toLowerCase()) {
+            case "bicuniformcrossover":
+                res = new BicUniformCrossover();
+                break;
+            default:
+                throw new RuntimeException(
+                        "The bicluster binary crossover " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    public CellBinaryCrossover getCellBinaryCrossoverFromString(String str) {
+        CellBinaryCrossover res;
+        switch (str.toLowerCase()) {
+            case "celluniformcrossover":
+                res = new CellUniformCrossover();
+                break;
+            default:
+                throw new RuntimeException(
+                        "The cell binary crossover " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    public static RowBiclusterMixedCrossover getRowBiclusterMixedCrossoverFromString(String str, int numApproxCrossovers) {
+        RowBiclusterMixedCrossover res;
+        float shuffleEnd = 0.75f;
+        float dynamicStartAmount = 0.25f;
+        switch (str.toLowerCase()) {
+            case "groupedbasedcrossover":
+                res = new GroupedBasedCrossover(numApproxCrossovers, shuffleEnd, dynamicStartAmount);
+                break;
+            default:
+                if (str.toLowerCase().matches("groupedbasedcrossover((.*))")) {
+                    String[] strParams = str.split("[()=, ]");
+                    for (int i = 0; i < strParams.length; i++) {
+                        switch (strParams[i].toLowerCase()) {
+                            case "shuffleend":
+                                shuffleEnd = Float.parseFloat(strParams[i + 1]);
+                                break;
+                            case "dynamicstartamount":
+                                dynamicStartAmount = Float.parseFloat(strParams[i + 1]);
+                                break;
+                        }
+                    }
+                    res = new GroupedBasedCrossover(numApproxCrossovers, shuffleEnd, dynamicStartAmount);
+                } else {
+                    throw new RuntimeException(
+                        "The row bicluster mixed crossover " + str + " is not implemented.");
+                }
+        }
+        return res;
+    }
+
+    public static BiclusterBinaryMutation getBiclusterBinaryMutationFromString(String str) {
+        BiclusterBinaryMutation res;
+        switch (str.toLowerCase()) {
+            case "bicuniformmutation":
+                res = new BicUniformMutation();
+                break;
+            default:
+                throw new RuntimeException(
+                        "The bicluster binary mutation " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    public static CellBinaryMutation getCellBinaryMutationFromString(String str) {
+        CellBinaryMutation res;
+        switch (str.toLowerCase()) {
+            case "celluniformmutation":
+                res = new CellUniformMutation();
+                break;
+            default:
+                throw new RuntimeException(
+                        "The cell binary mutation " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    public static RowPermutationMutation getRowPermutationMutationFromString(String str) {
+        RowPermutationMutation res;
+        switch (str.toLowerCase()) {
+            case "swapmutation":
+                res = new SwapMutation();
+                break;
+            default:
+                throw new RuntimeException(
+                        "The row permutation mutation " + str + " is not implemented.");
+        }
+        return res;
+    }
+    
+}
