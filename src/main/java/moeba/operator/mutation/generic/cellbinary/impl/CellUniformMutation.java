@@ -19,10 +19,12 @@ public class CellUniformMutation implements CellBinaryMutation {
 
     @Override
     public void execute(BinarySet bs, double mutationProbability) {
-        for (int i = 0; i < bs.getBinarySetLength(); i++) {
-            if (random.nextFloat() < mutationProbability) {
-                bs.set(i, !bs.get(i));
-            }
+        int numBits = bs.getBinarySetLength();
+        int numBitsChanged = (int)((mutationProbability-0.05 + 0.1*random.nextFloat())*numBits);
+        int index;
+        for (int i = 0; i < numBitsChanged; i++) {
+            index = random.nextInt(numBits);
+            bs.set(index, !bs.get(index));
         }
     }
     

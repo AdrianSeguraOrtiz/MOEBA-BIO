@@ -19,14 +19,16 @@ public class BicUniformMutation implements BiclusterBinaryMutation {
 
     @Override
     public void execute(BinarySet bs, double mutationProbability) {
-        for (int i = 0; i < bs.getBinarySetLength(); i++) {
-            if (random.nextFloat() < mutationProbability) {
-                boolean join = random.nextBoolean();
-                int index = join ? bs.nextSetBit(i) : bs.nextClearBit(i);
-                if (index == -1) index = join ? bs.previousSetBit(i) : bs.previousClearBit(i);
-                if (index == -1) index = i;
-                bs.set(index, !bs.get(index));
-            }
+        int numBits = bs.getBinarySetLength();
+        int numBitsChanged = (int)((mutationProbability-0.05 + 0.1*random.nextFloat())*numBits);
+        int index;
+        for (int i = 0; i < numBitsChanged; i++) {
+            index = random.nextInt(numBits);
+            boolean join = random.nextBoolean();
+            int targetIndex = join ? bs.nextSetBit(index) : bs.nextClearBit(index);
+            if (targetIndex == -1) targetIndex = join ? bs.previousSetBit(index) : bs.previousClearBit(index);
+            if (targetIndex == -1) targetIndex = index;
+            bs.set(targetIndex, !bs.get(targetIndex));
         }
     }
     

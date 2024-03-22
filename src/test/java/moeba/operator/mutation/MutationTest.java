@@ -50,11 +50,13 @@ public class MutationTest {
     public void testUniformMutation() {
         BinarySet bs = new BinarySet(20);
         BinarySet expected = new BinarySet(20);
-        expected.set(0);
+        for (int i = 0; i < 10; i++) {
+            expected.set(i);
+        }
 
         Random mockRandom = Mockito.mock(Random.class);
-        Mockito.when(mockRandom.nextFloat()).thenReturn(0.4f, 0.6f);
-        Mockito.when(mockRandom.nextBoolean()).thenReturn(false);
+        Mockito.when(mockRandom.nextFloat()).thenReturn(0.5f);
+        Mockito.when(mockRandom.nextInt(anyInt())).thenReturn(0, 1,2,3,4,5,6,7,8,9);
         BicUniformMutation bicUniformMutation = new BicUniformMutation(mockRandom);
 
         bicUniformMutation.execute(bs, 0.5f);
@@ -70,11 +72,11 @@ public class MutationTest {
         IntegerSolution s = createIntegerSolution(sol);
 
         Random mockRandom = Mockito.mock(Random.class);
-        Mockito.when(mockRandom.nextFloat()).thenReturn(0.4f, 0.6f);
-        Mockito.when(mockRandom.nextInt(anyInt())).thenReturn(6);
+        Mockito.when(mockRandom.nextFloat()).thenReturn(0.5f);
+        Mockito.when(mockRandom.nextInt(anyInt())).thenReturn(0, 6);
         SwapMutation swapMutation = new SwapMutation(mockRandom);
 
-        swapMutation.execute(s, 0.5f);
+        swapMutation.execute(s, 0.1f);
         int[] res = s.variables().stream().mapToInt(Integer::intValue).toArray();
         int[] expected = new int[]{8,6,2,1,5,4,3,7,0,9};
         assert(Arrays.equals(res, expected));
