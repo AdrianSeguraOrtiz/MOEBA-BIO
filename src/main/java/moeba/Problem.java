@@ -23,7 +23,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
     private FitnessFunction[] fitnessFunctions;
     protected CacheStorage<String, Double[]> externalCache;
     protected CacheStorage<String, Double>[] internalCaches;
-    private RepresentationWrapper representationWrapper;
+    protected RepresentationWrapper representationWrapper;
     private EvaluateFunction evaluateFunction;
 
     public interface EvaluateFunction {
@@ -74,7 +74,6 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
     @Override
     public CompositeSolution evaluate(CompositeSolution solution) {
         ArrayList<ArrayList<Integer>[]> biclusters = representationWrapper.getBiclustersFromRepresentation(solution);
-        StaticUtils.mergeBiclustersSameColumns(biclusters, solution);
         return evaluateFunction.evaluate(solution, biclusters);
     }
 

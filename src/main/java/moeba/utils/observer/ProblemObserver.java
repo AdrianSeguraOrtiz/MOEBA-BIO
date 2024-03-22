@@ -2,6 +2,8 @@ package moeba.utils.observer;
 
 import moeba.Problem;
 import moeba.representationwrapper.RepresentationWrapper;
+import moeba.representationwrapper.impl.GenericRepresentationWrapper;
+import moeba.utils.observer.impl.BiclusterCountObserver;
 import moeba.utils.observer.impl.ExternalCacheObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
 import moeba.utils.storage.CacheStorage;
@@ -31,16 +33,7 @@ public class ProblemObserver extends Problem {
             RepresentationWrapper representationWrapper, ObserverInterface[] observers) {
 
         super(data, types, strFitnessFunctions, externalCache, internalCaches, representationWrapper);
-
-        for (ObserverInterface observer : observers) {
-            if (observer instanceof ExternalCacheObserver && super.externalCache == null) {
-                throw new IllegalArgumentException("External cache observer requires external cache.");
-            }
-            if (observer instanceof InternalCacheObserver && super.internalCaches == null) {
-                throw new IllegalArgumentException("Internal cache observer requires internal cache.");
-            }
-        }
-
+        checkObservers(observers);
         this.observers = observers;
     }
 
@@ -61,4 +54,22 @@ public class ProblemObserver extends Problem {
         return result;
     }
 
+    /**
+     * Checks if the observers passed in the constructor are valid.
+     * Throws an IllegalArgumentException if any of the observers require missing dependencies.
+     * @param observers the observers to be checked
+     */
+    public void checkObservers(ObserverInterface[] observers) {
+        for (ObserverInterface observer : observers) {
+            if (observer instanceof ExternalCacheObserver && super.externalCache == null) {
+                throw new IllegalArgumentException("External cache observer requires external cache.");
+            }
+            if (observer instanceof InternalCacheObserver && super.internalCaches == null) {
+                throw new IllegalArgumentException("Internal cache observer requires internal cache.");
+            }
+            if (observer instanceof BiclusterCountObserver && !(super.representationWrapper instanceof GenericRepresentationWrapper)) {
+                throw new IllegalArgumentException("Bicluster count observer requires generic representation wrapper.");
+            }
+        }
+    }
 }

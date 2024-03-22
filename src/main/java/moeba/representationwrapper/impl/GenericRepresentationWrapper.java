@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 import moeba.operator.crossover.generic.GenericCrossover;
 import moeba.operator.crossover.generic.biclusterbinary.BiclusterBinaryCrossover;
@@ -153,6 +155,11 @@ public class GenericRepresentationWrapper extends RepresentationWrapper {
             }
         }
 
+        // Clean unused variables
+        rows = null;
+        cols = null;
+        precalculatedSums = null;
+
         // Sort list of biclusters depending on the smallest row
         List<Integer> indexes = new ArrayList<>();
         for (int i = 0; i < minRows.size(); i++) {
@@ -164,7 +171,28 @@ public class GenericRepresentationWrapper extends RepresentationWrapper {
             resOrdered.add(res.get(index));
         }
 
+        // Clean unused variables
+        res = null;
+
+        // Merge biclusters with same columns
+        mergeBiclustersSameColumns(resOrdered, solution);
+
         return resOrdered;
+    }
+
+    @Override
+    public String[] getVarLabels() {
+        String[] varLabels = new String[2 * super.numRows + super.numRows * super.numColumns];
+        for (int i = 0; i < super.numRows; i++) {
+            varLabels[i] = "R" + i;
+        }
+        for (int i = 0; i < super.numRows; i++) {
+            varLabels[i + super.numRows] = "P" + i;
+        }
+        for (int i = 2*super.numRows; i < varLabels.length; i++) {
+            varLabels[i] = "Cell-R" + (i % super.numRows) + "-C" + ((i / super.numRows) - 2);
+        }
+        return varLabels;
     }
 
     @Override
@@ -315,6 +343,50 @@ public class GenericRepresentationWrapper extends RepresentationWrapper {
                         "The row permutation mutation " + str + " is not implemented.");
         }
         return res;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void mergeBiclustersSameColumns(ArrayList<ArrayList<Integer>[]> biclusters, CompositeSolution solution) {
+
+        // Mapa para agrupar filas por sus columnas correspondientes
+        Map<String, ArrayList<Integer>> map = new LinkedHashMap<>();
+
+        // For each bicluster, add its rows to the map with the columns as key
+        for (ArrayList<Integer>[] bicluster : biclusters) {
+            String key = bicluster[1].toString(); // column list as string
+            map.computeIfAbsent(key, k -> new ArrayList<>())
+                .addAll(bicluster[0]); // add rows to column list
+        }
+
+        // Clear old biclusters list
+        biclusters.clear();
+
+        // Extract integer and binary variables from the composite solution
+        List<Integer> integerVariables = ((IntegerSolution) solution.variables().get(0)).variables();
+        integerVariables.clear();
+        BinarySet binaryVariables = ((BinarySolution) solution.variables().get(1)).variables().get(0);
+        binaryVariables.clear();
+
+        // For each group of rows with the same columns, create a new bicluster
+        for (Map.Entry<String, ArrayList<Integer>> entry : map.entrySet()) {
+            // Get rows and sort them
+            ArrayList<Integer> rows = entry.getValue();
+            Collections.sort(rows);
+
+            // Reconstruct columns from the key
+            String key = entry.getKey();
+            ArrayList<Integer> cols = key.length() <= 2 ? new ArrayList<>() : new ArrayList<>(Arrays.asList(key.substring(1, key.length() - 1).split(", ")))
+                .stream().map(Integer::parseInt)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+            // Create and add the new bicluster
+            ArrayList<Integer>[] bicluster = new ArrayList[2];
+            bicluster[0] = rows;
+            integerVariables.addAll(rows);
+            binaryVariables.set(integerVariables.size()-1);
+            bicluster[1] = cols;
+            biclusters.add(bicluster);
+        }
     }
     
 }

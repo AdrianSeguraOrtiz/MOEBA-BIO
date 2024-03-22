@@ -3,6 +3,12 @@ package moeba.representationwrapper.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import moeba.operator.crossover.individual.IndividualCrossover;
+import moeba.operator.crossover.individual.rowcolbinary.RowColBinaryCrossover;
+import moeba.operator.crossover.individual.rowcolbinary.impl.RowColUniformCrossover;
+import moeba.operator.mutation.individual.IndividualMutation;
+import moeba.operator.mutation.individual.rowcolbinary.RowColBinaryMutation;
+import moeba.operator.mutation.individual.rowcolbinary.impl.RowColUniformMutation;
 import moeba.representationwrapper.RepresentationWrapper;
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.mutation.MutationOperator;
@@ -83,17 +89,71 @@ public class IndividualRepresentationWrapper extends RepresentationWrapper {
     }
 
     @Override
-    public CrossoverOperator<CompositeSolution> getCrossoverFromString(String strCrossoverOperator,
-            double crossoverProbability, int numApproxCrossovers) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getCrossoverFromString'");
+    public String[] getVarLabels() {
+        String[] varLabels = new String[super.numRows + super.numColumns];
+        for (int i = 0; i < super.numRows; i++) {
+            varLabels[i] = "R" + i;
+        }
+        for (int i = 0; i < super.numColumns; i++) {
+            varLabels[i + super.numRows] = "C" + i;
+        }
+        return varLabels;
     }
 
     @Override
-    public MutationOperator<CompositeSolution> getMutationFromString(String strMutationOperator,
-            String mutationProbability, int numApproxMutations) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getMutationFromString'");
+    public CrossoverOperator<CompositeSolution> getCrossoverFromString(String strCrossoverOperator, double crossoverProbability, int numApproxCrossovers) {
+        CrossoverOperator<CompositeSolution> res;
+        String[] listStrCrossovers = strCrossoverOperator.split(";");
+
+        if (listStrCrossovers.length == 1) {
+            RowColBinaryCrossover rowColBinaryCrossover = getRowColBinaryCrossoverFromString(listStrCrossovers[0]);
+            res = new IndividualCrossover(crossoverProbability, rowColBinaryCrossover);
+        } else {
+            throw new RuntimeException("The number of crossover operators is not supported for GENERIC representation.");
+        }
+        
+        return res;
+    }
+
+    @Override
+    public MutationOperator<CompositeSolution> getMutationFromString(String strMutationOperator, String mutationProbability, int numApproxMutations) {
+        MutationOperator<CompositeSolution> res;
+        String[] listStrMutations = strMutationOperator.split(";");
+
+        if (listStrMutations.length == 1) {
+            RowColBinaryMutation rowColBinaryMutation = getRowColBinaryMutationFromString(listStrMutations[0]);
+            res = new IndividualMutation(mutationProbability, numApproxMutations, rowColBinaryMutation);
+        } else {
+            throw new RuntimeException("The number of mutation operators is not supported for GENERIC representation.");
+        }
+        
+        return res;
+    }
+
+    public RowColBinaryCrossover getRowColBinaryCrossoverFromString(String str) {
+        RowColBinaryCrossover res;
+        switch (str.toLowerCase()) {
+            case "rowcoluniformcrossover":
+                res = new RowColUniformCrossover();
+                break;
+            default:
+                throw new RuntimeException(
+                        "The row col binary crossover " + str + " is not implemented.");
+        }
+        return res;
+    }
+
+    public RowColBinaryMutation getRowColBinaryMutationFromString(String str) {
+        RowColBinaryMutation res;
+        switch (str.toLowerCase()) {
+            case "rowcoluniformmutation":
+                res = new RowColUniformMutation();
+                break;
+            default:
+                throw new RuntimeException(
+                        "The row col binary mutation " + str + " is not implemented.");
+        }
+        return res;
     }
     
 }

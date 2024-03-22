@@ -22,10 +22,12 @@ public class CellUniformCrossover implements CellBinaryCrossover {
     @Override
     public void execute(BinarySet s1, BinarySet s2) {
         // Loop through each bit in the parent cells
+        boolean aux;
         for (int i = 0; i < s1.getBinarySetLength(); i++) {
             if (random.nextBoolean()) {
+                aux = s1.get(i);
                 s1.set(i, s2.get(i));
-                s2.set(i, s1.get(i));
+                s2.set(i, aux);
             }
         }
     }

@@ -44,7 +44,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--num-biclusters"}, description = "Number of biclusters. Only for SPECIFIC representation", defaultValue = "-1")
     private int numBiclusters;
 
-    @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSize, BiclusterVariance, BiclusterRowVariance, MeanSquaredResidue, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSize;BiclusterRowVariance;MeanSquaredResidue")
+    @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSize, BiclusterSizeWeighted, BiclusterVariance, BiclusterRowVariance, MeanSquaredResidue, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSize;BiclusterRowVariance;MeanSquaredResidue")
     private String strFitnessFormulas;
 
     @Option(names = {"--population-size"}, description = "Population size", defaultValue = "100")
@@ -71,7 +71,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
             description = "Crossover operator. The following are configuration templates according to each type of representation:\n" + //
                 "\t- GENERIC: RowPermutationCrossover;BiclusterBinaryCrossover;CellBinaryCrossover or RowBiclusterMixedCrossover;CellBinaryCrossover\n" + //
                 "\t- SPECIFIC: ...\n" + //
-                "\t- INDIVIDUAL: ...\n" + //
+                "\t- INDIVIDUAL: RowColBinaryCrossover\n" + //
                 "\t- DYNAMIC: GENERIC-SPECIFIC\n" + //
                 "In case any operator requires additional parameters, they shall be specified in brackets in the following way OperatorName(parameter1=value, parameter2=value, ...)",
             defaultValue = "GroupedBasedCrossover;CellUniformCrossover")
@@ -81,7 +81,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
             description = "Mutation operator. Same explanation as for the crossover operator:\n" + //
                 "\t- GENERIC: RowPermutationMutation;BiclusterBinaryMutation;CellBinaryMutation\n" + //
                 "\t- SPECIFIC: ...\n" + //
-                "\t- INDIVIDUAL: ...\n" + //
+                "\t- INDIVIDUAL: RowColBinaryMutation\n" + //
                 "\t- DYNAMIC: GENERIC-SPECIFIC", 
             defaultValue = "SwapMutation;BicUniformMutation;CellUniformMutation")
     private String strMutationOperator;
@@ -204,17 +204,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // Write the data of the last population (pareto front approximation)
-        String[] varLabels = new String[2 * data.length + data.length * data[0].length];
-        for (int i = 0; i < data.length; i++) {
-            varLabels[i] = "R" + i;
-        }
-        for (int i = 0; i < data.length; i++) {
-            varLabels[i + data.length] = "P" + i;
-        }
-        for (int i = 2*data.length; i < varLabels.length; i++) {
-            varLabels[i] = "Cell-R" + (i % data.length) + "-C" + ((i / data.length) - 2);
-        }
-        new SolutionListVARWithHeader(result.population, strFitnessFormulas.split(";"), varLabels)
+        new SolutionListVARWithHeader(result.population, strFitnessFormulas.split(";"), representationWrapper.getVarLabels())
                 .setVarFileOutputContext(new DefaultFileOutputContext(outputFolder + "/VAR.csv", ","))
                 .setFunFileOutputContext(new DefaultFileOutputContext(outputFolder + "/FUN.csv", ","))
                 .print();

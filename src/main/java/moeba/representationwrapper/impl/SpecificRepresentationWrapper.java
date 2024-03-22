@@ -57,6 +57,12 @@ public class SpecificRepresentationWrapper extends RepresentationWrapper {
     }
 
     @Override
+    public String[] getVarLabels() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getVarLabels'");
+    }
+
+    @Override
     public CrossoverOperator<CompositeSolution> getCrossoverFromString(String strCrossoverOperator,
             double crossoverProbability, int numApproxCrossovers) {
         // TODO Auto-generated method stub

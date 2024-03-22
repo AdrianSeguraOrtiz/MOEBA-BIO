@@ -7,13 +7,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
@@ -42,10 +39,7 @@ import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.mutation.MutationOperator;
 import org.uma.jmetal.operator.selection.impl.NaryTournamentSelection;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
-import org.uma.jmetal.solution.integersolution.IntegerSolution;
-import org.uma.jmetal.solution.binarysolution.BinarySolution;
 import org.uma.jmetal.util.SolutionListUtils;
-import org.uma.jmetal.util.binarySet.BinarySet;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
 import org.uma.jmetal.util.termination.Termination;
 import org.uma.jmetal.util.termination.impl.TerminationByEvaluations;
@@ -383,59 +377,6 @@ public final class StaticUtils {
 
         return new AlgorithmResult(computingTime, population);
     } 
-
-    /**
-     * Merges biclusters with the same columns, preserving the order of the rows
-     * and the order of the columns. The merged biclusters are added to the
-     * given solution.
-     *
-     * @param biclusters the biclusters to merge
-     * @param solution the composite solution where the merged biclusters are
-     * added
-     */
-    @SuppressWarnings("unchecked")
-    public static void mergeBiclustersSameColumns(ArrayList<ArrayList<Integer>[]> biclusters, CompositeSolution solution) {
-
-        // Mapa para agrupar filas por sus columnas correspondientes
-        Map<String, ArrayList<Integer>> map = new LinkedHashMap<>();
-
-        // For each bicluster, add its rows to the map with the columns as key
-        for (ArrayList<Integer>[] bicluster : biclusters) {
-            String key = bicluster[1].toString(); // column list as string
-            map.computeIfAbsent(key, k -> new ArrayList<>())
-                .addAll(bicluster[0]); // add rows to column list
-        }
-
-        // Clear old biclusters list
-        biclusters.clear();
-
-        // Extract integer and binary variables from the composite solution
-        List<Integer> integerVariables = ((IntegerSolution) solution.variables().get(0)).variables();
-        integerVariables.clear();
-        BinarySet binaryVariables = ((BinarySolution) solution.variables().get(1)).variables().get(0);
-        binaryVariables.clear();
-
-        // For each group of rows with the same columns, create a new bicluster
-        for (Map.Entry<String, ArrayList<Integer>> entry : map.entrySet()) {
-            // Get rows and sort them
-            ArrayList<Integer> rows = entry.getValue();
-            Collections.sort(rows);
-
-            // Reconstruct columns from the key
-            String key = entry.getKey();
-            ArrayList<Integer> cols = key.length() <= 2 ? new ArrayList<>() : new ArrayList<>(Arrays.asList(key.substring(1, key.length() - 1).split(", ")))
-                .stream().map(Integer::parseInt)
-                .collect(Collectors.toCollection(ArrayList::new));
-
-            // Create and add the new bicluster
-            ArrayList<Integer>[] bicluster = new ArrayList[2];
-            bicluster[0] = rows;
-            integerVariables.addAll(rows);
-            binaryVariables.set(integerVariables.size()-1);
-            bicluster[1] = cols;
-            biclusters.add(bicluster);
-        }
-    }
 
     /**
      * Converts a bicluster to a string representation

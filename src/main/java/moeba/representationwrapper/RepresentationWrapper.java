@@ -29,4 +29,6 @@ public abstract class RepresentationWrapper {
     public abstract ArrayList<ArrayList<Integer>[]> getBiclustersFromRepresentation(CompositeSolution solution);
     public abstract CrossoverOperator<CompositeSolution> getCrossoverFromString(String strCrossoverOperator, double crossoverProbability, int numApproxCrossovers);
     public abstract MutationOperator<CompositeSolution> getMutationFromString(String strMutationOperator, String mutationProbability, int numApproxMutations);
+
+    public abstract String[] getVarLabels();
 }
