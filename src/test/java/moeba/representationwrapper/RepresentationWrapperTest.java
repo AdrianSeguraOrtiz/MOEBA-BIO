@@ -40,7 +40,7 @@ public class RepresentationWrapperTest {
             binarySolution.variables().set(i, bits);
         }
         
-        GenericRepresentationWrapper wrapper = new GenericRepresentationWrapper(8,8);
+        GenericRepresentationWrapper wrapper = new GenericRepresentationWrapper(8,8,0.05f,0.2f);
         ArrayList<ArrayList<Integer>[]> res = wrapper.getBiclustersFromRepresentation(new CompositeSolution(Arrays.asList(integerSolution, binarySolution)));
 
         // Num of biclusters
@@ -97,7 +97,7 @@ public class RepresentationWrapperTest {
             binarySolution.variables().set(i, bits);
         }
         
-        GenericRepresentationWrapper wrapper = new GenericRepresentationWrapper(8,8);
+        GenericRepresentationWrapper wrapper = new GenericRepresentationWrapper(8,8,0.05f,0.2f);
         ArrayList<ArrayList<Integer>[]> res = wrapper.getBiclustersFromRepresentation(new CompositeSolution(Arrays.asList(integerSolution, binarySolution)));
 
         // Num of biclusters
