@@ -29,7 +29,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@Command(name = "RunnerMOEBA", description = "Multi-Objective Evolutionary Biclustering Algorithm (MOEBA) for Heterogeneous Clinical Data (HeCliDa) with progressive representation for self-determination on the number of clusters", mixinStandardHelpOptions = true)
+@Command(name = "RunnerMOEBA", description = "Multi-Objective Evolutionary Biclustering Algorithm (MOEBA) for Heterogeneous Clinical Data (HeCliDa) with progressive representation for self-determination on the number of clusters", mixinStandardHelpOptions = true, showDefaultValues = true, sortOptions = false)
 public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
     @Option(names = {"--input-dataset"}, description = "Path to the input CSV dataset on which you want to perform biclustering", required = true)
@@ -41,8 +41,14 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--representation"}, description = "Representation as a string. Possible values: GENERIC, SPECIFIC, INDIVIDUAL, DYNAMIC", defaultValue = "GENERIC")
     private Representation representation;
 
-    @Option(names = {"--num-biclusters"}, description = "Number of biclusters. Only for SPECIFIC representation", defaultValue = "-1")
-    private int numBiclusters;
+    @Option(names = {"--specific-num-biclusters"}, description = "Number of biclusters. Only for SPECIFIC representation", defaultValue = "-1")
+    private int specificNumBiclusters;
+
+    @Option(names = {"--generic-initial-min-num-bics"}, description = "Initial minimum number of biclusters. Only for GENERIC representation. Default: 5% of the number of rows", defaultValue = "-1")
+    private int genericInitialMinNumBics;
+
+    @Option(names = {"--generic-initial-max-num-bics"}, description = "Initial maximum number of biclusters. Only for GENERIC representation. Default: 25% of the number of rows", defaultValue = "-1")
+    private int genericInitialMaxNumBics;
 
     @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSize, BiclusterSizeWeighted, BiclusterVariance, BiclusterRowVariance, MeanSquaredResidue, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSize;BiclusterRowVariance;MeanSquaredResidue")
     private String strFitnessFormulas;
@@ -108,8 +114,13 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 
         // If the representation is not SPECIFIC the number of biclusters cant be set
-        if (this.representation != Representation.SPECIFIC && this.numBiclusters != -1) {
+        if (this.representation != Representation.SPECIFIC && this.specificNumBiclusters != -1) {
             throw new IllegalArgumentException("No se puede fijar el número de biclusters para la representación " + this.representation);
+        }
+
+        // If the representation is not GENERIC the initial number of biclusters cant be set
+        if (this.representation != Representation.GENERIC && (this.genericInitialMinNumBics != -1 || this.genericInitialMaxNumBics != -1)) {
+            throw new IllegalArgumentException("No se puede fijar el rango inicial de biclusters para la representación " + this.representation);
         }
 
         // Read input dataset
@@ -166,7 +177,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // Problem
-        RepresentationWrapper representationWrapper = StaticUtils.getRepresentationWrapperFromRepresentation(representation, data.length, data[0].length, numBiclusters);
+        float genericInitialMinPercBics = (float) genericInitialMinNumBics / data.length;
+        float genericInitialMaxPercBics = (float) genericInitialMaxNumBics / data.length;
+        RepresentationWrapper representationWrapper = StaticUtils.getRepresentationWrapperFromRepresentation(representation, data.length, data[0].length, specificNumBiclusters, genericInitialMinPercBics, genericInitialMaxPercBics);
         Problem problem = new ProblemObserver(data, types, fitnessFunctions, externalCache, internalCaches, representationWrapper, observers);
 
         // Operators

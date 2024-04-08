@@ -140,18 +140,20 @@ public final class StaticUtils {
      * @param rep The representation to create a wrapper for.
      * @param numRows The number of rows in the dataset.
      * @param numCols The number of columns in the dataset.
-     * @param numBiclusters The number of biclusters in the specific representation.
+     * @param specificNumBiclusters The number of biclusters in the specific representation.
+     * @param genericInitialMinPercBics The initial minimum percentage of biclusters in the generic representation.
+     * @param genericInitialMaxPercBics The initial maximum percentage of biclusters in the generic representation.
      * @return A new representation wrapper instance.
      * @throws RuntimeException If the given representation is not implemented.
      */
-    public static RepresentationWrapper getRepresentationWrapperFromRepresentation(Representation rep, int numRows, int numCols, int numBiclusters) {
+    public static RepresentationWrapper getRepresentationWrapperFromRepresentation(Representation rep, int numRows, int numCols, int specificNumBiclusters, float genericInitialMinPercBics, float genericInitialMaxPercBics) {
         RepresentationWrapper res;
         switch (rep) {
             case GENERIC:
-                res = new GenericRepresentationWrapper(numRows, numCols);
+                res = new GenericRepresentationWrapper(numRows, numCols, genericInitialMinPercBics, genericInitialMaxPercBics);
                 break;
             case SPECIFIC:
-                res = new SpecificRepresentationWrapper(numRows, numCols, numBiclusters);
+                res = new SpecificRepresentationWrapper(numRows, numCols, specificNumBiclusters);
                 break;
             case INDIVIDUAL:
                 res = new IndividualRepresentationWrapper(numRows, numCols);
@@ -205,6 +207,7 @@ public final class StaticUtils {
         typeMapping.put("int", Integer.class);
         typeMapping.put("double", Double.class);
         typeMapping.put("float", Float.class);
+        typeMapping.put("float64", Float.class);
         typeMapping.put("boolean", Boolean.class);
 
         // Initialize an array to hold the Class objects for the columns

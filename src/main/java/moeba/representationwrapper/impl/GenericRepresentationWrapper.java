@@ -38,26 +38,22 @@ import org.uma.jmetal.solution.integersolution.IntegerSolution;
 import org.uma.jmetal.util.binarySet.BinarySet;
 
 public class GenericRepresentationWrapper extends RepresentationWrapper {
-    private float minGeneticContent;
-    private float maxGeneticContent;
+    private float genericInitialMinPercBics;
+    private float genericInitialMaxPercBics;
     private Random random;
 
-    public GenericRepresentationWrapper(int numRows, int numColumns, float minGeneticContent, float maxGeneticContent) {
+    public GenericRepresentationWrapper(int numRows, int numColumns, float genericInitialMinPercBics, float genericInitialMaxPercBics) {
         super(numRows, numColumns);
-        this.minGeneticContent = minGeneticContent;
-        this.maxGeneticContent = maxGeneticContent;
+        this.genericInitialMinPercBics = genericInitialMinPercBics;
+        this.genericInitialMaxPercBics = genericInitialMaxPercBics;
         this.random = new Random();
-    }
-
-    public GenericRepresentationWrapper(int numRows, int numColumns) {
-        this(numRows, numColumns, 0.05f, 0.25f);
     }
 
     public CompositeSolution buildComposition(IntegerSolution integerSolution, BinarySolution binarySolution) {
 
         // Ensure that the initial number of biclusters is varied within an acceptable range
         binarySolution.variables().get(0).clear();
-        float limit = random.nextFloat()*(maxGeneticContent - minGeneticContent) + minGeneticContent;
+        float limit = random.nextFloat()*(genericInitialMaxPercBics - genericInitialMinPercBics) + genericInitialMinPercBics;
 
         // Ensure that the integer part is a permutation
         List<Integer> rowIndexes = IntStream.rangeClosed(0, super.numRows - 1).boxed().collect(Collectors.toList());
