@@ -177,8 +177,8 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // Problem
-        float genericInitialMinPercBics = (float) genericInitialMinNumBics / data.length;
-        float genericInitialMaxPercBics = (float) genericInitialMaxNumBics / data.length;
+        float genericInitialMinPercBics = genericInitialMinNumBics != -1 ? (float) genericInitialMinNumBics / data.length : 0.05f;
+        float genericInitialMaxPercBics = genericInitialMaxNumBics != -1 ? (float) genericInitialMaxNumBics / data.length : 0.25f;
         RepresentationWrapper representationWrapper = StaticUtils.getRepresentationWrapperFromRepresentation(representation, data.length, data[0].length, specificNumBiclusters, genericInitialMinPercBics, genericInitialMaxPercBics);
         Problem problem = new ProblemObserver(data, types, fitnessFunctions, externalCache, internalCaches, representationWrapper, observers);
 
