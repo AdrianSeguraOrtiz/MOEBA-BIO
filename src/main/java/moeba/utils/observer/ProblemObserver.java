@@ -28,7 +28,7 @@ public class ProblemObserver extends Problem {
         void writeToFile(String strFile);
     }
 
-    public ProblemObserver(Object[][] data, Class<?>[] types, String[] strFitnessFunctions,
+    public ProblemObserver(String[][] data, Class<?>[] types, String[] strFitnessFunctions,
             CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches,
             RepresentationWrapper representationWrapper, ObserverInterface[] observers) {
 

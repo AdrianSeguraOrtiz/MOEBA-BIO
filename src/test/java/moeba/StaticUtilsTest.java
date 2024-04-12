@@ -4,7 +4,7 @@ import org.testng.annotations.Test;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import static moeba.StaticUtils.csvToObjectMatrix;
+import static moeba.StaticUtils.csvToStringMatrix;
 import java.io.File;
 import java.io.IOException;
 
@@ -14,9 +14,9 @@ import static org.testng.Assert.assertEquals;
 public class StaticUtilsTest {
 
     @Test
-    public void testCsvToObjectMatrix() throws IOException {
+    public void testcsvToStringMatrix() throws IOException {
         // Create a temporary CSV file with a header
-        File inputDataset = File.createTempFile("testCsvToObjectMatrix", ".csv");
+        File inputDataset = File.createTempFile("testcsvToStringMatrix", ".csv");
         inputDataset.deleteOnExit();
         BufferedWriter bw = new BufferedWriter(new FileWriter(inputDataset));
         bw.write("header1,header2,header3\n");
@@ -24,7 +24,7 @@ public class StaticUtilsTest {
         bw.write("value21,value22,value23\n");
         bw.close();
         // Read the CSV file and check the resulting array
-        Object[][] matrix = csvToObjectMatrix(inputDataset);
+        String[][] matrix = csvToStringMatrix(inputDataset);
         assertEquals(2, matrix.length);
         assertEquals(3, matrix[0].length);
         assertEquals("value11", matrix[0][0]);

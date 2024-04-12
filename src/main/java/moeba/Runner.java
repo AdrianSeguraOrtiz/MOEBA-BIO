@@ -44,10 +44,10 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--specific-num-biclusters"}, description = "Number of biclusters. Only for SPECIFIC representation", defaultValue = "-1")
     private int specificNumBiclusters;
 
-    @Option(names = {"--generic-initial-min-num-bics"}, description = "Initial minimum number of biclusters. Only for GENERIC representation. Default: 5% of the number of rows", defaultValue = "-1")
+    @Option(names = {"--generic-initial-min-num-bics"}, description = "Initial minimum number of biclusters. Only for GENERIC representation. Default: 5%% of the number of rows", defaultValue = "-1")
     private int genericInitialMinNumBics;
 
-    @Option(names = {"--generic-initial-max-num-bics"}, description = "Initial maximum number of biclusters. Only for GENERIC representation. Default: 25% of the number of rows", defaultValue = "-1")
+    @Option(names = {"--generic-initial-max-num-bics"}, description = "Initial maximum number of biclusters. Only for GENERIC representation. Default: 25%% of the number of rows", defaultValue = "-1")
     private int genericInitialMaxNumBics;
 
     @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSize, BiclusterSizeWeighted, BiclusterVariance, BiclusterRowVariance, MeanSquaredResidue, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSize;BiclusterRowVariance;MeanSquaredResidue")
@@ -101,7 +101,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--observers"}, description = "List of observers separated by semicolon. Possible values: BiclusterCountObserver, FitnessEvolutionObserver, NumEvaluationsObserver, ExternalCacheObserver, InternalCacheObserver", defaultValue = "BiclusterCountObserver;FitnessEvolutionObserver;NumEvaluationsObserver;ExternalCacheObserver;InternalCacheObserver")
     private String strObservers;
 
-    @Option(names = {"--num-threads"}, description = "Number of threads. Default value = all")
+    @Option(names = {"--num-threads"}, description = "Number of threads. Default: All")
     private int numThreads = Runtime.getRuntime().availableProcessors();
 
     @Option(names = {"--output-folder"}, description = "Output folder", defaultValue = "./MOEBA-HeCliDa/")
@@ -124,9 +124,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // Read input dataset
-        Object[][] data = null;
+        String[][] data = null;
         try {
-            data = StaticUtils.csvToObjectMatrix(inputDataset);
+            data = StaticUtils.csvToStringMatrix(inputDataset);
         } catch (IOException e) {
             e.printStackTrace();
         }

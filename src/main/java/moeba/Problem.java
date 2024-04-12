@@ -18,8 +18,8 @@ import org.uma.jmetal.solution.integersolution.impl.DefaultIntegerSolution;
  */
 public class Problem extends AbstractMixedIntegerBinaryProblem {
 
-    protected Object [][] data;
-    private Class<?> [] types;
+    protected String[][] data;
+    private Class<?>[] types;
     private FitnessFunction[] fitnessFunctions;
     protected CacheStorage<String, Double[]> externalCache;
     protected CacheStorage<String, Double>[] internalCaches;
@@ -31,7 +31,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
     }
 
     public Problem(
-        Object[][] data, 
+        String[][] data, 
         Class<?> [] types, 
         String[] strFitnessFunctions, 
         CacheStorage<String, Double[]> externalCache, 
@@ -55,7 +55,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
         // Initialize fitness functions based on provided string identifiers
         this.fitnessFunctions = new FitnessFunction[strFitnessFunctions.length];
         for (int i = 0; i < strFitnessFunctions.length; i++) {
-            this.fitnessFunctions[i] = StaticUtils.getFitnessFunctionFromString(strFitnessFunctions[i], data, types, internalCaches == null ? null : internalCaches[i]);
+            this.fitnessFunctions[i] = StaticUtils.getFitnessFunctionFromString(strFitnessFunctions[i], this.data, this.types, internalCaches == null ? null : internalCaches[i]);
         }
 
         // Configure the problem's parameters

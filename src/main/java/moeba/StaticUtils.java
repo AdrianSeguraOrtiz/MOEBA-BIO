@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.ArrayList;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
@@ -18,6 +17,7 @@ import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSize;
 import moeba.fitnessfunction.impl.BiclusterSizeWeighted;
+import moeba.fitnessfunction.impl.BiclusterVariance;
 import moeba.representationwrapper.RepresentationWrapper;
 import moeba.representationwrapper.impl.GenericRepresentationWrapper;
 import moeba.representationwrapper.impl.IndividualRepresentationWrapper;
@@ -54,7 +54,7 @@ public final class StaticUtils {
      * @param cache the internal cache of the fitness function
      * @return a FitnessFunction object
      */
-    public static FitnessFunction getFitnessFunctionFromString(String str, Object[][] data, Class<?>[] types, CacheStorage<String, Double> cache) {
+    public static FitnessFunction getFitnessFunctionFromString(String str, String[][] data, Class<?>[] types, CacheStorage<String, Double> cache) {
         FitnessFunction res;
         switch (str.toLowerCase()) {
 
@@ -64,10 +64,10 @@ public final class StaticUtils {
             case "biclustersizeweighted":
                 res = new BiclusterSizeWeighted(data, types, cache);
                 break;
-            /**
             case "biclustervariance":
-                res = new BiclusterVariance(data, types);
+                res = new BiclusterVariance(data, types, cache);
                 break;
+            /**
             case "biclusterrowvariance":
                 res = new BiclusterRowVariance(data, types);
                 break;
@@ -165,24 +165,22 @@ public final class StaticUtils {
     }
 
     /**
-     * Converts a CSV file to a bidimensional array of objects.
+     * Converts a CSV file to a bidimensional array of strings.
      * 
      * @param inputDataset The input CSV file to read
-     * @return A bidimensional array of objects, where each row corresponds to a line in the CSV file and each column
+     * @return A bidimensional array of strings, where each row corresponds to a line in the CSV file and each column
      *         corresponds to a value in that line.
      * @throws IOException If there is an error reading the input CSV file
      */
-    public static Object[][] csvToObjectMatrix(File inputDataset) throws IOException {
+    public static String[][] csvToStringMatrix(File inputDataset) throws IOException {
         // Read all lines from the CSV file sequentially
         List<String> lines = Files.readAllLines(inputDataset.toPath());
         
         // Process lines in parallel to convert them to an array of objects
-        Object[][] matrix = lines.parallelStream()
+        String[][] matrix = lines.parallelStream()
             .skip(1) // Ignore the first line as it contains the heading
             .map(line -> line.split(",")) // Assumes comma as CSV separator
-            .map(array -> (Object[]) array) // Direct conversion of String[] to Object[]
-            .collect(Collectors.toList()) // Collect results in a list
-            .toArray(new Object[0][]); // Convert list to a bidimensional array of objects
+            .toArray(String[][]::new); // Convert list to a bidimensional array of strings
         
         return matrix;
     }
