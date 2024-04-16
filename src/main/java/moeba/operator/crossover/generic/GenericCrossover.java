@@ -54,11 +54,11 @@ public class GenericCrossover implements CrossoverOperator<CompositeSolution> {
 
         List<CompositeSolution> offspring = new ArrayList<>();
 
-        CompositeSolution offSpring1 = (CompositeSolution) source.get(0).copy();
+        CompositeSolution offSpring1 = new CompositeSolution(source.get(0));
         IntegerSolution offSpring1IntSol = (IntegerSolution) offSpring1.variables().get(0);
         BinarySolution offSpring1BinSol = (BinarySolution) offSpring1.variables().get(1);
 
-        CompositeSolution offSpring2 = (CompositeSolution) source.get(1).copy();
+        CompositeSolution offSpring2 = new CompositeSolution(source.get(1));
         IntegerSolution offSpring2IntSol = (IntegerSolution) offSpring2.variables().get(0);
         BinarySolution offSpring2BinSol = (BinarySolution) offSpring2.variables().get(1);
 

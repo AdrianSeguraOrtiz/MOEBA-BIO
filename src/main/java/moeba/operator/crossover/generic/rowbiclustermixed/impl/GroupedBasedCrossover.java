@@ -76,16 +76,14 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
 
         // Ensure the last bit of each individual is set to true to match their cardinality with the number of biclusters
         int n = is1.variables().size();
-        bs1.set(n-1);
-        bs2.set(n-1);
 
         // Determine the number of biclusters to cross for each individual, ensuring at least one is crossed
-        int numBicsP1 = Math.max((int) (bs1.cardinality() * amount), 1);
-        int numBicsP2 = Math.max((int) (bs2.cardinality() * amount), 1);
+        int numBicsP1 = Math.max((int) ((bs1.cardinality() + (bs1.get(n -1) ? 0 : 1 )) * amount), 1);
+        int numBicsP2 = Math.max((int) ((bs2.cardinality() + (bs2.get(n -1) ? 0 : 1 )) * amount), 1);
 
         // Calculate the range of positions for the biclusters to be crossed
-        int[] limits1 = amount != 1 ? getLimits(bs1, random.nextInt(n-1)+1, numBicsP1, n) : new int[] {0, n};
-        int[] limits2 = amount != 1 ? getLimits(bs2, random.nextInt(n-1)+1, numBicsP2, n) : new int[] {0, n};
+        int[] limits1 = amount != 1 ? getLimits(bs1, random.nextInt(n-2)+1, numBicsP1, n) : new int[] {0, n-1};
+        int[] limits2 = amount != 1 ? getLimits(bs2, random.nextInt(n-2)+1, numBicsP2, n) : new int[] {0, n-1};
         
         // The bics vector stores at position i the identifier of the bicluster to which row i belongs. If row i has been out of range, it will be assigned the value 0
         // The cuts vector stores at position i the cut point of bicluster i. Since bicluster 0 represents out-of-range leftovers, cuts[0] will be left at the default value of 0.
@@ -93,9 +91,9 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         int b1 = 1;
         int[] bicsP1 = new int[n];
         int[] cutsP1 = new int[numBicsP1 + 1];
-        for (int i = limits1[0]; i < limits1[1]; i++) {
+        for (int i = limits1[0]+1; i < limits1[1]+1; i++) {
             bicsP1[is1.variables().get(i)] = b1;
-            if (bs1.get(i)) {
+            if (bs1.get(i) || i == n-1) {
                 cutsP1[b1] = i;
                 b1 += 1;
             }
@@ -105,9 +103,9 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         int b2 = 1;
         int[] bicsP2 = new int[n];
         int[] cutsP2 = new int[numBicsP2 + 1];
-        for (int i = limits2[0]; i < limits2[1]; i++) {
+        for (int i = limits2[0]+1; i < limits2[1]+1; i++) {
             bicsP2[is2.variables().get(i)] = b2;
-            if (bs2.get(i)) {
+            if (bs2.get(i) || i == n-1) {
                 cutsP2[b2] = i;
                 b2 += 1;
             }
@@ -128,31 +126,31 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         // The rows already added to the solution are stored in the visited vector to ensure the maintenance of the permutation. In this case, it is initialized by setting to true the rows that do not participate in the crossing and that remain outside the range
         // For individual 1:
         boolean[] visitedO1 = new boolean[n];
-        for (int i = 0; i < limits1[0]; i++) {
+        for (int i = 0; i <= limits1[0]; i++) {
             visitedO1[is1.variables().get(i)] = true;
         }
-        for (int i = limits1[1]; i < n; i++) {
+        for (int i = limits1[1]+1; i < n; i++) {
             visitedO1[is1.variables().get(i)] = true;
         }
 
         // For individual 2:
         boolean[] visitedO2 = new boolean[n];
-        for (int i = 0; i < limits2[0]; i++) {
+        for (int i = 0; i <= limits2[0]; i++) {
             visitedO2[is2.variables().get(i)] = true;
         }
-        for (int i = limits2[1]; i < n; i++) {
+        for (int i = limits2[1]+1; i < n; i++) {
             visitedO2[is2.variables().get(i)] = true;
         }
 
         // Copies of the genetic content of the parents are extracted in the ranges to be crossed
-        int[] p1 = is1.variables().stream().skip(limits1[0]).limit(limits1[1] - limits1[0]).mapToInt(Integer::intValue).toArray();
-        int[] p2 = is2.variables().stream().skip(limits2[0]).limit(limits2[1] - limits2[0]).mapToInt(Integer::intValue).toArray();
+        int[] p1 = is1.variables().stream().skip(limits1[0]+1).limit(limits1[1] - limits1[0]).mapToInt(Integer::intValue).toArray();
+        int[] p2 = is2.variables().stream().skip(limits2[0]+1).limit(limits2[1] - limits2[0]).mapToInt(Integer::intValue).toArray();
 
         // Reset the bits of the action zone and update the permutation by grouping matches
-        bs1.clear(limits1[0], limits1[1]);
-        updateSolutions(is1, limits1[0], limits2[0], p1, p2, bs1, cutsP1, cutsP2, bestMatchesP1, visitedO1, doned);
-        bs2.clear(limits2[0], limits2[1]);
-        updateSolutions(is2, limits2[0], limits1[0], p2, p1, bs2, cutsP2, cutsP1, bestMatchesP2, visitedO2, doned);
+        bs1.clear(limits1[0]+1, limits1[1]+1);
+        updateSolutions(is1, limits1[0]+1, limits2[0]+1, p1, p2, bs1, cutsP1, cutsP2, bestMatchesP1, visitedO1, doned);
+        bs2.clear(limits2[0]+1, limits2[1]+1);
+        updateSolutions(is2, limits2[0]+1, limits1[0]+1, p2, p1, bs2, cutsP2, cutsP1, bestMatchesP2, visitedO2, doned);
     }
 
     /**
@@ -191,10 +189,16 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
                 else if (nextEnd != -1) {
                     res[1] = nextEnd;
                 }
+                // If the next bit is -1, the seed has fallen between the end and the last 1
+                else if (res[1] == seed) {
+                    res[1] = n-1;
+                }
             } else {
                 // Same as before but giving priority to the queue
                 if (nextEnd != -1) {
                     res[1] = nextEnd;
+                } else if (res[1] == seed) {
+                    res[1] = n-1;
                 } else if (nextStart != -1) {
                     res[0] = nextStart;
                 } else if (res[0] == seed) {
@@ -203,8 +207,6 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
             }
             nb++;
         }
-        res[0]++;
-        if (res[1] != n) res[1]++;
 
         return res;
     }
