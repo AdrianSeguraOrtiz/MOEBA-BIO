@@ -357,12 +357,6 @@ public class GenericRepresentationWrapper extends RepresentationWrapper {
         // Clear old biclusters list
         biclusters.clear();
 
-        // Extract integer and binary variables from the composite solution
-        List<Integer> integerVariables = ((IntegerSolution) solution.variables().get(0)).variables();
-        integerVariables.clear();
-        BinarySet binaryVariables = ((BinarySolution) solution.variables().get(1)).variables().get(0);
-        binaryVariables.clear();
-
         // For each group of rows with the same columns, create a new bicluster
         for (Map.Entry<String, ArrayList<Integer>> entry : map.entrySet()) {
             // Get rows and sort them
@@ -378,8 +372,6 @@ public class GenericRepresentationWrapper extends RepresentationWrapper {
             // Create and add the new bicluster
             ArrayList<Integer>[] bicluster = new ArrayList[2];
             bicluster[0] = rows;
-            integerVariables.addAll(rows);
-            binaryVariables.set(integerVariables.size()-1);
             bicluster[1] = cols;
             biclusters.add(bicluster);
         }
