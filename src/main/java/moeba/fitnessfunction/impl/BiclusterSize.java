@@ -17,6 +17,6 @@ public class BiclusterSize extends FitnessFunction {
     }
 
     protected double getBiclusterScore(ArrayList<Integer>[] bicluster) {
-        return (double) (bicluster[0].size() * bicluster[1].size());
+        return (double) (bicluster[0].size() * bicluster[1].size()) / (data.length * data[0].length);
     }
 }
