@@ -171,7 +171,8 @@ public class GenericRepresentationWrapper extends RepresentationWrapper {
         res = null;
 
         // Merge biclusters with same columns
-        mergeBiclustersSameColumns(resOrdered, solution);
+        // TODO: Hacer esto en fase de reparacion / busqueda local
+        //mergeBiclustersSameColumns(resOrdered, solution);
 
         return resOrdered;
     }
