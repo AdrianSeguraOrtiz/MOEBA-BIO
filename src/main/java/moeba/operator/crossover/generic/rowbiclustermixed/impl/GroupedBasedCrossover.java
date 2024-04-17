@@ -82,31 +82,41 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         int numBicsP2 = Math.max((int) ((bs2.cardinality() + (bs2.get(n -1) ? 0 : 1 )) * amount), 1);
 
         // Calculate the range of positions for the biclusters to be crossed
-        int[] limits1 = amount != 1 ? getLimits(bs1, random.nextInt(n-2)+1, numBicsP1, n) : new int[] {0, n-1};
-        int[] limits2 = amount != 1 ? getLimits(bs2, random.nextInt(n-2)+1, numBicsP2, n) : new int[] {0, n-1};
+        int[] limits1 = amount != 1 ? getLimits(bs1, random.nextInt(n-2)+1, numBicsP1, n) : new int[] {-1, n-1};
+        int[] limits2 = amount != 1 ? getLimits(bs2, random.nextInt(n-2)+1, numBicsP2, n) : new int[] {-1, n-1};
+        if (limits1[0] == 0 && !bs1.get(0)) limits1[0] = -1;
+        if (limits2[0] == 0 && !bs2.get(0)) limits2[0] = -1;
         
         // The bics vector stores at position i the identifier of the bicluster to which row i belongs. If row i has been out of range, it will be assigned the value 0
         // The cuts vector stores at position i the cut point of bicluster i. Since bicluster 0 represents out-of-range leftovers, cuts[0] will be left at the default value of 0.
         // For individual 1:
         int b1 = 1;
+        int size1, maxSize1 = 0, minSize1 = n;
         int[] bicsP1 = new int[n];
         int[] cutsP1 = new int[numBicsP1 + 1];
         for (int i = limits1[0]+1; i < limits1[1]+1; i++) {
             bicsP1[is1.variables().get(i)] = b1;
             if (bs1.get(i) || i == n-1) {
                 cutsP1[b1] = i;
+                size1 = i - cutsP1[b1-1];
+                if (b1 != 1 && size1 > maxSize1) maxSize1 = size1;
+                if (b1 != 1 && size1 < minSize1) minSize1 = size1;
                 b1 += 1;
             }
         }
 
         // For individual 2:
         int b2 = 1;
+        int size2, maxSize2 = 0, minSize2 = n;
         int[] bicsP2 = new int[n];
         int[] cutsP2 = new int[numBicsP2 + 1];
         for (int i = limits2[0]+1; i < limits2[1]+1; i++) {
             bicsP2[is2.variables().get(i)] = b2;
             if (bs2.get(i) || i == n-1) {
                 cutsP2[b2] = i;
+                size2 = i - cutsP2[b2-1];
+                if (b2 != 1 && size2 > maxSize2) maxSize2 = size2;
+                if (b2 != 1 && size2 < minSize2) minSize2 = size2;
                 b2 += 1;
             }
         }
@@ -148,9 +158,9 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
 
         // Reset the bits of the action zone and update the permutation by grouping matches
         bs1.clear(limits1[0]+1, limits1[1]+1);
-        updateSolutions(is1, limits1[0]+1, limits2[0]+1, p1, p2, bs1, cutsP1, cutsP2, bestMatchesP1, visitedO1, doned);
+        updateSolutions(is1, limits1[0]+1, limits2[0]+1, p1, p2, bs1, cutsP1, cutsP2, bestMatchesP1, visitedO1, doned, maxSize1, minSize1);
         bs2.clear(limits2[0]+1, limits2[1]+1);
-        updateSolutions(is2, limits2[0]+1, limits1[0]+1, p2, p1, bs2, cutsP2, cutsP1, bestMatchesP2, visitedO2, doned);
+        updateSolutions(is2, limits2[0]+1, limits1[0]+1, p2, p1, bs2, cutsP2, cutsP1, bestMatchesP2, visitedO2, doned, maxSize2, minSize2);
     }
 
     /**
@@ -249,14 +259,16 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
      * @param bestMatches The indices of the best matching biclusters between the two parents.
      * @param visited An array tracking which rows have already been added to the solution.
      * @param doned The percentage of crossover operations completed.
+     * @param maxSize The maximum bicluster size of the solution.
+     * @param minSize The minimum bicluster size of the solution.
      */
-    public void updateSolutions(IntegerSolution is, int start, int startComp, int[] p, int[] pComp, BinarySet bs, int[] cuts, int[] cutsComp, int[] bestMatches, boolean[] visited, float doned) {
+    public void updateSolutions(IntegerSolution is, int start, int startComp, int[] p, int[] pComp, BinarySet bs, int[] cuts, int[] cutsComp, int[] bestMatches, boolean[] visited, float doned, int maxSize, int minSize) {
         int bm;
         int cut, prevCut = start;
         int cutComp, prevCutComp = 0;
         int cnt = 0;
-        float r;
-        int numRows;
+        float r, growthFactor;
+        int initialSize, numRows;
         ArrayList<Integer> rows = new ArrayList<>();
         for (int b = 1; b < bestMatches.length; b++){
             bm = bestMatches[b];
@@ -282,12 +294,15 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
             for (int j = 0; j < numRows; j++) {
                 is.variables().set(start + cnt + j, rows.get(j));
             }
-            r = random.nextInt(3);
+
+            r = random.nextFloat();
+            initialSize = cut - prevCut + 1;
+            growthFactor = (1 - (float) initialSize / numRows + (float) (initialSize - minSize) / Math.max(1, maxSize - minSize)) / 2;
             bs.set(start + cnt + numRows - 1);
-            if (r == 0) {
+            if (r < growthFactor * growthFactor) {
                 bs.set(start + cnt + numRows/3 - 1);
                 bs.set(start + cnt + 2*numRows/3 - 1);
-            } else if (r == 1) {
+            } else if (r < growthFactor) {
                 bs.set(start + cnt + numRows/2 - 1);
             }
             cnt += numRows;

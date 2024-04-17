@@ -177,7 +177,7 @@ public class CrossoverTest {
         IntegerSolution is2 = createIntegerSolution(parent2);
 
         Random mockRandom = Mockito.mock(Random.class);
-        Mockito.when(mockRandom.nextInt(anyInt())).thenReturn(2);
+        Mockito.when(mockRandom.nextFloat()).thenReturn(1.0f);
         GroupedBasedCrossover crossoverOperator = new GroupedBasedCrossover(1, 0, 1, mockRandom);
         crossoverOperator.execute(is1, is2, bs1, bs2);
 
@@ -205,21 +205,21 @@ public class CrossoverTest {
 
         int[] parent1 = new int[]{0,1,2,3,4,5,6,7,8};
         IntegerSolution is1 = createIntegerSolution(parent1);
-        int[] parent2 = new int[]{0,1,8,3,4,7,6,2,5};
+        int[] parent2 = new int[]{3,4,2,0,1,5,6,7,8};
         IntegerSolution is2 = createIntegerSolution(parent2);
 
         Random mockRandom = Mockito.mock(Random.class);
-        Mockito.when(mockRandom.nextInt(anyInt())).thenReturn(6);
+        Mockito.when(mockRandom.nextFloat()).thenReturn(1.0f);
         GroupedBasedCrossover crossoverOperator = new GroupedBasedCrossover(1, 0, 0.75f, mockRandom);
         crossoverOperator.execute(is1, is2, bs1, bs2);
 
         int[] child1 = is1.variables().stream().mapToInt(Integer::intValue).toArray();
         int[] child2 = is2.variables().stream().mapToInt(Integer::intValue).toArray();
-        int[] expectedOffsprint1 = new int[]{0,1,2,3,4,5,7,6,8};
-        int[] expectedOffsprint2 = new int[]{0,1,8,3,4,7,5,6,2};
+        int[] expectedOffsprint1 = new int[]{0,1,2,5,3,4,6,7,8};
+        int[] expectedOffsprint2 = new int[]{3,4,2,5,0,1,6,7,8};
         assert(Arrays.equals(child1, expectedOffsprint1));
         assert(Arrays.equals(child2, expectedOffsprint2));
-        assertEquals("001000101", bs1.toString());
-        assertEquals("001000101", bs2.toString());
+        assertEquals("000101001", bs1.toString());
+        assertEquals("000101001", bs2.toString());
     }
 }
