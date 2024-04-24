@@ -299,11 +299,13 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
             initialSize = cut - prevCut + 1;
             growthFactor = (1 - (float) initialSize / numRows + (float) (initialSize - minSize) / Math.max(1, maxSize - minSize)) / 2;
             bs.set(start + cnt + numRows - 1);
-            if (r < growthFactor * growthFactor) {
-                bs.set(start + cnt + numRows/3 - 1);
-                bs.set(start + cnt + 2*numRows/3 - 1);
-            } else if (r < growthFactor) {
-                bs.set(start + cnt + numRows/2 - 1);
+            if (numRows > 2) {
+                if (r < growthFactor * growthFactor) {
+                    bs.set(start + cnt + numRows/3 - 1);
+                    bs.set(start + cnt + 2*numRows/3 - 1);
+                } else if (r < growthFactor) {
+                    bs.set(start + cnt + numRows/2 - 1);
+                }
             }
             cnt += numRows;
             prevCut = cut + 1;
