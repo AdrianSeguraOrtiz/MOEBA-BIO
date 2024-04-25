@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.ArrayList;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
@@ -420,5 +422,46 @@ public final class StaticUtils {
         }
         String res = builder.toString();
         return res.substring(0, res.length() - 2); // Remove last comma and space
+    }
+
+    /**
+     * Converts a string representation of biclusters into a list of biclusters.
+     * Each bicluster is represented as an ArrayList of two ArrayLists of Integers,
+     * where the first list represents rows and the second list represents columns.
+     *
+     * @param biclustersString The string representation of biclusters.
+     * @return The ArrayList of biclusters.
+     */
+    @SuppressWarnings("unchecked")
+    public static ArrayList<ArrayList<Integer>[]> stringToBiclusters(String biclustersString) {
+        ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
+        Pattern bicPattern = Pattern.compile("Bicluster\\d+: \\(rows: \\[([\\d ]+)\\] cols: \\[([\\d ]+)\\])");
+        Matcher matcher = bicPattern.matcher(biclustersString);
+
+        while (matcher.find()) {
+            ArrayList<Integer>[] bicArray = new ArrayList[2];
+            bicArray[0] = stringToIntegerList(matcher.group(1));
+            bicArray[1] = stringToIntegerList(matcher.group(2));
+            biclusters.add(bicArray);
+        }
+
+        return biclusters;
+    }
+
+    /**
+     * Converts a space-separated string of numbers into an ArrayList of Integers.
+     *
+     * @param numbers String containing space-separated numbers.
+     * @return ArrayList of Integers parsed from the string.
+     */
+    private static ArrayList<Integer> stringToIntegerList(String numbers) {
+        ArrayList<Integer> list = new ArrayList<>();
+        String[] tokens = numbers.trim().split(" ");
+        for (String token : tokens) {
+            if (!token.isEmpty()) {
+                list.add(Integer.parseInt(token));
+            }
+        }
+        return list;
     }
 }
