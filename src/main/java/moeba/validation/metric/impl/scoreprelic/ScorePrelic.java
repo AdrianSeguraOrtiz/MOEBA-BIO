@@ -14,8 +14,6 @@ import moeba.validation.metric.MetricInterface;
  * expression data. Bioinformatics 22, 9 (2006), 1122–1129. DOI:https://doi.org/10.1093/bioinformatics/btl060
  */
 public abstract class ScorePrelic extends MetricInterface {
-    
-    public abstract double getScore(ArrayList<ArrayList<Integer>[]> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandardBiclusters);
 
     /**
      * Calculate the score based on the row overlaps between two lists of biclusters.

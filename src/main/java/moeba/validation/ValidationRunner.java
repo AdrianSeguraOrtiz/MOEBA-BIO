@@ -13,6 +13,11 @@ import java.util.stream.IntStream;
 
 import moeba.StaticUtils;
 import moeba.validation.metric.MetricInterface;
+import moeba.validation.metric.impl.ScoreAyadi;
+import moeba.validation.metric.impl.ScoreDice;
+import moeba.validation.metric.impl.ScoreLiuWang;
+import moeba.validation.metric.impl.scoreeren.impl.ScoreErenRecovery;
+import moeba.validation.metric.impl.scoreeren.impl.ScoreErenRelevance;
 import moeba.validation.metric.impl.scoreprelic.impl.ScorePrelicRecovery;
 import moeba.validation.metric.impl.scoreprelic.impl.ScorePrelicRelevance;
 import picocli.CommandLine;
@@ -33,7 +38,7 @@ public class ValidationRunner implements Runnable {
     @Option(names = {"--gold-standard-translated"}, description = "Path to the input CSV file with gold standard translated biclusters.", required = true)
     private File goldStandardTranslatedFile;
 
-    @Option(names = {"--validation-metrics"}, description = "List of validation metrics, separated by semicolon. Supported values: ScorePrelicRelevance, ScorePrelicRecovery.", required = true)
+    @Option(names = {"--validation-metrics"}, description = "List of validation metrics, separated by semicolon. Supported values: ScorePrelicRelevance, ScorePrelicRecovery, ScoreLiuWang, ScoreDice, ScoreAyadi, ScoreErenRelevance, ScoreErenRecovery.", required = true)
     private String validationMetrics;
 
     @Option(names = {"--num-threads"}, description = "Number of threads to use. Defaults to available processors.")
@@ -125,6 +130,21 @@ public class ValidationRunner implements Runnable {
                     break;
                 case "scoreprelicrecovery":
                     metricInterfaces[i] = new ScorePrelicRecovery();
+                    break;
+                case "scoreliuwang":
+                    metricInterfaces[i] = new ScoreLiuWang();
+                    break;
+                case "scoredice":
+                    metricInterfaces[i] = new ScoreDice();
+                    break;
+                case "scoreayadi":
+                    metricInterfaces[i] = new ScoreAyadi();
+                    break;
+                case "scoreerenrelevance":
+                    metricInterfaces[i] = new ScoreErenRelevance();
+                    break;
+                case "scoreerenrecovery":
+                    metricInterfaces[i] = new ScoreErenRecovery();
                     break;
                 default:
                     throw new IllegalArgumentException("Unsupported validation metric: " + metricNames[i]);
