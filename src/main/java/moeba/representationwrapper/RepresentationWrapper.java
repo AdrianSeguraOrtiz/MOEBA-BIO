@@ -31,4 +31,5 @@ public abstract class RepresentationWrapper {
     public abstract MutationOperator<CompositeSolution> getMutationFromString(String strMutationOperator, String mutationProbability, int numApproxMutations);
 
     public abstract String[] getVarLabels();
+    public abstract String getSummariseMethod();
 }

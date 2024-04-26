@@ -12,13 +12,15 @@ import org.uma.jmetal.solution.integersolution.IntegerSolution;
 
 public class SpecificRepresentationWrapper extends RepresentationWrapper {
     private int numBiclusters;
+    private String summariseIndividualObjectives;
 
-    public SpecificRepresentationWrapper(int numRows, int numColumns, int numBiclusters) {
+    public SpecificRepresentationWrapper(int numRows, int numColumns, int numBiclusters, String summariseIndividualObjectives) {
         super(numRows, numColumns);
         if (numBiclusters < 2 || numBiclusters >= super.numRows) {
             throw new IllegalArgumentException("The number of biclusters must be between 2 and " + (super.numRows - 1) + ".");
         }
         this.numBiclusters = numBiclusters;
+        this.summariseIndividualObjectives = summariseIndividualObjectives;
     }
 
     public CompositeSolution buildComposition(IntegerSolution integerSolution, BinarySolution binarySolution) {
@@ -48,6 +50,11 @@ public class SpecificRepresentationWrapper extends RepresentationWrapper {
     @Override
     public int getNumBitsPerVariable() {
         return super.numColumns;
+    }
+
+    @Override
+    public String getSummariseMethod() {
+        return summariseIndividualObjectives;
     }
 
     @Override

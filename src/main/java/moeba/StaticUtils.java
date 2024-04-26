@@ -54,20 +54,21 @@ public final class StaticUtils {
      * @param data 2D array of data
      * @param types array of data types
      * @param cache the internal cache of the fitness function
+     * @param summariseIndividualObjectives way to summarise the overall quality of the solutions from the individual quality of their biclusters
      * @return a FitnessFunction object
      */
-    public static FitnessFunction getFitnessFunctionFromString(String str, String[][] data, Class<?>[] types, CacheStorage<String, Double> cache) {
+    public static FitnessFunction getFitnessFunctionFromString(String str, String[][] data, Class<?>[] types, CacheStorage<String, Double> cache, String summariseIndividualObjectives) {
         FitnessFunction res;
         switch (str.toLowerCase()) {
 
             case "biclustersize":
-                res = new BiclusterSize(data, types, cache);
+                res = new BiclusterSize(data, types, cache, summariseIndividualObjectives);
                 break;
             case "biclustersizeweighted":
-                res = new BiclusterSizeWeighted(data, types, cache);
+                res = new BiclusterSizeWeighted(data, types, cache, summariseIndividualObjectives);
                 break;
             case "biclustervariance":
-                res = new BiclusterVariance(data, types, cache);
+                res = new BiclusterVariance(data, types, cache, summariseIndividualObjectives);
                 break;
             /**
             case "biclusterrowvariance":
@@ -145,17 +146,18 @@ public final class StaticUtils {
      * @param specificNumBiclusters The number of biclusters in the specific representation.
      * @param genericInitialMinPercBics The initial minimum percentage of biclusters in the generic representation.
      * @param genericInitialMaxPercBics The initial maximum percentage of biclusters in the generic representation.
+     * @param summariseIndividualObjectives The way to summarise the overall quality of the solutions from the individual quality of their biclusters.
      * @return A new representation wrapper instance.
      * @throws RuntimeException If the given representation is not implemented.
      */
-    public static RepresentationWrapper getRepresentationWrapperFromRepresentation(Representation rep, int numRows, int numCols, int specificNumBiclusters, float genericInitialMinPercBics, float genericInitialMaxPercBics) {
+    public static RepresentationWrapper getRepresentationWrapperFromRepresentation(Representation rep, int numRows, int numCols, int specificNumBiclusters, float genericInitialMinPercBics, float genericInitialMaxPercBics, String summariseIndividualObjectives) {
         RepresentationWrapper res;
         switch (rep) {
             case GENERIC:
-                res = new GenericRepresentationWrapper(numRows, numCols, genericInitialMinPercBics, genericInitialMaxPercBics);
+                res = new GenericRepresentationWrapper(numRows, numCols, genericInitialMinPercBics, genericInitialMaxPercBics, summariseIndividualObjectives);
                 break;
             case SPECIFIC:
-                res = new SpecificRepresentationWrapper(numRows, numCols, specificNumBiclusters);
+                res = new SpecificRepresentationWrapper(numRows, numCols, specificNumBiclusters, summariseIndividualObjectives);
                 break;
             case INDIVIDUAL:
                 res = new IndividualRepresentationWrapper(numRows, numCols);

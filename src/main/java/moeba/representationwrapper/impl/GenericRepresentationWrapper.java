@@ -40,12 +40,14 @@ import org.uma.jmetal.util.binarySet.BinarySet;
 public class GenericRepresentationWrapper extends RepresentationWrapper {
     private float genericInitialMinPercBics;
     private float genericInitialMaxPercBics;
+    private String summariseIndividualObjectives;
     private Random random;
 
-    public GenericRepresentationWrapper(int numRows, int numColumns, float genericInitialMinPercBics, float genericInitialMaxPercBics) {
+    public GenericRepresentationWrapper(int numRows, int numColumns, float genericInitialMinPercBics, float genericInitialMaxPercBics, String summariseIndividualObjectives) {
         super(numRows, numColumns);
         this.genericInitialMinPercBics = genericInitialMinPercBics;
         this.genericInitialMaxPercBics = genericInitialMaxPercBics;
+        this.summariseIndividualObjectives = summariseIndividualObjectives;
         this.random = new Random();
     }
 
@@ -93,6 +95,11 @@ public class GenericRepresentationWrapper extends RepresentationWrapper {
     @Override
     public int getNumBitsPerVariable() {
         return super.numRows;
+    }
+
+    @Override
+    public String getSummariseMethod() {
+        return summariseIndividualObjectives;
     }
 
     @Override

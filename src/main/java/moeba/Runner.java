@@ -53,6 +53,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSize, BiclusterSizeWeighted, BiclusterVariance, BiclusterRowVariance, MeanSquaredResidue, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSize;BiclusterRowVariance;MeanSquaredResidue")
     private String strFitnessFormulas;
 
+    @Option(names = {"--summarise-individual-objectives"}, description = "Way to summarise the overall quality of the solutions from the individual quality of their biclusters. Only for GENERIC, SPECIFIC or DYNAMIC representation. Possible values: Mean, HarmonicMean", defaultValue = "Mean")
+    private String summariseIndividualObjectives;
+
     @Option(names = {"--population-size"}, description = "Population size", defaultValue = "100")
     private int populationSize;
 
@@ -123,6 +126,11 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
             throw new IllegalArgumentException("No se puede fijar el rango inicial de biclusters para la representación " + this.representation);
         }
 
+        // If the representation is INDIVIDUAL summariseIndividualObjectives must be Mean
+        if (this.representation == Representation.INDIVIDUAL && this.summariseIndividualObjectives != "Mean") {
+            throw new IllegalArgumentException("No se puede fijar la suma de objetivos individuales para la representación " + this.representation);
+        }
+
         // Read input dataset
         String[][] data = null;
         try {
@@ -179,7 +187,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         // Problem
         float genericInitialMinPercBics = genericInitialMinNumBics != -1 ? (float) genericInitialMinNumBics / data.length : 0.05f;
         float genericInitialMaxPercBics = genericInitialMaxNumBics != -1 ? (float) genericInitialMaxNumBics / data.length : 0.25f;
-        RepresentationWrapper representationWrapper = StaticUtils.getRepresentationWrapperFromRepresentation(representation, data.length, data[0].length, specificNumBiclusters, genericInitialMinPercBics, genericInitialMaxPercBics);
+        RepresentationWrapper representationWrapper = StaticUtils.getRepresentationWrapperFromRepresentation(representation, data.length, data[0].length, specificNumBiclusters, genericInitialMinPercBics, genericInitialMaxPercBics, summariseIndividualObjectives);
         Problem problem = new ProblemObserver(data, types, fitnessFunctions, externalCache, internalCaches, representationWrapper, observers);
 
         // Operators

@@ -2,18 +2,13 @@ package moeba.fitnessfunction.impl;
 
 import java.util.ArrayList;
 
-import moeba.fitnessfunction.FitnessFunction;
+import moeba.fitnessfunction.IndividualFitnessFunction;
 import moeba.utils.storage.CacheStorage;
 
-public class BiclusterSizeWeighted extends FitnessFunction {
+public class BiclusterSizeWeighted extends IndividualFitnessFunction {
 
-    public BiclusterSizeWeighted(String[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache) {
-        super(data, types, internalCache);
-    }
-
-    @Override
-    public double run(ArrayList<ArrayList<Integer>[]> biclusters) {
-        return 1 - super.func.run(biclusters);
+    public BiclusterSizeWeighted(String[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
+        super(data, types, internalCache, summariseIndividualObjectives);
     }
 
     protected double getBiclusterScore(ArrayList<Integer>[] bicluster) {

@@ -53,6 +53,11 @@ public class IndividualRepresentationWrapper extends RepresentationWrapper {
     }
 
     @Override
+    public String getSummariseMethod() {
+        return null;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public ArrayList<ArrayList<Integer>[]> getBiclustersFromRepresentation(CompositeSolution solution) {
         // Initialize the result list
