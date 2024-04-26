@@ -435,7 +435,7 @@ public final class StaticUtils {
     @SuppressWarnings("unchecked")
     public static ArrayList<ArrayList<Integer>[]> stringToBiclusters(String biclustersString) {
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
-        Pattern bicPattern = Pattern.compile("Bicluster\\d+: \\(rows: \\[([\\d ]+)\\] cols: \\[([\\d ]+)\\])");
+        Pattern bicPattern = Pattern.compile("Bicluster\\d+: \\(rows: \\[([\\d ]+)\\] cols: \\[([\\d ]+)\\]\\)");
         Matcher matcher = bicPattern.matcher(biclustersString);
 
         while (matcher.find()) {
