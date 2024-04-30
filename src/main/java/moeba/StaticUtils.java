@@ -20,6 +20,8 @@ import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSize;
 import moeba.fitnessfunction.impl.BiclusterSizeWeighted;
 import moeba.fitnessfunction.impl.BiclusterVariance;
+import moeba.fitnessfunction.impl.MeanSquaredResidue;
+import moeba.fitnessfunction.impl.RowVariance;
 import moeba.representationwrapper.RepresentationWrapper;
 import moeba.representationwrapper.impl.GenericRepresentationWrapper;
 import moeba.representationwrapper.impl.IndividualRepresentationWrapper;
@@ -70,13 +72,13 @@ public final class StaticUtils {
             case "biclustervariance":
                 res = new BiclusterVariance(data, types, cache, summariseIndividualObjectives);
                 break;
-            /**
-            case "biclusterrowvariance":
-                res = new BiclusterRowVariance(data, types);
+            case "rowvariance":
+                res = new RowVariance(data, types, cache, summariseIndividualObjectives);
                 break;
             case "meansquaredresidue":
-                res = new MeanSquaredResidue(data, types);
+                res = new MeanSquaredResidue(data, types, cache, summariseIndividualObjectives);
                 break;
+            /**
             case "scalingmeansquaredresidue":
                 res = new ScalingMeanSquaredResidue(data, types);
                 break;
