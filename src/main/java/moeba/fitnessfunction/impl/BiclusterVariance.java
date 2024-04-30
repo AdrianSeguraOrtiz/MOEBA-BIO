@@ -30,6 +30,7 @@ public class BiclusterVariance extends IndividualFitnessFunction {
             }
         }
 
-        return 1 - 4 * score;
+        // Revert to maximization and normalize between 0 and 1
+        return 1 - 4 * score / (data.length * data[0].length);
     }
 }
