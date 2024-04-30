@@ -37,7 +37,7 @@ public class RowVariance extends IndividualFitnessFunction {
         // Divide by the number of elements in the bicluster
         score /= (bicluster[0].size() * bicluster[1].size());
 
-        // Revert to maximization and normalize between 0 and 1
-        return 1 - 4 * score;
+        // Normalize between 0 and 1
+        return 4 * score;
     }
 }
