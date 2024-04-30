@@ -78,15 +78,16 @@ public class BiclusterCountObserver implements ObserverInterface {
      */
     @Override
     public void writeToFile(String strFile) {
+        int limit = this.cnt / this.populationSize;
+        ArrayList<Integer> keys = new ArrayList<>(biclusterPercentages.keySet());
+        
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(strFile))) {
             // Iterate over each bicluster size and its percentage array
-            ArrayList<Integer> keys = new ArrayList<>(biclusterPercentages.keySet());
             Collections.sort(keys);
             for (int k : keys) {
                 bw.write(k + ", ");
 
                 double[] percentages = biclusterPercentages.get(k);
-                int limit = this.cnt / this.populationSize;
                 // Write percentages for each generation
                 for (int i = 1; i < limit; i++) {
                     bw.write(String.format("%.2f", percentages[i]) + (i == limit - 1 ? "" : ", "));
