@@ -20,6 +20,9 @@ public abstract class IndividualFitnessFunction extends FitnessFunction {
                 case "harmonicmean":
                     this.func = internalCache == null ? this::runHarmonicMeanWithoutCache : this::runHarmonicMeanWithCache;
                     break;
+                case "geometricmean":
+                    this.func = internalCache == null ? this::runGeometricMeanWithoutCache : this::runGeometricMeanWithCache;
+                    break;
                 default:
                     throw new IllegalArgumentException("Summarise method not supported: " + summariseIndividualObjectives);
             }
@@ -79,6 +82,31 @@ public abstract class IndividualFitnessFunction extends FitnessFunction {
             res += 1 / bicScore;
         }
         return biclusters.size()/res;
+    }
+
+    protected double runGeometricMeanWithoutCache(ArrayList<ArrayList<Integer>[]> biclusters) {
+        double res = 1;
+        for (ArrayList<Integer>[] bic : biclusters) {
+            res *= getBiclusterScore(bic);
+        }
+        return Math.pow(res, (double) 1 / biclusters.size());
+    }
+
+    protected double runGeometricMeanWithCache(ArrayList<ArrayList<Integer>[]> biclusters) {
+        double res = 1;
+        String key;
+        double bicScore;
+        for (ArrayList<Integer>[] bic : biclusters) {
+            key = StaticUtils.biclusterToString(bic);
+            if (internalCache.containsKey(key)){
+                bicScore = internalCache.get(key);
+            } else {
+                bicScore = getBiclusterScore(bic);
+                internalCache.put(key, bicScore);
+            }
+            res *= bicScore;
+        }
+        return Math.pow(res, (double) 1 / biclusters.size());
     }
 
     protected abstract double getBiclusterScore(ArrayList<Integer>[] bicluster);

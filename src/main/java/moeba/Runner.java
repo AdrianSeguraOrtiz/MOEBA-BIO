@@ -53,7 +53,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSize, BiclusterSizeWeighted, BiclusterVariance, BiclusterRowVariance, MeanSquaredResidue, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSize;BiclusterRowVariance;MeanSquaredResidue")
     private String strFitnessFormulas;
 
-    @Option(names = {"--summarise-individual-objectives"}, description = "Way to summarise the overall quality of the solutions from the individual quality of their biclusters. Only for GENERIC, SPECIFIC or DYNAMIC representation. Possible values: Mean, HarmonicMean", defaultValue = "Mean")
+    @Option(names = {"--summarise-individual-objectives"}, description = "Way to summarise the overall quality of the solutions from the individual quality of their biclusters. Only for GENERIC, SPECIFIC or DYNAMIC representation. Possible values: Mean, HarmonicMean, GeometricMean", defaultValue = "Mean")
     private String summariseIndividualObjectives;
 
     @Option(names = {"--population-size"}, description = "Population size", defaultValue = "100")
