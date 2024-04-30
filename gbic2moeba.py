@@ -3,6 +3,8 @@ import pandas as pd
 import json
 import argparse
 
+from sklearn.preprocessing import MinMaxScaler
+
 """
 This script processes a dataset and its associated bicluster information genetated by gbic.
 It reads a JSON file containing specifications of biclusters and a TSV dataset file.
@@ -54,6 +56,12 @@ with open(bic_clusters_filename, "w") as file:
         for i, bic in enumerate(biclusters_list)
     )
     file.write(bic_clusters_info)
+
+# Normalize the dataset
+scaler = MinMaxScaler()
+for column in df.columns:
+    if pd.api.types.is_numeric_dtype(df[column]):
+        df[column] = scaler.fit_transform(df[column].values.reshape(-1, 1))
 
 # Save the modified dataset to CSV
 df.to_csv(f'{output_base}-data.csv', index=False)
