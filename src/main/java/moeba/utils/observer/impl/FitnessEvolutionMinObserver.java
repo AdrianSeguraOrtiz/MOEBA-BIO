@@ -20,7 +20,7 @@ import moeba.utils.observer.ProblemObserver.ObserverInterface;
  * improvements of solutions and records the best fitness values found for
  * each objective over time.
  */
-public class FitnessEvolutionObserver implements ObserverInterface {
+public class FitnessEvolutionMinObserver implements ObserverInterface {
     // Size of the population.
     private int populationSize;
     // Number of objectives to be optimized.
@@ -33,7 +33,7 @@ public class FitnessEvolutionObserver implements ObserverInterface {
     private AtomicInteger parallelCount;
 
     /**
-     * Constructor for the FitnessEvolutionObserver.
+     * Constructor for the FitnessEvolutionMinObserver.
      * Initializes the observer with the given population size and number of objectives.
      * Sets up tracking structures for the evolution of fitness values.
      *
@@ -41,7 +41,7 @@ public class FitnessEvolutionObserver implements ObserverInterface {
      * @param numObjectives The number of objectives being optimized.
      */
     @SuppressWarnings("unchecked")
-    public FitnessEvolutionObserver(int populationSize, int numObjectives) {
+    public FitnessEvolutionMinObserver(int populationSize, int numObjectives) {
         this.populationSize = populationSize;
         this.numObjectives = numObjectives;
         this.progressiveValues = new AtomicDoubleArray(numObjectives);
