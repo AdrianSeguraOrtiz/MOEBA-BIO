@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 
+import moeba.Representation;
 import moeba.StaticUtils;
 import moeba.validation.metric.MetricInterface;
 import moeba.validation.metric.impl.ScoreAyadi;
@@ -35,6 +36,9 @@ public class ValidationRunner implements Runnable {
     @Option(names = {"--inferred-translated"}, description = "Path to the input CSV file with inferred translated biclusters.", required = true)
     private File inferredTranslatedFile;
 
+    @Option(names = {"--representation"}, description = "Representation as a string. Possible values: GENERIC, SPECIFIC, INDIVIDUAL", defaultValue = "GENERIC")
+    private Representation representation;
+
     @Option(names = {"--gold-standard-translated"}, description = "Path to the input CSV file with gold standard translated biclusters.", required = true)
     private File goldStandardTranslatedFile;
 
@@ -44,7 +48,7 @@ public class ValidationRunner implements Runnable {
     @Option(names = {"--num-threads"}, description = "Number of threads to use. Defaults to available processors.")
     private int numThreads = Runtime.getRuntime().availableProcessors();
 
-    @Option(names = {"--output-file"}, description = "Path to the output CSV file to save results.", required = true)
+    @Option(names = {"--output-file"}, description = "Path to the output CSV file to save results.", defaultValue = "scores.csv")
     private File outputFile;
 
     /**
@@ -56,6 +60,20 @@ public class ValidationRunner implements Runnable {
     public void run() {
         // Load inferred biclusters from CSV file
         ArrayList<ArrayList<ArrayList<Integer>[]>> inferredBiclusters = loadBiclusters(inferredTranslatedFile);
+
+        // Flatten inferred biclusters if representation is INDIVIDUAL
+        if (representation == Representation.INDIVIDUAL) {
+            ArrayList<ArrayList<Integer>[]> flattenedList = new ArrayList<>();
+
+            for (ArrayList<ArrayList<Integer>[]> list : inferredBiclusters) {
+                for (ArrayList<Integer>[] array : list) {
+                    flattenedList.add(array);
+                }
+            }
+
+            inferredBiclusters = new ArrayList<>();
+            inferredBiclusters.add(flattenedList);
+        }
 
         // Load gold standard biclusters from CSV file
         ArrayList<ArrayList<Integer>[]> goldStandardBiclusters = loadGoldStandardBiclusters(goldStandardTranslatedFile);

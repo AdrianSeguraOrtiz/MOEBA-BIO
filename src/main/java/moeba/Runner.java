@@ -127,7 +127,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // If the representation is INDIVIDUAL summariseIndividualObjectives must be Mean
-        if (this.representation == Representation.INDIVIDUAL && this.summariseIndividualObjectives != "Mean") {
+        if (this.representation == Representation.INDIVIDUAL && !this.summariseIndividualObjectives.equals("Mean")) {
             throw new IllegalArgumentException("No se puede fijar la suma de objetivos individuales para la representación " + this.representation);
         }
 
