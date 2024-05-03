@@ -225,7 +225,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
         // Write the evolution of fitness values to an output txt file
         for (ObserverInterface observer : observers) {
-            observer.writeToFile(outputFolder + observer.getClass().getSimpleName() +".csv");
+            observer.writeToFile(outputFolder + "/" + observer.getClass().getSimpleName() + ".csv");
         }
 
         // Write the data of the last population (pareto front approximation)
