@@ -7,7 +7,7 @@ import moeba.utils.storage.CacheStorage;
 
 public class RowVariance extends IndividualFitnessFunction {
 
-    public RowVariance(String[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
+    public RowVariance(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
         super(data, types, internalCache, summariseIndividualObjectives);
     }
 
@@ -19,7 +19,7 @@ public class RowVariance extends IndividualFitnessFunction {
         for (int i : bicluster[0]) {
             float sum = 0.0f;
             for (int j : bicluster[1]) {
-                sum += conversionMap.get(types[j]).getFloatValue(data[i][j], j, bicluster);
+                sum += data[i][j];
             }
             means[cnt++] = sum / bicluster[1].size();
         }
@@ -29,7 +29,7 @@ public class RowVariance extends IndividualFitnessFunction {
         cnt = 0;
         for (int i : bicluster[0]) {
             for (int j : bicluster[1]) {
-                score += Math.pow(conversionMap.get(types[j]).getFloatValue(data[i][j], j, bicluster) - means[cnt], 2);
+                score += Math.pow(data[i][j] - means[cnt], 2);
             }
             cnt++;
         }

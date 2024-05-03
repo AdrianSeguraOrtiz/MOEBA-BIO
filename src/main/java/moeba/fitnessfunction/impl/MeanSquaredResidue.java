@@ -8,7 +8,7 @@ import moeba.utils.storage.CacheStorage;
 
 public class MeanSquaredResidue extends IndividualFitnessFunction {
 
-    public MeanSquaredResidue(String[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
+    public MeanSquaredResidue(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
         super(data, types, internalCache, summariseIndividualObjectives);
     }
 
@@ -25,7 +25,7 @@ public class MeanSquaredResidue extends IndividualFitnessFunction {
         for (int i = 0; i < numRows; i++) {
             float rowSum = 0.0f;
             for (int j = 0; j < numCols; j++) {
-                float value = conversionMap.get(types[bicluster[1].get(j)]).getFloatValue(data[bicluster[0].get(i)][bicluster[1].get(j)], bicluster[1].get(j), bicluster);
+                double value = data[bicluster[0].get(i)][bicluster[1].get(j)];
                 rowSum += value;
                 colMeans[j] += value;
             }
@@ -42,7 +42,7 @@ public class MeanSquaredResidue extends IndividualFitnessFunction {
         double score = 0.0;
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numCols; j++) {
-                float value = conversionMap.get(types[bicluster[1].get(j)]).getFloatValue(data[bicluster[0].get(i)][bicluster[1].get(j)], bicluster[1].get(j), bicluster);
+                double value = data[bicluster[0].get(i)][bicluster[1].get(j)];
                 score += Math.pow(value - rowMeans[i] - colMeans[j] + mean, 2);
             }
         }

@@ -18,7 +18,7 @@ import org.uma.jmetal.solution.integersolution.impl.DefaultIntegerSolution;
  */
 public class Problem extends AbstractMixedIntegerBinaryProblem {
 
-    protected String[][] data;
+    protected double[][] data;
     private Class<?>[] types;
     private FitnessFunction[] fitnessFunctions;
     protected CacheStorage<String, Double[]> externalCache;
@@ -31,7 +31,7 @@ public class Problem extends AbstractMixedIntegerBinaryProblem {
     }
 
     public Problem(
-        String[][] data, 
+        double[][] data, 
         Class<?> [] types, 
         String[] strFitnessFunctions, 
         CacheStorage<String, Double[]> externalCache, 

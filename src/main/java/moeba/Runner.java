@@ -157,6 +157,10 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
             e.printStackTrace();
         }
 
+        // Convert data to numeric matrix in base of types
+        double[][] numericData = StaticUtils.dataToNumericMatrix(data, types, numThreads);
+        data = null;
+
         // Create Hybrid Caches Manager
         CacheManager hybridCacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
         hybridCacheManager.init();
@@ -185,10 +189,10 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         }
 
         // Problem
-        float genericInitialMinPercBics = genericInitialMinNumBics != -1 ? (float) genericInitialMinNumBics / data.length : 0.05f;
-        float genericInitialMaxPercBics = genericInitialMaxNumBics != -1 ? (float) genericInitialMaxNumBics / data.length : 0.25f;
-        RepresentationWrapper representationWrapper = StaticUtils.getRepresentationWrapperFromRepresentation(representation, data.length, data[0].length, specificNumBiclusters, genericInitialMinPercBics, genericInitialMaxPercBics, summariseIndividualObjectives);
-        Problem problem = new ProblemObserver(data, types, fitnessFunctions, externalCache, internalCaches, representationWrapper, observers);
+        float genericInitialMinPercBics = genericInitialMinNumBics != -1 ? (float) genericInitialMinNumBics / numericData.length : 0.05f;
+        float genericInitialMaxPercBics = genericInitialMaxNumBics != -1 ? (float) genericInitialMaxNumBics / numericData.length : 0.25f;
+        RepresentationWrapper representationWrapper = StaticUtils.getRepresentationWrapperFromRepresentation(representation, numericData.length, numericData[0].length, specificNumBiclusters, genericInitialMinPercBics, genericInitialMaxPercBics, summariseIndividualObjectives);
+        Problem problem = new ProblemObserver(numericData, types, fitnessFunctions, externalCache, internalCaches, representationWrapper, observers);
 
         // Operators
         // 1. Crossover

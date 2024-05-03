@@ -7,7 +7,7 @@ import moeba.utils.storage.CacheStorage;
 
 public class BiclusterSizeWeighted extends IndividualFitnessFunction {
 
-    public BiclusterSizeWeighted(String[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
+    public BiclusterSizeWeighted(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
         super(data, types, internalCache, summariseIndividualObjectives);
     }
 

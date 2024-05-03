@@ -7,7 +7,7 @@ import moeba.utils.storage.CacheStorage;
 
 public abstract class IndividualFitnessFunction extends FitnessFunction {
     
-    public IndividualFitnessFunction(String[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
+    public IndividualFitnessFunction(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
         super(data, types, internalCache);
 
         if (summariseIndividualObjectives == null) {

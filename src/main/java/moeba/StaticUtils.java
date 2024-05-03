@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
@@ -60,7 +62,7 @@ public final class StaticUtils {
      * @param summariseIndividualObjectives way to summarise the overall quality of the solutions from the individual quality of their biclusters
      * @return a FitnessFunction object
      */
-    public static FitnessFunction getFitnessFunctionFromString(String str, String[][] data, Class<?>[] types, CacheStorage<String, Double> cache, String summariseIndividualObjectives) {
+    public static FitnessFunction getFitnessFunctionFromString(String str, double[][] data, Class<?>[] types, CacheStorage<String, Double> cache, String summariseIndividualObjectives) {
         FitnessFunction res;
         switch (str.toLowerCase()) {
 
@@ -238,6 +240,56 @@ public final class StaticUtils {
         }
 
         return columnClasses;
+    }
+
+    /**
+     * Converts a data matrix with string values to a matrix with numeric values.
+     * Supported types: string, float, double, int, boolean.
+     * Strings are converted to categorical values, with each unique string value
+     * being assigned a unique numeric value.
+     *
+     * @param data The data matrix with string values
+     * @param types The types of each column in the data matrix
+     * @param numThreads The number of threads to use for parallel processing
+     * @return A matrix with numeric values
+     */
+    public static double[][] dataToNumericMatrix(String[][] data, Class<?>[] types, int numThreads) {
+        double[][] numericData = new double[data.length][data[0].length];
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+
+        // Convert each column in parallel
+        for (int j = 0; j < data[0].length; j++) {
+            final int colIndex = j;
+            executor.execute(() -> {
+                // Determine how to convert the data in this column based on its type
+                if (types[colIndex] == Float.class || types[colIndex] == Double.class
+                        || types[colIndex] == Integer.class) {
+                    // Column is numeric, directly parse the values as doubles
+                    for (int i = 0; i < data.length; i++) {
+                        numericData[i][colIndex] = Double.parseDouble(data[i][colIndex]);
+                    }
+                } else if (types[colIndex] == Boolean.class) {
+                    // Column is boolean, map "Yes" to 1.0 and other values to 0.0
+                    for (int i = 0; i < data.length; i++) {
+                        numericData[i][colIndex] = data[i][colIndex].equalsIgnoreCase("Yes") ? 1.0 : 0.0;
+                    }
+                } else if (types[colIndex] == String.class) {
+                    // Column is string, convert to categorical values
+                    Map<String, Double> categoryToNumber = new HashMap<>();
+                    double categoryIndex = 0.0;
+                    for (int i = 0; i < data.length; i++) {
+                        String category = data[i][colIndex];
+                        if (!categoryToNumber.containsKey(category)) {
+                            categoryToNumber.put(category, categoryIndex);
+                            categoryIndex++;
+                        }
+                        numericData[i][colIndex] = categoryToNumber.get(category);
+                    }
+                }
+            });
+        }
+        executor.shutdown();
+        return numericData;
     }
 
     /**
