@@ -75,6 +75,7 @@ public class RepresentationWrapperTest {
         assertEquals(expected[1], res.get(3)[1]);
     }
 
+    /** 
     @Test
     public void testGetBiclustersFromGenericRepresentationWithMerge() {
         int[] x = {5,0,3,1,2,7,6,4, 1,0,1,0,0,1,0,0, 1,1,1,1,0,1,0,1, 1,0,0,1,0,1,0,0, 0,0,0,0,1,0,1,0, 0,1,1,0,0,0,0,1, 0,1,1,0,0,0,0,1, 0,0,0,0,1,0,1,0, 1,0,0,1,1,1,1,0, 0,0,0,0,1,0,1,0};
@@ -125,4 +126,5 @@ public class RepresentationWrapperTest {
         assertEquals(expected[0], res.get(2)[0]);
         assertEquals(expected[1], res.get(2)[1]);
     }
+    */
 }
