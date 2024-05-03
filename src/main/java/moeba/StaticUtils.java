@@ -31,6 +31,7 @@ import moeba.representationwrapper.impl.SpecificRepresentationWrapper;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.observer.impl.BiclusterCountObserver;
 import moeba.utils.observer.impl.ExternalCacheObserver;
+import moeba.utils.observer.impl.FitnessEvolutionAvgObserver;
 import moeba.utils.observer.impl.FitnessEvolutionMaxObserver;
 import moeba.utils.observer.impl.FitnessEvolutionMinObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
@@ -131,6 +132,9 @@ public final class StaticUtils {
                 break;
             case "fitnessevolutionmaxobserver":
                 res = new FitnessEvolutionMaxObserver(populationSize, fitnessFunctions.length);
+                break;
+            case "fitnessevolutionavgobserver":
+                res = new FitnessEvolutionAvgObserver(populationSize, fitnessFunctions.length);
                 break;
             case "internalcacheobserver":
                 res = new InternalCacheObserver(populationSize, fitnessFunctions, internalCaches);

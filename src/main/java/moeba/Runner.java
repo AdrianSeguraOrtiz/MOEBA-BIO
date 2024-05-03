@@ -101,7 +101,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--have-internal-cache"}, description = "Whether the internal cache is used")
     private boolean haveInternalCache;
 
-    @Option(names = {"--observers"}, description = "List of observers separated by semicolon. Possible values: BiclusterCountObserver, FitnessEvolutionMinObserver, FitnessEvolutionMaxObserver, NumEvaluationsObserver, ExternalCacheObserver, InternalCacheObserver", defaultValue = "BiclusterCountObserver;FitnessEvolutionMinObserver;NumEvaluationsObserver;ExternalCacheObserver;InternalCacheObserver")
+    @Option(names = {"--observers"}, description = "List of observers separated by semicolon. Possible values: BiclusterCountObserver, FitnessEvolutionMinObserver, FitnessEvolutionAvgObserver, FitnessEvolutionMaxObserver, NumEvaluationsObserver, ExternalCacheObserver, InternalCacheObserver", defaultValue = "BiclusterCountObserver;FitnessEvolutionMinObserver;NumEvaluationsObserver;ExternalCacheObserver;InternalCacheObserver")
     private String strObservers;
 
     @Option(names = {"--num-threads"}, description = "Number of threads. Default: All")
