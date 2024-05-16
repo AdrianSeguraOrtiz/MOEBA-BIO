@@ -11,6 +11,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 
+import org.apache.commons.io.FileUtils;
+import org.zeroturnaround.zip.ZipUtil;
+
 import moeba.Representation;
 import moeba.StaticUtils;
 import moeba.validation.metric.MetricInterface;
@@ -45,6 +48,9 @@ public class ValidationRunner implements Runnable {
     @Option(names = {"--validation-metrics"}, description = "List of validation metrics, separated by semicolon. Supported values: ScorePrelicRelevance, ScorePrelicRecovery, ScoreLiuWang, ScoreDice, ScoreAyadi, ScoreErenRelevance, ScoreErenRecovery.", required = true)
     private String validationMetrics;
 
+    @Option(names = {"--save-process"}, description = "Save process to file")
+    private boolean saveProcess;
+
     @Option(names = {"--num-threads"}, description = "Number of threads to use. Defaults to available processors.")
     private int numThreads = Runtime.getRuntime().availableProcessors();
 
@@ -75,17 +81,37 @@ public class ValidationRunner implements Runnable {
             inferredBiclusters.add(flattenedList);
         }
 
+        // Create output folder if it doesn't exist
+        String parentFolderName = outputFile.getParent();
+        if (parentFolderName != null) {
+            File outputFolder = new File(parentFolderName);
+            if (!outputFolder.exists()) outputFolder.mkdirs();
+        } else {
+            parentFolderName = "./";
+        }
+
         // Load gold standard biclusters from CSV file
         ArrayList<ArrayList<Integer>[]> goldStandardBiclusters = loadGoldStandardBiclusters(goldStandardTranslatedFile);
 
         // Parse validation metrics from command-line argument
-        MetricInterface[] metrics = parseValidationMetrics(validationMetrics);
+        MetricInterface[] metrics = parseValidationMetrics(validationMetrics, saveProcess, parentFolderName + "/process/");
 
         // Compute validation scores for each inferred bicluster
         double[][] scores = computeScores(inferredBiclusters, goldStandardBiclusters, metrics, numThreads);
 
         // Write the computed scores to an output CSV file
         writeScoresToFile(scores, validationMetrics.split(";"), outputFile);
+
+        // If saveProcess is true, save the process to a zip file
+        if (saveProcess) {
+            try {
+                File dir = new File(parentFolderName + "/process/");
+                ZipUtil.pack(dir, new File(parentFolderName + "/process.zip"));
+                FileUtils.deleteDirectory(dir);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -135,34 +161,36 @@ public class ValidationRunner implements Runnable {
      * This method maps string names to corresponding MetricInterface implementations.
      *
      * @param metrics A semicolon-separated string containing the names of the metrics.
+     * @param saveProcess Whether to save the process to a zip file.
+     * @param parentFolderName The parent folder name.
      * @return An array of MetricInterface implementations corresponding to the names provided.
      * @throws IllegalArgumentException if a specified metric name does not correspond to a known implementation.
      */
-    private MetricInterface[] parseValidationMetrics(String metrics) {
+    private MetricInterface[] parseValidationMetrics(String metrics, boolean saveProcess, String parentFolderName) {
         String[] metricNames = metrics.split(";");
         MetricInterface[] metricInterfaces = new MetricInterface[metricNames.length];
         for (int i = 0; i < metricNames.length; i++) {
             switch (metricNames[i].toLowerCase()) {
                 case "scoreprelicrelevance":
-                    metricInterfaces[i] = new ScorePrelicRelevance();
+                    metricInterfaces[i] = new ScorePrelicRelevance(saveProcess, parentFolderName);
                     break;
                 case "scoreprelicrecovery":
-                    metricInterfaces[i] = new ScorePrelicRecovery();
+                    metricInterfaces[i] = new ScorePrelicRecovery(saveProcess, parentFolderName);
                     break;
                 case "scoreliuwang":
-                    metricInterfaces[i] = new ScoreLiuWang();
+                    metricInterfaces[i] = new ScoreLiuWang(saveProcess, parentFolderName);
                     break;
                 case "scoredice":
-                    metricInterfaces[i] = new ScoreDice();
+                    metricInterfaces[i] = new ScoreDice(saveProcess, parentFolderName);
                     break;
                 case "scoreayadi":
-                    metricInterfaces[i] = new ScoreAyadi();
+                    metricInterfaces[i] = new ScoreAyadi(saveProcess, parentFolderName);
                     break;
                 case "scoreerenrelevance":
-                    metricInterfaces[i] = new ScoreErenRelevance();
+                    metricInterfaces[i] = new ScoreErenRelevance(saveProcess, parentFolderName);
                     break;
                 case "scoreerenrecovery":
-                    metricInterfaces[i] = new ScoreErenRecovery();
+                    metricInterfaces[i] = new ScoreErenRecovery(saveProcess, parentFolderName);
                     break;
                 default:
                     throw new IllegalArgumentException("Unsupported validation metric: " + metricNames[i]);
@@ -188,7 +216,7 @@ public class ValidationRunner implements Runnable {
         try {
             customThreadPool.submit(() -> IntStream.range(0, inferredBiclusters.size()).parallel().forEach(i -> {
                 for (int j = 0; j < metrics.length; j++) {
-                    scores[i][j] = metrics[j].getScore(inferredBiclusters.get(i), goldStandard);
+                    scores[i][j] = metrics[j].run(inferredBiclusters.get(i), goldStandard, i);
                 }
             })).get();
         } catch (InterruptedException | ExecutionException e) {

@@ -12,6 +12,10 @@ import moeba.validation.metric.MetricInterface;
  */
 public abstract class ScoreEren extends MetricInterface {
     
+    public ScoreEren(boolean saveProcess, String outputProcessFolder) {
+        super(saveProcess, outputProcessFolder);
+    }
+
     /**
      * Calculates the Jaccard similarity coefficient between two biclusters.
      * Each bicluster is represented as an array of two ArrayLists, where the first list contains row indices

@@ -1,20 +1,75 @@
 package moeba.validation.metric;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 public abstract class MetricInterface {
+    private ScoreFunction scoreFunction;
+    protected String outputProcessFolder;
+
+    public interface ScoreFunction {
+        double run(ArrayList<ArrayList<Integer>[]> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandardBiclusters, int resultIndex);
+    }
+
+    public MetricInterface(boolean saveProcess, String outputProcessFolder) {
+        this.scoreFunction = saveProcess ? this::getScoreSavingProcess : this::getScore;
+        this.outputProcessFolder = outputProcessFolder;
+    }
+
+    public double run(ArrayList<ArrayList<Integer>[]> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandardBiclusters, int resultIndex) {
+        return scoreFunction.run(inferredBiclusters, goldStandardBiclusters, resultIndex);
+    }
 
     /**
      * Calculate the score by comparing two sets of biclusters, one inferred and one as gold standard.
      *
      * @param inferredBiclusters List of biclusters inferred from some analysis method.
      * @param goldStandardBiclusters List of biclusters considered as the gold standard for comparison.
+     * @param resultIndex Index of the result to save.
      * @return A double representing the overall score based on specific implementation.
      */
-    public abstract double getScore(ArrayList<ArrayList<Integer>[]> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandardBiclusters);    
+    protected abstract double getScore(ArrayList<ArrayList<Integer>[]> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandardBiclusters, int resultIndex);    
+
+    /**
+     * Calculate the score by comparing two sets of biclusters, one inferred and one as gold standard.
+     * The partial scores are saved in the specified output file.
+     *
+     * @param inferredBiclusters List of biclusters inferred from some analysis method.
+     * @param goldStandardBiclusters List of biclusters considered as the gold standard for comparison.
+     * @param resultIndex Index of the result to save.
+     * @return A double representing the overall score based on specific implementation.
+     */
+    protected abstract double getScoreSavingProcess(ArrayList<ArrayList<Integer>[]> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandardBiclusters, int resultIndex);  
+
+/**
+     * Gets a PrintWriter for saving the score process to a file.
+     *
+     * @param folderPath       Path to the output folder.
+     * @param resultIndex      Index of the result to save.
+     * @param numGoldBiclusters Number of gold standard biclusters.
+     * @return A PrintWriter instance for writing the score process.
+     */
+    protected PrintWriter getScoreSavingProcessWriter(String folderPath, int resultIndex, int numGoldBiclusters) {
+        File outputFolderPath = new File(folderPath);
+        if (!outputFolderPath.exists()) outputFolderPath.mkdirs();
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(new FileWriter(outputFolderPath.getAbsolutePath() + "/solution-" + resultIndex + ".csv"));
+            for (int j = 0; j < numGoldBiclusters; j++) {
+                writer.print(",Bicluster" + j);
+            }
+            writer.println();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return writer;
+    }
 
     /**
      * Calculates the intersection of two ArrayLists of integers.

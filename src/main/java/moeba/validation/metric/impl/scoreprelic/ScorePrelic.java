@@ -15,6 +15,10 @@ import moeba.validation.metric.MetricInterface;
  */
 public abstract class ScorePrelic extends MetricInterface {
 
+    public ScorePrelic(boolean saveProcess, String outputProcessFolder) {
+        super(saveProcess, outputProcessFolder);
+    }
+
     /**
      * Calculate the score based on the row overlaps between two lists of biclusters.
      *
