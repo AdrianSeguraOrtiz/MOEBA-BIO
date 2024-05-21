@@ -1,7 +1,10 @@
 import argparse
 import csv
+from functools import partial
+import itertools
 import re
 import zipfile
+import multiprocessing
 from pathlib import Path
 
 import networkx as nx
@@ -27,9 +30,6 @@ def csv_to_nested_dict(content):
               and the values are dictionaries with the row names as keys
               and the corresponding values as values.
     """
-    # Create an empty nested dictionary
-    nested_dict = {}
-
     # Create a CSV reader
     csv_reader = csv.reader(content)
     
@@ -179,6 +179,103 @@ def add_circles_to_plot(ax, n, m, biclusters, colors, filtered_image, rmask, cma
                         wedge = Wedge((new_col, new_row), radius, start_angle, start_angle + part_angle, color=clr, ec=None)
                         ax.add_patch(wedge)
 
+def get_matrix_score(metric, i, metrics_zip_file, result_biclusters, gold_biclusters):
+    
+    if metric == "intersection-size":
+        # Calcular la matriz de similaridad
+        matrix = {f"gs-{k}": {} for k in range(len(gold_biclusters))}
+        gold_cells_list = [set(itertools.product(gsbic_cells["rows"], gsbic_cells["cols"])) for _, gsbic_cells in gold_biclusters.items()]
+        for j, (_, rbic_cells) in enumerate(result_biclusters[i].items()):
+            result_cells = set(itertools.product(rbic_cells["rows"], rbic_cells["cols"]))
+            for k in range(len(gold_cells_list)):
+                matrix[f"gs-{k}"][f"r-{j}"] = len(result_cells & gold_cells_list[k]) / len(result_cells | gold_cells_list[k])
+    else:
+        # Extraer la matriz de similaridad
+        archive = zipfile.ZipFile(metrics_zip_file, 'r')
+        content = archive.read(f"{metric}/solution-{i}.csv").decode('utf-8').splitlines()
+        matrix = csv_to_nested_dict(content)
+    return matrix
+
+def plot_graph(i, result_biclusters, gold_biclusters, metrics_zip_file, metric, output_folder):
+
+    # Extraer la matriz de similaridad
+    matrix = get_matrix_score(metric, i, metrics_zip_file, result_biclusters, gold_biclusters)
+
+    # Crear la carpeta de salida si no existe
+    Path(f"{output_folder}/graphs").mkdir(parents=True, exist_ok=True)
+
+    # Crear el grafo
+    G = nx.Graph()
+
+    # Añadir nodos del gold standard en verde
+    for bic in gold_biclusters.keys():
+        G.add_node(bic, color='mediumseagreen')
+
+    # Añadir nodos del resultado en morado
+    for bic in result_biclusters[i].keys():
+        G.add_node(bic, color='mediumpurple')
+
+    # Añadir aristas
+    for gsbic in gold_biclusters.keys():
+        for rbic in result_biclusters[i].keys():
+            if matrix[gsbic][rbic] > 0:
+                G.add_edge(gsbic, rbic, weight=matrix[gsbic][rbic], color="gray")
+
+    # Crear una visualización con pyvis
+    net = Network(notebook=False, directed=False, height='100vh', width='100vw')
+
+    # Activar la física para mejor distribución de nodos
+    net.force_atlas_2based(gravity=-80, central_gravity=0.01, spring_length=200, spring_strength=0.01, damping=0.4)
+
+    # Añadir nodos y establecer posiciones manualmente
+    for node, data in G.nodes(data=True):
+        net.add_node(node, label=node, color=data['color'], physics=True)
+
+    # Añadir aristas a la visualización de pyvis
+    for source, target, data in G.edges(data=True):
+        net.add_edge(source, target, value=data['weight'], color=data['color'])
+
+    # Generar el archivo HTML
+    net.save_graph(f'{output_folder}/graphs/solution_{i}.html')
+
+def plot_picture(i, result_biclusters, gold_biclusters, metrics_zip_file, metric, output_folder, n, m):
+
+    # Extraer la matriz de similaridad
+    matrix = get_matrix_score(metric, i, metrics_zip_file, result_biclusters, gold_biclusters)
+
+    # Crear carpetas para las imagenes
+    Path(f"{output_folder}/pictures/solution_{i}").mkdir(parents=True, exist_ok=True)
+
+    # Generar colores para los biclusters
+    colors = generate_colors(4, viridis)
+
+    for j, (gsbic, gscells) in enumerate(gold_biclusters.items()):
+        # Generar imagen completa
+        gold_standard_image = create_image_matrix(n, m, gscells, colors[0])
+
+        # Obtener las mejores biclusters
+        best_biclusters = sorted(result_biclusters[i].items(), key=lambda x: matrix[gsbic][x[0]], reverse=True)[0:3]
+
+        # Crear conjuntos para las filas y columnas relevantes
+        relevant_rows = set(gscells["rows"] + best_biclusters[0][1]["rows"] + best_biclusters[1][1]["rows"] + best_biclusters[2][1]["rows"])
+        relevant_cols = set(gscells["cols"] + best_biclusters[0][1]["cols"] + best_biclusters[1][1]["cols"] + best_biclusters[2][1]["cols"])
+
+        # Crear máscaras para las filas y columnas relevantes
+        row_mask = np.array([i in relevant_rows for i in range(n)])
+        col_mask = np.array([i in relevant_cols for i in range(m)])
+
+        # Filtrar la matriz
+        filtered_image = gold_standard_image[row_mask][:, col_mask]
+
+        # Generar imagen filtrada
+        _, ax = plt.subplots(figsize=(10, 10))
+        ax.imshow(filtered_image)
+
+        # Añadir círculos de los tres biclusters resultado más cercano
+        add_circles_to_plot(ax, n, m, best_biclusters, colors[1:], filtered_image, row_mask, col_mask)
+        ax.set_title(f'B-GS-{j} vs top 3 in R-{i}')
+        ax.axis('off')
+        plt.savefig(f'{output_folder}/pictures/solution_{i}/gs_{j}.pdf')
 
 def main(
         var_translated_file: str, 
@@ -215,124 +312,66 @@ def main(
     gold_biclusters = parse_bicluster(gold_standard.iloc[0], 'gs-')
     result_biclusters = [parse_bicluster(result.iloc[i], 'r-') for i in range(len(result))]
 
-    # Si la representación es individual se juntan todas las soluciones en una sola
-    if representation == 'individual':
+    # Si la representación es INDIVIDUAL se juntan todas las soluciones en una sola
+    if representation == 'INDIVIDUAL':
         result_biclusters = [{f'r-{i}': list(d.values())[0] for i, d in enumerate(result_biclusters)}]
 
     ## 1. Grafo
-    if plot_type == 'graph':
+    if plot_type == 'graph' or plot_type == 'all':
 
-        for i in range(len(result_biclusters)):
-
-            # Extraer la matriz de similaridad
-            archive = zipfile.ZipFile(metrics_zip_file, 'r')
-            content = archive.read(f"{metric}/solution-{i}.csv").decode('utf-8').splitlines()
-            matrix = csv_to_nested_dict(content)
-
-            # Crear la carpeta de salida si no existe
-            Path(f"{output_folder}/graphs").mkdir(parents=True, exist_ok=True)
-
-            # Crear el grafo
-            G = nx.Graph()
-
-            # Añadir nodos del gold standard en verde
-            for bic in gold_biclusters.keys():
-                G.add_node(bic, color='mediumseagreen')
-
-            # Añadir nodos del resultado en morado
-            for bic in result_biclusters[i].keys():
-                G.add_node(bic, color='mediumpurple')
-
-            # Añadir aristas
-            for gsbic in gold_biclusters.keys():
-                for rbic in result_biclusters[i].keys():
-                    if matrix[gsbic][rbic] > 0:
-                        G.add_edge(gsbic, rbic, weight=matrix[gsbic][rbic], color="gray")
-
-            # Crear una visualización con pyvis
-            net = Network(notebook=False, directed=False, height='100vh', width='100vw')
-
-            # Activar la física para mejor distribución de nodos
-            net.force_atlas_2based(gravity=-80, central_gravity=0.01, spring_length=200, spring_strength=0.01, damping=0.4)
-
-            # Añadir nodos y establecer posiciones manualmente
-            for node, data in G.nodes(data=True):
-                net.add_node(node, label=node, color=data['color'], physics=True)
-
-            # Añadir aristas a la visualización de pyvis
-            for source, target, data in G.edges(data=True):
-                net.add_edge(source, target, value=data['weight'], color=data['color'])
-
-            # Generar el archivo HTML
-            net.save_graph(f'{output_folder}/graphs/solution_{i}.html')
+        # Llamar a la función para cada solución en paralelo
+        pool_obj = multiprocessing.Pool()
+        pool_obj.map(
+            partial(
+                plot_graph, 
+                result_biclusters=result_biclusters, 
+                gold_biclusters=gold_biclusters, 
+                metrics_zip_file=metrics_zip_file, 
+                metric=metric, 
+                output_folder=output_folder
+            ), 
+            range(len(result_biclusters)))
+        pool_obj.close()
 
     ## 2. Imagen
-    elif plot_type == 'picture':
+    if plot_type == 'picture' or plot_type == 'all':
 
         # Calcular tamaño de la matriz
         n = 0
         m = 0
-        for gsbic, gscells in gold_biclusters.items():
+        for _, gscells in gold_biclusters.items():
             if max(gscells["rows"]) >= n:
                 n = max(gscells["rows"]) + 1
             if max(gscells["cols"]) >= m:
                 m = max(gscells["cols"]) + 1
-
-        for i in range(len(result_biclusters)):
-
-            # Extraer la matriz de similaridad
-            archive = zipfile.ZipFile(metrics_zip_file, 'r')
-            content = archive.read(f"{metric}/solution-{i}.csv").decode('utf-8').splitlines()
-            matrix = csv_to_nested_dict(content)
-
-            # Crear carpetas para las imagenes
-            Path(f"{output_folder}/pictures/solution_{i}").mkdir(parents=True, exist_ok=True)
-
-            # Generar colores para los biclusters
-            colors = generate_colors(3, viridis)
-
-            for j, (gsbic, gscells) in enumerate(gold_biclusters.items()):
-                # Generar imagen completa
-                gold_standard_image = create_image_matrix(n, m, gscells, colors[0])
-
-                # Obtener las mejores biclusters
-                best_biclusters = sorted(result_biclusters[i].items(), key=lambda x: matrix[gsbic][x[0]], reverse=True)[0:2]
-
-                # Crear conjuntos para las filas y columnas relevantes
-                relevant_rows = set(gscells["rows"] + best_biclusters[0][1]["rows"] + best_biclusters[1][1]["rows"])
-                relevant_cols = set(gscells["cols"] + best_biclusters[0][1]["cols"] + best_biclusters[1][1]["cols"])
-
-                # Crear máscaras para las filas y columnas relevantes
-                row_mask = np.array([i in relevant_rows for i in range(n)])
-                col_mask = np.array([i in relevant_cols for i in range(m)])
-
-                # Filtrar la matriz
-                filtered_image = gold_standard_image[row_mask][:, col_mask]
-
-                # Generar imagen filtrada
-                _, ax = plt.subplots(figsize=(10, 10))
-                ax.imshow(filtered_image)
-
-                # Añadir círculos de los tres biclusters resultado más cercano
-                add_circles_to_plot(ax, n, m, best_biclusters, colors[1:], filtered_image, row_mask, col_mask)
-                ax.set_title(f'B-GS-{j} vs top 2 in R-{i}')
-                ax.axis('off')
-                plt.savefig(f'{output_folder}/pictures/solution_{i}/gs_{j}.pdf')
-
-    else:
-        raise ValueError(f"Invalid plot type: {plot_type}")
+        
+        # Llamar a la función para cada solución en paralelo
+        pool_obj = multiprocessing.Pool()
+        pool_obj.map(
+            partial(
+                plot_picture, 
+                result_biclusters=result_biclusters, 
+                gold_biclusters=gold_biclusters, 
+                metrics_zip_file=metrics_zip_file, 
+                metric=metric, 
+                output_folder=output_folder,
+                n=n,
+                m=m
+            ), 
+            range(len(result_biclusters)))
+        pool_obj.close()
     
     # Plot evaluated parallel coordinates
-    if representation == "generic":
+    if representation == "GENERIC":
         df1 = pd.read_csv(fun_file)
         df2 = pd.read_csv(accuracy_scores_file)
         df = pd.concat([df1, df2], axis=1)
         fig = px.parallel_coordinates(
             df,
-            color=metric,
-            dimensions=df.columns,
-            color_continuous_scale=px.colors.sequential.Blues,
-            title="Evaluated plot of parallel coordinates",
+            color = metric if metric != "intersection-size" else None,
+            dimensions = df.columns,
+            color_continuous_scale = px.colors.sequential.Blues,
+            title = "Evaluated plot of parallel coordinates",
         )
         fig.write_html(f"{output_folder}/evaluated_parallel_coordinates.html")
 
@@ -367,23 +406,23 @@ if __name__ == "__main__":
     parser.add_argument(
         "--accuracy-scores-file",
         type=str,
-        help="File with accuracy scores. Only required if representation is 'generic'.",
+        help="File with accuracy scores. Only required if representation is 'GENERIC'.",
     )
     parser.add_argument(
         "--fun-file",
         type=str,
-        help="File with function values. Only required if representation is 'generic'.",
+        help="File with function values. Only required if representation is 'GENERIC'.",
     )
     parser.add_argument(
         "--representation", 
-        choices=['individual', 'generic'], 
-        default='generic', 
+        choices=['INDIVIDUAL', 'GENERIC'], 
+        default='GENERIC', 
         help="Type of plot to display.",
     )
     parser.add_argument(
         "--plot-type", 
-        choices=['graph', 'picture'], 
-        default='graph', 
+        choices=['graph', 'picture', 'all'], 
+        default='all', 
         help="Type of plot to display.",
     )
     parser.add_argument(
@@ -394,10 +433,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.representation == "generic" and args.accuracy_scores_file is None:
-        raise ValueError("File with accuracy scores is required if representation is 'generic'.")
+    if args.representation == "GENERIC" and args.accuracy_scores_file is None:
+        raise ValueError("File with accuracy scores is required if representation is 'GENERIC'.")
 
-    if args.representation == "generic" and args.fun_file is None:
-        raise ValueError("File with function values is required if representation is 'generic'.")
+    if args.representation == "GENERIC" and args.fun_file is None:
+        raise ValueError("File with function values is required if representation is 'GENERIC'.")
 
     main(args.var_translated_file, args.gold_standard_translated_file, args.metric_zip_file, args.metric, args.representation, args.plot_type, args.accuracy_scores_file, args.fun_file, args.output_folder)

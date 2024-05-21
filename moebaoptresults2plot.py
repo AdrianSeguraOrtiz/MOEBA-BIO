@@ -8,6 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from plotly.subplots import make_subplots
 
 
@@ -176,6 +177,7 @@ def plot_3D_pareto_front(fun_df: pd.DataFrame, objectives: list, output_file: st
             )
         ]
     )
+    fig.update_traces(marker_size = 4)
 
     # Set the axis names and the title of the plot
     fig.update_layout(
@@ -242,7 +244,7 @@ def plot_bicluster_count(df: pd.DataFrame,
     - output_file (str): The path to the output file where the plot will be saved.
     """
     # Set figure size
-    plt.figure(figsize=(18, 10))
+    plt.figure(figsize=(45, 15))
 
     # Plot the data
     if plot_type == 'violin':
@@ -250,7 +252,9 @@ def plot_bicluster_count(df: pd.DataFrame,
         sns.violinplot(x='Generation', y='Number of Biclusters', data=df)
     elif plot_type == 'box':
         # Plot box plot
-        sns.boxplot(x='Generation', y='Number of Biclusters', data=df)
+        ax = sns.boxplot(x='Generation', y='Number of Biclusters', data=df)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(25))
+        ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
     elif plot_type == 'histogram':
         # Plot histogram
         # Convert 'Generation' to categorical for better histogram plotting

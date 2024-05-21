@@ -18,7 +18,7 @@ public class ScoreLiuWang extends MetricInterface {
 
     public ScoreLiuWang(boolean saveProcess, String outputProcessFolder) {
         super(saveProcess, outputProcessFolder);
-        this.outputProcessFolder += "/scoreLiuWang/";
+        this.outputProcessFolder += "/ScoreLiuWang/";
     }
 
     /**

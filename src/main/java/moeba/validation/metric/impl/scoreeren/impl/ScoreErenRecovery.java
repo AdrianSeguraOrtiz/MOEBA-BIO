@@ -9,7 +9,7 @@ public class ScoreErenRecovery extends ScoreEren {
 
     public ScoreErenRecovery(boolean saveProcess, String outputProcessFolder) {
         super(saveProcess, outputProcessFolder);
-        this.outputProcessFolder += "/scoreErenRecovery/";
+        this.outputProcessFolder += "/ScoreErenRecovery/";
     }
 
     @Override

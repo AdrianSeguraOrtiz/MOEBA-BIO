@@ -18,7 +18,7 @@ public class ScoreAyadi extends MetricInterface {
 
     public ScoreAyadi(boolean saveProcess, String outputProcessFolder) {
         super(saveProcess, outputProcessFolder);
-        this.outputProcessFolder += "/scoreAyadi/";
+        this.outputProcessFolder += "/ScoreAyadi/";
     }
 
     /**

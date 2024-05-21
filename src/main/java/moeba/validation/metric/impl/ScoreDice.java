@@ -20,7 +20,7 @@ public class ScoreDice extends MetricInterface {
 
     public ScoreDice(boolean saveProcess, String outputProcessFolder) {
         super(saveProcess, outputProcessFolder);
-        this.outputProcessFolder += "/scoreDice/";
+        this.outputProcessFolder += "/ScoreDice/";
     }
 
     /**

@@ -9,7 +9,7 @@ public class ScoreErenRelevance extends ScoreEren {
 
     public ScoreErenRelevance(boolean saveProcess, String outputProcessFolder) {
         super(saveProcess, outputProcessFolder);
-        this.outputProcessFolder += "/scoreErenRelevance/";
+        this.outputProcessFolder += "/ScoreErenRelevance/";
     }
 
     @Override
