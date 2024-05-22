@@ -3,7 +3,9 @@ package moeba;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -527,5 +529,47 @@ public final class StaticUtils {
             }
         }
         return list;
+    }
+
+
+    /**
+     * Loads biclusters from a specified CSV file.
+     * This method reads a file line by line, converts each line into a list of biclusters,
+     * and returns a list of these biclusters. Each bicluster is represented as an ArrayList of ArrayLists of arrays of Integers.
+     *
+     * @param file The file to read biclusters from.
+     * @return A list containing the biclusters loaded from the file.
+     * @throws IOException if an I/O error occurs reading from the file.
+     */
+    public static ArrayList<ArrayList<ArrayList<Integer>[]>> loadBiclusters(File file) {
+        ArrayList<ArrayList<ArrayList<Integer>[]>> biclusters = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                biclusters.add(StaticUtils.stringToBiclusters(line));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return biclusters;
+    }
+
+    /**
+     * Loads gold standard biclusters from a specified CSV file.
+     * This method reads the first line of the file and converts it into a list of biclusters,
+     * which is returned. This list is intended to serve as the "gold standard" for validation.
+     *
+     * @param file The file to read the gold standard biclusters from.
+     * @return A list of gold standard biclusters.
+     * @throws IOException if an I/O error occurs reading from the file.
+     */
+    public static ArrayList<ArrayList<Integer>[]> loadGoldStandardBiclusters(File file) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line = reader.readLine();
+            return StaticUtils.stringToBiclusters(line);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 }

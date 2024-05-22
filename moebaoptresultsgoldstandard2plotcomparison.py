@@ -11,6 +11,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from matplotlib import pyplot as plt
 from matplotlib.cm import viridis
 from matplotlib.colors import Normalize
@@ -89,6 +90,32 @@ def parse_bicluster(line, suffix):
     # Return the dictionary with the biclusters information
     return biclusters
 
+def get_biclusters(var_translated_file: str, gold_standard_translated_file: str, representation: str) -> tuple:
+    """
+    Load the translated solutions from files and convert them to biclusters dictionaries.
+
+    Args:
+        var_translated_file (str): File with the translated solutions.
+        gold_standard_translated_file (str): File with the translated gold standard solutions.
+        representation (str): Representation of the solutions.
+
+    Returns:
+        tuple: A tuple containing the list of biclusters from the solutions and the list of
+               biclusters from the gold standard.
+    """
+    # Load the files
+    result = pd.read_csv(var_translated_file, header=None)
+    gold_standard = pd.read_csv(gold_standard_translated_file, header=None)
+
+    # Convert biclusters to dictionaries of rows and columns
+    gold_biclusters = parse_bicluster(gold_standard.iloc[0], 'gs-')
+    result_biclusters = [parse_bicluster(result.iloc[i], 'r-') for i in range(len(result))]
+
+    # If the representation is INDIVIDUAL, join all the solutions in one single solution
+    if representation == 'INDIVIDUAL':
+        result_biclusters = [{f'r-{i}': list(d.values())[0] for i, d in enumerate(result_biclusters)}]
+                             
+    return result_biclusters, gold_biclusters 
 
 def generate_colors(n, colormap):
     """
@@ -279,12 +306,13 @@ def plot_picture(i, result_biclusters, gold_biclusters, metrics_zip_file, metric
 
 def main(
         var_translated_file: str, 
-        gold_standard_translated_file: str, 
-        metrics_zip_file: str, 
+        gold_standard_translated_file: str,  
         metric: str, 
+        metrics_zip_file: str, 
         representation: str, 
         plot_type: str, 
         accuracy_scores_file: str, 
+        gs_fun_file: str,
         fun_file: str, 
         output_folder: str
     ) -> None:
@@ -294,30 +322,24 @@ def main(
     Args:
         var_translated_file (str): File with translated solutions.
         gold_standard_translated_file (str): File with translated gold standard solutions.
-        metrics_zip_file (str): Zip file with metrics.
-        metric (str): Metric used for evaluation.
-        representation (str): Representation type.
+        metric (str): Name of the metric.
+        metrics_zip_file (str): File with the metrics.
+        representation (str): Representation of the solutions.
         plot_type (str): Type of plot.
+        accuracy_scores_file (str): File with the accuracy scores.
+        gs_fun_file (str): File with the gold standard function values.
+        fun_file (str): File with the function values.
         output_folder (str): Output folder.
     """
 
     # Crear carpeta de salida si no existe
     Path(output_folder).mkdir(parents=True, exist_ok=True)
 
-    # Cargar los archivos CSV
-    result = pd.read_csv(var_translated_file, header=None)
-    gold_standard = pd.read_csv(gold_standard_translated_file, header=None)
-
-    # Convertir biclústeres a diccionarios de filas y columnas
-    gold_biclusters = parse_bicluster(gold_standard.iloc[0], 'gs-')
-    result_biclusters = [parse_bicluster(result.iloc[i], 'r-') for i in range(len(result))]
-
-    # Si la representación es INDIVIDUAL se juntan todas las soluciones en una sola
-    if representation == 'INDIVIDUAL':
-        result_biclusters = [{f'r-{i}': list(d.values())[0] for i, d in enumerate(result_biclusters)}]
-
     ## 1. Grafo
-    if plot_type == 'graph' or plot_type == 'all':
+    if plot_type == 'graph':
+
+        # Cargar las soluciones y las gold standard
+        result_biclusters, gold_biclusters = get_biclusters(var_translated_file, gold_standard_translated_file, representation)
 
         # Llamar a la función para cada solución en paralelo
         pool_obj = multiprocessing.Pool()
@@ -334,7 +356,10 @@ def main(
         pool_obj.close()
 
     ## 2. Imagen
-    if plot_type == 'picture' or plot_type == 'all':
+    elif plot_type == 'picture':
+
+        # Cargar las soluciones y las gold standard
+        result_biclusters, gold_biclusters = get_biclusters(var_translated_file, gold_standard_translated_file, representation)
 
         # Calcular tamaño de la matriz
         n = 0
@@ -361,19 +386,94 @@ def main(
             range(len(result_biclusters)))
         pool_obj.close()
     
-    # Plot evaluated parallel coordinates
-    if representation == "GENERIC":
-        df1 = pd.read_csv(fun_file)
-        df2 = pd.read_csv(accuracy_scores_file)
-        df = pd.concat([df1, df2], axis=1)
+    ## 3. Plot evaluated parallel coordinates
+    elif plot_type == 'evaluated-parallel-coordinates':
+
+        # Cargar los archivos con los valores de las funciones de fitness y métricas de validación
+        fun_df = pd.read_csv(fun_file)
+        acc_df = pd.read_csv(accuracy_scores_file)
+        df = pd.concat([fun_df, acc_df], axis=1)
+
+        # Añadir la línea correspondiente al gold standard
+        df3 = pd.read_csv(gs_fun_file)
+        new_row = []
+        for column in fun_df.columns:
+            new_row.append(df3.iloc[0][column])
+        for column in acc_df.columns:
+            new_row.append(1)
+        df.loc[len(df.index)] = new_row
+
+        # Crear una nueva escala de colores
+        custom_colorscale = px.colors.sequential.Blues[:-1]
+        colorscale = [[i / (len(custom_colorscale) - 1) * 0.99, color] for i, color in enumerate(custom_colorscale)]
+        colorscale.append([1.0, 'red'])
+
+        # Crear el plot
         fig = px.parallel_coordinates(
             df,
             color = metric if metric != "intersection-size" else None,
             dimensions = df.columns,
-            color_continuous_scale = px.colors.sequential.Blues,
+            color_continuous_scale = colorscale,
+            range_color=[min(acc_df[metric]), max(acc_df[metric]) + (max(acc_df[metric]) - min(acc_df[metric])) / 100],
             title = "Evaluated plot of parallel coordinates",
         )
+
+        # Guardar el plot
         fig.write_html(f"{output_folder}/evaluated_parallel_coordinates.html")
+
+
+    ## 4. Plot pareto front with the gold standard
+    elif plot_type == 'pareto-front-gs':
+
+        # Cargar los archivos con los valores de las funciones de fitness y métricas de validación
+        fun_df = pd.read_csv(fun_file)
+        acc_df = pd.read_csv(accuracy_scores_file)
+        df = pd.concat([fun_df, acc_df], axis=1)
+
+        # Create the 3D scatter plot
+        fig = px.scatter_3d(
+            df,
+            x=fun_df.columns[0],
+            y=fun_df.columns[1],
+            z=fun_df.columns[2],
+            color=metric if metric != "intersection-size" else None,
+            color_continuous_scale=px.colors.sequential.Blues,
+        )
+
+        # Set the size of the markers
+        fig.update_traces(marker_size = 4)
+
+        # Set the axis names and the title of the plot
+        fig.update_layout(
+            scene=dict(
+                xaxis_title=fun_df.columns[0],
+                yaxis_title=fun_df.columns[1],
+                zaxis_title=fun_df.columns[2],
+                xaxis_title_font=dict(size=20),
+                yaxis_title_font=dict(size=20),
+                zaxis_title_font=dict(size=20),
+                xaxis=dict(tickfont=dict(size=14)),
+                yaxis=dict(tickfont=dict(size=14)),
+                zaxis=dict(tickfont=dict(size=14)),
+            ),
+            title="Pareto front",
+        )
+
+        # Add the gold standard to the plot
+        gs_df = pd.read_csv(gs_fun_file)
+        fig.add_trace(
+            go.Scatter3d(
+                x=gs_df.iloc[:, 0],
+                y=gs_df.iloc[:, 1],
+                z=gs_df.iloc[:, 2],
+                mode="markers",
+                marker=dict(color="red"),
+                showlegend=False,
+            )
+        )
+
+        # Save the plot to an HTML file
+        fig.write_html(f"{output_folder}/pareto_front_with_gold_standard.html")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -382,36 +482,23 @@ if __name__ == "__main__":
     parser.add_argument(
         "--var-translated-file",
         type=str,
-        help="File with translated solutions.",
-        required=True,
+        help="File with translated solutions. Only required if plot-type is 'graph' or 'picture'.",
     )
     parser.add_argument(
         "--gold-standard-translated-file",
         type=str,
-        help="File with translated gold standard.",
-        required=True,
-    )
-    parser.add_argument(
-        "--metric-zip-file",
-        type=str,
-        help="Zip file with metrics csvs.",
-        required=True,
+        help="File with translated gold standard. Only required if plot-type is 'graph' or 'picture'.",
     )
     parser.add_argument(
         "--metric",
         type=str,
-        help="Metric to calculate as similarity. It must be in the zip file as a folder with the same name.",
-        required=True,
+        help="Metric to calculate as similarity. It must be in the zip file as a folder with the same name or 'intersection-size'.",
+        default="intersection-size",
     )
     parser.add_argument(
-        "--accuracy-scores-file",
+        "--metric-zip-file",
         type=str,
-        help="File with accuracy scores. Only required if representation is 'GENERIC'.",
-    )
-    parser.add_argument(
-        "--fun-file",
-        type=str,
-        help="File with function values. Only required if representation is 'GENERIC'.",
+        help="Zip file with metrics csvs. Only required if plot-type is 'graph' or 'picture' and metric is not 'intersection-size'.",
     )
     parser.add_argument(
         "--representation", 
@@ -421,9 +508,24 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--plot-type", 
-        choices=['graph', 'picture', 'all'], 
-        default='all', 
-        help="Type of plot to display.",
+        choices=['graph', 'picture', 'evaluated-parallel-coordinates', 'pareto-front-gs'], 
+        default='graph', 
+        help="Type of plot to display. Evaluated parallel coordinates only works if representation is 'GENERIC'.",
+    )
+    parser.add_argument(
+        "--accuracy-scores-file",
+        type=str,
+        help="File with accuracy scores. Only required if plot type is 'evaluated-parallel-coordinates'.",
+    )
+    parser.add_argument(
+        "--gs-fun-file",
+        type=str,
+        help="File with gold standard function values. Only required if plot type is 'evaluated-parallel-coordinates' or 'pareto-front-gs'.",
+    )
+    parser.add_argument(
+        "--fun-file",
+        type=str,
+        help="File with function values. Only required if plot type is 'evaluated-parallel-coordinates' or 'pareto-front-gs'.",
     )
     parser.add_argument(
         "--output-folder",
@@ -433,10 +535,25 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.representation == "GENERIC" and args.accuracy_scores_file is None:
-        raise ValueError("File with accuracy scores is required if representation is 'GENERIC'.")
+    if (args.plot_type == 'graph' or args.plot_type == 'picture') and args.var_translated_file is None: 
+        raise ValueError("File with translated solutions is required if plot type is 'graph' or 'picture'.")
+    
+    if (args.plot_type == 'graph' or args.plot_type == 'picture') and args.gold_standard_translated_file is None: 
+        raise ValueError("File with translated gold standard is required if plot type is 'graph' or 'picture'.")
 
-    if args.representation == "GENERIC" and args.fun_file is None:
-        raise ValueError("File with function values is required if representation is 'GENERIC'.")
+    if args.metric != "intersection-size" and (args.plot_type == 'graph' or args.plot_type == 'picture') and args.metric_zip_file is None:  
+        raise ValueError("Zip file with metrics is required if plot type is 'graph' or 'picture' and metric is not 'intersection-size'.")
+    
+    if args.plot_type == 'evaluated-parallel-coordinates' and args.representation != 'GENERIC':
+        raise ValueError("Evaluated parallel coordinates only works if representation is 'GENERIC'.")
 
-    main(args.var_translated_file, args.gold_standard_translated_file, args.metric_zip_file, args.metric, args.representation, args.plot_type, args.accuracy_scores_file, args.fun_file, args.output_folder)
+    if args.plot_type == 'evaluated-parallel-coordinates' and args.accuracy_scores_file is None:
+        raise ValueError("File with accuracy scores is required if plot type is 'evaluated-parallel-coordinates'.")
+    
+    if (args.plot_type == 'evaluated-parallel-coordinates' or args.plot_type == 'pareto-front-gs') and args.gs_fun_file is None:
+        raise ValueError("File with gold standard function values is required if plot type is 'evaluated-parallel-coordinates' or 'pareto-front-gs'.")
+    
+    if (args.plot_type == 'evaluated-parallel-coordinates' or args.plot_type == 'pareto-front-gs') and args.fun_file is None:
+        raise ValueError("File with function values is required if plot type is 'evaluated-parallel-coordinates' or 'pareto-front-gs'.")
+
+    main(args.var_translated_file, args.gold_standard_translated_file, args.metric, args.metric_zip_file, args.representation, args.plot_type, args.accuracy_scores_file, args.gs_fun_file, args.fun_file, args.output_folder)
