@@ -430,6 +430,10 @@ def main(
         acc_df = pd.read_csv(accuracy_scores_file)
         df = pd.concat([fun_df, acc_df], axis=1)
 
+        # Comprobar que el número de columnas es 3
+        if len(fun_df.columns) != 3:
+            raise Exception("The number of columns is not 3. Pareto front plot is only available for 3 objectives.") 
+
         # Create the 3D scatter plot
         fig = px.scatter_3d(
             df,
@@ -515,7 +519,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--accuracy-scores-file",
         type=str,
-        help="File with accuracy scores. Only required if plot type is 'evaluated-parallel-coordinates'.",
+        help="File with accuracy scores. Only required if plot type is 'evaluated-parallel-coordinates' or 'pareto-front-gs'.",
     )
     parser.add_argument(
         "--gs-fun-file",
@@ -547,8 +551,8 @@ if __name__ == "__main__":
     if args.plot_type == 'evaluated-parallel-coordinates' and args.representation != 'GENERIC':
         raise ValueError("Evaluated parallel coordinates only works if representation is 'GENERIC'.")
 
-    if args.plot_type == 'evaluated-parallel-coordinates' and args.accuracy_scores_file is None:
-        raise ValueError("File with accuracy scores is required if plot type is 'evaluated-parallel-coordinates'.")
+    if (args.plot_type == 'evaluated-parallel-coordinates' or args.plot_type == 'pareto-front-gs') and args.accuracy_scores_file is None:
+        raise ValueError("File with accuracy scores is required if plot type is 'evaluated-parallel-coordinates' or 'pareto-front-gs'.")
     
     if (args.plot_type == 'evaluated-parallel-coordinates' or args.plot_type == 'pareto-front-gs') and args.gs_fun_file is None:
         raise ValueError("File with gold standard function values is required if plot type is 'evaluated-parallel-coordinates' or 'pareto-front-gs'.")
