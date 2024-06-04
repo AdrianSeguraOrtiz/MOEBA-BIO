@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public abstract class MetricInterface {
@@ -47,7 +49,7 @@ public abstract class MetricInterface {
      */
     protected abstract double getScoreSavingProcess(ArrayList<ArrayList<Integer>[]> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandardBiclusters, int resultIndex);  
 
-/**
+    /**
      * Gets a PrintWriter for saving the score process to a file.
      *
      * @param folderPath       Path to the output folder.
@@ -229,5 +231,53 @@ public abstract class MetricInterface {
         return result;
     }
 
+    /**
+     * Calculates the nondisjoint maps for the given biclusters.
+     *
+     * @param inferredBiclusters the inferred biclusters
+     * @param goldStandardBiclusters the gold standard biclusters
+     * @return the nondisjoint maps
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Integer>[] getNondisjointMaps(ArrayList<ArrayList<Integer>[]> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandardBiclusters) {
+
+        // Set to hold all keys
+        Set<String> keys = new HashSet<>();
+        
+        // Maps to hold the count of occurrences of each key
+        Map<String, Integer> nondisjointUnionMap = new HashMap<>();
+        Map<String, Integer> nondisjointIntersectionMap = new HashMap<>();
+        Map<String, Integer> inferredMap = new HashMap<>();
+        Map<String, Integer> goldStandardMap = new HashMap<>();
+
+        // Calculate the map for the inferred biclusters
+        for (ArrayList<Integer>[] inferredBicluster : inferredBiclusters) {
+            int[][] inferredCartesianProduct = getCartesianProduct(inferredBicluster[0], inferredBicluster[1]);
+            for (int[] pair : inferredCartesianProduct) {
+                String key = pair[0] + "-" + pair[1];
+                inferredMap.put(key, inferredMap.getOrDefault(key, 0) + 1);
+                keys.add(key);
+            }
+        }
+
+        // Calculate the map for the gold standard biclusters
+        for (ArrayList<Integer>[] goldStandardBicluster : goldStandardBiclusters) {
+            int[][] goldStandardCartesianProduct = getCartesianProduct(goldStandardBicluster[0], goldStandardBicluster[1]);
+            for (int[] pair : goldStandardCartesianProduct) {
+                String key = pair[0] + "-" + pair[1];
+                goldStandardMap.put(key, goldStandardMap.getOrDefault(key, 0) + 1);
+                keys.add(key);
+            }
+        }
+
+        // Calculate the nondisjoint union and intersection maps
+        for (String key : keys) {
+            nondisjointUnionMap.put(key, Math.max(inferredMap.getOrDefault(key, 0), goldStandardMap.getOrDefault(key, 0)));
+            nondisjointIntersectionMap.put(key, Math.min(inferredMap.getOrDefault(key, 0), goldStandardMap.getOrDefault(key, 0)));
+        }
+
+        // Return the nondisjoint maps
+        return new Map[]{nondisjointUnionMap, nondisjointIntersectionMap};
+    }
 
 }
