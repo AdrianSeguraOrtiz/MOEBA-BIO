@@ -90,32 +90,45 @@ def parse_bicluster(line, suffix):
     # Return the dictionary with the biclusters information
     return biclusters
 
-def get_biclusters(var_translated_file: str, gold_standard_translated_file: str, representation: str) -> tuple:
+def get_biclusters(
+    var_translated_file: str,
+    gold_standard_translated_file: str,
+    representation: str
+) -> tuple:
     """
     Load the translated solutions from files and convert them to biclusters dictionaries.
 
     Args:
         var_translated_file (str): File with the translated solutions.
         gold_standard_translated_file (str): File with the translated gold standard solutions.
-        representation (str): Representation of the solutions.
+        representation (str): Representation of the solutions. If 'INDIVIDUAL', the solutions
+                               from the variable file are joined together in a single
+                               solution. If 'GENERIC', each solution is a bicluster.
 
     Returns:
         tuple: A tuple containing the list of biclusters from the solutions and the list of
                biclusters from the gold standard.
     """
-    # Load the files
-    result = pd.read_csv(var_translated_file, header=None)
-    gold_standard = pd.read_csv(gold_standard_translated_file, header=None)
 
-    # Convert biclusters to dictionaries of rows and columns
-    gold_biclusters = parse_bicluster(gold_standard.iloc[0], 'gs-')
-    result_biclusters = [parse_bicluster(result.iloc[i], 'r-') for i in range(len(result))]
+    # Load the biclusters from the translated solutions file
+    result_biclusters = []
+    with open(var_translated_file, 'r') as file:
+        for line in file:
+            # Parse each line and store the biclusters information
+            result_biclusters.append(parse_bicluster(line.strip().split(','), 'r-'))
+
+    # Load the biclusters from the gold standard translated file
+    with open(gold_standard_translated_file, 'r') as file:
+        # Parse the first line, which contains the gold standard biclusters
+        gold_biclusters = parse_bicluster(file.readline().strip().split(','), 'gs-')
 
     # If the representation is INDIVIDUAL, join all the solutions in one single solution
     if representation == 'INDIVIDUAL':
+        # Join all the solutions in a single solution
         result_biclusters = [{f'r-{i}': list(d.values())[0] for i, d in enumerate(result_biclusters)}]
-                             
-    return result_biclusters, gold_biclusters 
+        
+    # Return the list of biclusters from the variable file and the gold standard
+    return result_biclusters, gold_biclusters
 
 def generate_colors(n, colormap):
     """

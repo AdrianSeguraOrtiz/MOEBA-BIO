@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import moeba.Representation;
 import moeba.StaticUtils;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -25,6 +26,9 @@ public class FastEvaluationRunner implements Runnable {
 
     @Option(names = {"--solution-translated"}, description = "Path to the input CSV file with solution translated biclusters.", required = true)
     private File solutionTranslatedFile;
+
+    @Option(names = {"--representation"}, description = "Representation as a string. Possible values: GENERIC, INDIVIDUAL", defaultValue = "GENERIC")
+    private Representation representation;
 
     @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSize, BiclusterSizeWeighted, BiclusterVariance, RowVariance, MeanSquaredResidue, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSize;RowVariance;MeanSquaredResidue")
     private String strFitnessFormulas;
@@ -80,6 +84,20 @@ public class FastEvaluationRunner implements Runnable {
 
         // Load inferred biclusters from CSV file
         ArrayList<ArrayList<ArrayList<Integer>[]>> biclusters = StaticUtils.loadBiclusters(solutionTranslatedFile);
+
+        // Flatten inferred biclusters if representation is INDIVIDUAL
+        if (representation == Representation.INDIVIDUAL) {
+            ArrayList<ArrayList<ArrayList<Integer>[]>> individualBiclusters = new ArrayList<>();
+            for (ArrayList<ArrayList<Integer>[]> genericBiclusters : biclusters) {
+                for (ArrayList<Integer>[] bicluster : genericBiclusters) {
+                    ArrayList<ArrayList<Integer>[]> individualBicluster = new ArrayList<>();
+                    individualBicluster.add(bicluster);
+                    individualBiclusters.add(individualBicluster);
+                }
+            }
+            biclusters = individualBiclusters;
+            individualBiclusters = null;
+        }
 
         // Run evaluation
         try (PrintWriter writer = new PrintWriter(new FileWriter(outputFile))) {
