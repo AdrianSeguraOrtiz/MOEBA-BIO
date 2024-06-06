@@ -20,17 +20,17 @@ import moeba.validation.metric.MetricInterface;
  * 
  * This class extends MetricInterface and calculates the overall score based on this specific implementation.
  */
-public class ClusteringError extends MetricInterface {
+public class ClusteringErrorComplementary extends MetricInterface {
 
     /**
-     * Constructor for ClusteringError.
+     * Constructor for ClusteringErrorComplementary.
      *
      * @param saveProcess boolean indicating whether the process should be saved. This option is not supported and will be ignored.
      * @param outputProcessFolder String representing the folder where the process output would be saved if supported.
      */
-    public ClusteringError(boolean saveProcess, String outputProcessFolder) {
+    public ClusteringErrorComplementary(boolean saveProcess, String outputProcessFolder) {
         super(saveProcess, outputProcessFolder);
-        if (saveProcess) System.out.println("This metric (ClusteringError) doesnt support saving process, it will be ignored.");
+        if (saveProcess) System.out.println("This metric (ClusteringErrorComplementary) doesnt support saving process, it will be ignored.");
     }
 
     /**
@@ -53,7 +53,7 @@ public class ClusteringError extends MetricInterface {
             unionSum += entry.getValue();
         }
 
-        return (double) (unionSum - dMax) / unionSum;
+        return 1.0 - (double) (unionSum - dMax) / unionSum;
     }
 
     /**

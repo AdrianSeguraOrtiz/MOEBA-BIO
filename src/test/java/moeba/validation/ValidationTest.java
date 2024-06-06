@@ -7,12 +7,12 @@ import java.util.Arrays;
 
 import org.testng.annotations.Test;
 
-import moeba.validation.metric.impl.ClusteringError;
+import moeba.validation.metric.impl.ClusteringErrorComplementary;
 public class ValidationTest {
     
     @SuppressWarnings("unchecked")
     @Test
-    public void testDisjointClusteringError() {
+    public void testDisjointClusteringErrorComplementary() {
         ArrayList<ArrayList<Integer>[]> goldStandardBiclusters = new ArrayList<>();
         ArrayList<Integer>[] gsb1 = new ArrayList[]{new ArrayList<>(Arrays.asList(0, 1)), new ArrayList<>(Arrays.asList(2, 3))};
         ArrayList<Integer>[] gsb2 = new ArrayList[]{new ArrayList<>(Arrays.asList(2, 3)), new ArrayList<>(Arrays.asList(2, 3))};
@@ -29,13 +29,13 @@ public class ValidationTest {
         inferredBiclusters.add(ib2);
         inferredBiclusters.add(ib3);
 
-        ClusteringError ce = new ClusteringError(false, null);
-        assertEquals(ce.run(goldStandardBiclusters, inferredBiclusters, 0), 19.0/25.0);
+        ClusteringErrorComplementary ce = new ClusteringErrorComplementary(false, null);
+        assertEquals(ce.run(goldStandardBiclusters, inferredBiclusters, 0), 1.0 - 19.0/25.0);
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testNonDisjointClusteringError() {
+    public void testNonDisjointClusteringErrorComplementary() {
         ArrayList<ArrayList<Integer>[]> goldStandardBiclusters = new ArrayList<>();
         ArrayList<Integer>[] gsb1 = new ArrayList[]{new ArrayList<>(Arrays.asList(0, 1)), new ArrayList<>(Arrays.asList(2, 3))};
         ArrayList<Integer>[] gsb2 = new ArrayList[]{new ArrayList<>(Arrays.asList(2, 3)), new ArrayList<>(Arrays.asList(2, 3))};
@@ -58,7 +58,7 @@ public class ValidationTest {
         inferredBiclusters.add(ib4);
         inferredBiclusters.add(ib5);
 
-        ClusteringError ce = new ClusteringError(false, null);
-        assertEquals(ce.run(goldStandardBiclusters, inferredBiclusters, 0), 21.0/30.0);
+        ClusteringErrorComplementary ce = new ClusteringErrorComplementary(false, null);
+        assertEquals(ce.run(goldStandardBiclusters, inferredBiclusters, 0), 1.0 - 21.0/30.0);
     }
 }

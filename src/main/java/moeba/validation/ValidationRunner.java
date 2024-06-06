@@ -15,6 +15,7 @@ import org.zeroturnaround.zip.ZipUtil;
 import moeba.Representation;
 import moeba.StaticUtils;
 import moeba.validation.metric.MetricInterface;
+import moeba.validation.metric.impl.ClusteringErrorComplementary;
 import moeba.validation.metric.impl.ScoreAyadi;
 import moeba.validation.metric.impl.ScoreDice;
 import moeba.validation.metric.impl.ScoreLiuWang;
@@ -43,7 +44,7 @@ public class ValidationRunner implements Runnable {
     @Option(names = {"--gold-standard-translated"}, description = "Path to the input CSV file with gold standard translated biclusters.", required = true)
     private File goldStandardTranslatedFile;
 
-    @Option(names = {"--validation-metrics"}, description = "List of validation metrics, separated by semicolon. Supported values: ScorePrelicRelevance, ScorePrelicRecovery, ScoreLiuWang, ScoreDice, ScoreAyadi, ScoreErenRelevance, ScoreErenRecovery.", required = true)
+    @Option(names = {"--validation-metrics"}, description = "List of validation metrics, separated by semicolon. Supported values: ScorePrelicRelevance, ScorePrelicRecovery, ScoreLiuWang, ScoreDice, ScoreAyadi, ScoreErenRelevance, ScoreErenRecovery, ClusteringErrorComplementary.", required = true)
     private String validationMetrics;
 
     @Option(names = {"--save-process"}, description = "Save process to file")
@@ -148,6 +149,9 @@ public class ValidationRunner implements Runnable {
                     break;
                 case "scoreerenrecovery":
                     metricInterfaces[i] = new ScoreErenRecovery(saveProcess, parentFolderName);
+                    break;
+                case "clusteringerrorcomplementary":
+                    metricInterfaces[i] = new ClusteringErrorComplementary(saveProcess, parentFolderName);
                     break;
                 default:
                     throw new IllegalArgumentException("Unsupported validation metric: " + metricNames[i]);
