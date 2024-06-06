@@ -5,8 +5,8 @@ import java.util.Arrays;
 
 import org.testng.annotations.Test;
 
-import moeba.fitnessfunction.impl.BiclusterSize;
-import moeba.fitnessfunction.impl.BiclusterSizeWeighted;
+import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
+import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
 import moeba.fitnessfunction.impl.BiclusterVariance;
 import moeba.fitnessfunction.impl.MeanSquaredResidue;
 import moeba.fitnessfunction.impl.RowVariance;
@@ -24,8 +24,8 @@ public class FitnessFunctionTest {
     
     @SuppressWarnings("unchecked")
     @Test
-    public void testBiclusterSizeOneBicluster() {
-        FitnessFunction f = new BiclusterSize(data, types, null, "Mean");
+    public void testBiclusterSizeNormCompOneBicluster() {
+        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "Mean");
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
@@ -36,8 +36,8 @@ public class FitnessFunctionTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testBiclusterSizeTwoBiclustersMean() {
-        FitnessFunction f = new BiclusterSize(data, types, null, "Mean");
+    public void testBiclusterSizeNormCompTwoBiclustersMean() {
+        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "Mean");
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b1 = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
@@ -50,8 +50,8 @@ public class FitnessFunctionTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testBiclusterSizeTwoBiclustersHarmonicMean() {
-        FitnessFunction f = new BiclusterSize(data, types, null, "HarmonicMean");
+    public void testBiclusterSizeNormCompTwoBiclustersHarmonicMean() {
+        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "HarmonicMean");
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b1 = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
@@ -64,8 +64,8 @@ public class FitnessFunctionTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testBiclusterSizeTwoBiclustersGeometricMean() {
-        FitnessFunction f = new BiclusterSize(data, types, null, "GeometricMean");
+    public void testBiclusterSizeNormCompTwoBiclustersGeometricMean() {
+        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "GeometricMean");
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b1 = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
@@ -78,8 +78,8 @@ public class FitnessFunctionTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testBiclusterSizeWeightedOneBicluster() {
-        FitnessFunction f = new BiclusterSizeWeighted(data, types, null, "Mean");
+    public void testBiclusterSizeWeightedNormCompOneBicluster() {
+        FitnessFunction f = new BiclusterSizeWeightedNormComp(data, types, null, "Mean");
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2, 3)), new ArrayList<>(Arrays.asList(1))};

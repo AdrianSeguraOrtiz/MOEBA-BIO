@@ -21,8 +21,8 @@ import moeba.algorithm.AsyncMultiThreadGAParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
-import moeba.fitnessfunction.impl.BiclusterSize;
-import moeba.fitnessfunction.impl.BiclusterSizeWeighted;
+import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
+import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
 import moeba.fitnessfunction.impl.BiclusterVariance;
 import moeba.fitnessfunction.impl.MeanSquaredResidue;
 import moeba.fitnessfunction.impl.RowVariance;
@@ -69,11 +69,11 @@ public final class StaticUtils {
         FitnessFunction res;
         switch (str.toLowerCase()) {
 
-            case "biclustersize":
-                res = new BiclusterSize(data, types, cache, summariseIndividualObjectives);
+            case "biclustersizenormcomp":
+                res = new BiclusterSizeNormComp(data, types, cache, summariseIndividualObjectives);
                 break;
-            case "biclustersizeweighted":
-                res = new BiclusterSizeWeighted(data, types, cache, summariseIndividualObjectives);
+            case "biclustersizeweightednormcomp":
+                res = new BiclusterSizeWeightedNormComp(data, types, cache, summariseIndividualObjectives);
                 break;
             case "biclustervariance":
                 res = new BiclusterVariance(data, types, cache, summariseIndividualObjectives);
