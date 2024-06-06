@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
 import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
-import moeba.fitnessfunction.impl.MeanSquaredResidue;
+import moeba.fitnessfunction.impl.MeanSquaredResidueNorm;
 import moeba.fitnessfunction.impl.RowVariance;
 
 public class FitnessFunctionTest {
@@ -114,8 +114,8 @@ public class FitnessFunctionTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testMSROneBicluster() {
-        FitnessFunction f = new MeanSquaredResidue(data, types, null, "Mean");
+    public void testMSRNormOneBicluster() {
+        FitnessFunction f = new MeanSquaredResidueNorm(data, types, null, "Mean");
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b = new ArrayList[]{new ArrayList<>(Arrays.asList(2, 3)), new ArrayList<>(Arrays.asList(2, 3))};

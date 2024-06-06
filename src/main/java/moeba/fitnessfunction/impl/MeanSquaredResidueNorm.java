@@ -6,9 +6,9 @@ import java.util.Arrays;
 import moeba.fitnessfunction.IndividualFitnessFunction;
 import moeba.utils.storage.CacheStorage;
 
-public class MeanSquaredResidue extends IndividualFitnessFunction {
+public class MeanSquaredResidueNorm extends IndividualFitnessFunction {
 
-    public MeanSquaredResidue(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
+    public MeanSquaredResidueNorm(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
         super(data, types, internalCache, summariseIndividualObjectives);
     }
 

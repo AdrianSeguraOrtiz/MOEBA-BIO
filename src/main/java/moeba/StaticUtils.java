@@ -24,7 +24,7 @@ import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
 import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
-import moeba.fitnessfunction.impl.MeanSquaredResidue;
+import moeba.fitnessfunction.impl.MeanSquaredResidueNorm;
 import moeba.fitnessfunction.impl.RowVariance;
 import moeba.representationwrapper.RepresentationWrapper;
 import moeba.representationwrapper.impl.GenericRepresentationWrapper;
@@ -81,8 +81,8 @@ public final class StaticUtils {
             case "rowvariance":
                 res = new RowVariance(data, types, cache, summariseIndividualObjectives);
                 break;
-            case "meansquaredresidue":
-                res = new MeanSquaredResidue(data, types, cache, summariseIndividualObjectives);
+            case "meansquaredresiduenorm":
+                res = new MeanSquaredResidueNorm(data, types, cache, summariseIndividualObjectives);
                 break;
             /**
             case "scalingmeansquaredresidue":
