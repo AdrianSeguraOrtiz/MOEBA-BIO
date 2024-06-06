@@ -23,7 +23,7 @@ import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
 import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
-import moeba.fitnessfunction.impl.BiclusterVariance;
+import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
 import moeba.fitnessfunction.impl.MeanSquaredResidue;
 import moeba.fitnessfunction.impl.RowVariance;
 import moeba.representationwrapper.RepresentationWrapper;
@@ -75,8 +75,8 @@ public final class StaticUtils {
             case "biclustersizeweightednormcomp":
                 res = new BiclusterSizeWeightedNormComp(data, types, cache, summariseIndividualObjectives);
                 break;
-            case "biclustervariance":
-                res = new BiclusterVariance(data, types, cache, summariseIndividualObjectives);
+            case "biclustervariancenorm":
+                res = new BiclusterVarianceNorm(data, types, cache, summariseIndividualObjectives);
                 break;
             case "rowvariance":
                 res = new RowVariance(data, types, cache, summariseIndividualObjectives);
