@@ -2,10 +2,10 @@ package moeba.fitnessfunction.impl;
 
 import java.util.ArrayList;
 
-import moeba.fitnessfunction.IndividualFitnessFunction;
+import moeba.fitnessfunction.IndividualBiclusterFitnessFunction;
 import moeba.utils.storage.CacheStorage;
 
-public class BiclusterSizeWeightedNormComp extends IndividualFitnessFunction {
+public class BiclusterSizeWeightedNormComp extends IndividualBiclusterFitnessFunction {
 
     public BiclusterSizeWeightedNormComp(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
         super(data, types, internalCache, summariseIndividualObjectives);

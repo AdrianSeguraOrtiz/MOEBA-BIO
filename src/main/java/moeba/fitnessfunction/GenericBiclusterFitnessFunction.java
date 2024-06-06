@@ -1,0 +1,22 @@
+package moeba.fitnessfunction;
+
+import java.util.ArrayList;
+
+import moeba.utils.storage.CacheStorage;
+
+public abstract class GenericBiclusterFitnessFunction extends BiclusterFitnessFunction {
+
+    public GenericBiclusterFitnessFunction(double[][] data, Class<?>[] types,
+            CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
+        super(data, types, internalCache, summariseIndividualObjectives);
+    }
+
+    protected abstract double getBiclusterScore(ArrayList<Integer>[] bicluster, ArrayList<ArrayList<Integer>[]> biclusters);
+
+    protected double getBiclusterScore(ArrayList<ArrayList<Integer>[]> biclusters, int i) {
+        ArrayList<ArrayList<Integer>[]> biclustersCopy = new ArrayList<>(biclusters);
+        biclustersCopy.remove(i);
+        return this.getBiclusterScore(biclusters.get(i), biclustersCopy);
+    }
+    
+}
