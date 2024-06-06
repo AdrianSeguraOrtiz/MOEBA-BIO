@@ -30,7 +30,7 @@ public class FastEvaluationRunner implements Runnable {
     @Option(names = {"--representation"}, description = "Representation as a string. Possible values: GENERIC, INDIVIDUAL", defaultValue = "GENERIC")
     private Representation representation;
 
-    @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSizeNormComp, BiclusterSizeWeightedNormComp, BiclusterVarianceNorm, RowVariance, MeanSquaredResidueNorm, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSizeNormComp;RowVariance;MeanSquaredResidueNorm")
+    @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSizeNormComp, BiclusterSizeWeightedNormComp, BiclusterVarianceNorm, RowVarianceNormComp, MeanSquaredResidueNorm, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSizeNormComp;RowVarianceNormComp;MeanSquaredResidueNorm")
     private String strFitnessFormulas;
 
     @Option(names = {"--summarise-individual-objectives"}, description = "Way to summarise the overall quality of the solutions from the individual quality of their biclusters. Only for GENERIC, SPECIFIC or DYNAMIC representation. Possible values: Mean, HarmonicMean, GeometricMean", defaultValue = "Mean")

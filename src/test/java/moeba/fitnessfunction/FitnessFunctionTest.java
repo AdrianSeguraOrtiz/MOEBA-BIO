@@ -9,7 +9,7 @@ import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
 import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
 import moeba.fitnessfunction.impl.MeanSquaredResidueNorm;
-import moeba.fitnessfunction.impl.RowVariance;
+import moeba.fitnessfunction.impl.RowVarianceNormComp;
 
 public class FitnessFunctionTest {
 
@@ -102,8 +102,8 @@ public class FitnessFunctionTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testRowVarianceOneBicluster() {
-        FitnessFunction f = new RowVariance(data, types, null, "Mean");
+    public void testRowVarianceNormCompOneBicluster() {
+        FitnessFunction f = new RowVarianceNormComp(data, types, null, "Mean");
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b = new ArrayList[]{new ArrayList<>(Arrays.asList(2, 3)), new ArrayList<>(Arrays.asList(2, 3))};

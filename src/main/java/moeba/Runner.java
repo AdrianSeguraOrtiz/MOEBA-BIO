@@ -50,7 +50,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--generic-initial-max-num-bics"}, description = "Initial maximum number of biclusters. Only for GENERIC representation. Default: 25%% of the number of rows", defaultValue = "-1")
     private int genericInitialMaxNumBics;
 
-    @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSizeNormComp, BiclusterSizeWeightedNormComp, BiclusterVarianceNorm, RowVariance, MeanSquaredResidueNorm, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSizeNormComp;RowVariance;MeanSquaredResidueNorm")
+    @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSizeNormComp, BiclusterSizeWeightedNormComp, BiclusterVarianceNorm, RowVarianceNormComp, MeanSquaredResidueNorm, ScalingMeanSquaredResidue, AverageCorrelationFunction, AverageCorrelationValue, VirtualError, CoefficientOfVariationFunction", defaultValue = "BiclusterSizeNormComp;RowVarianceNormComp;MeanSquaredResidueNorm")
     private String strFitnessFormulas;
 
     @Option(names = {"--summarise-individual-objectives"}, description = "Way to summarise the overall quality of the solutions from the individual quality of their biclusters. Only for GENERIC, SPECIFIC or DYNAMIC representation. Possible values: Mean, HarmonicMean, GeometricMean", defaultValue = "Mean")

@@ -25,7 +25,7 @@ import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
 import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
 import moeba.fitnessfunction.impl.MeanSquaredResidueNorm;
-import moeba.fitnessfunction.impl.RowVariance;
+import moeba.fitnessfunction.impl.RowVarianceNormComp;
 import moeba.representationwrapper.RepresentationWrapper;
 import moeba.representationwrapper.impl.GenericRepresentationWrapper;
 import moeba.representationwrapper.impl.IndividualRepresentationWrapper;
@@ -78,8 +78,8 @@ public final class StaticUtils {
             case "biclustervariancenorm":
                 res = new BiclusterVarianceNorm(data, types, cache, summariseIndividualObjectives);
                 break;
-            case "rowvariance":
-                res = new RowVariance(data, types, cache, summariseIndividualObjectives);
+            case "rowvariancenormcomp":
+                res = new RowVarianceNormComp(data, types, cache, summariseIndividualObjectives);
                 break;
             case "meansquaredresiduenorm":
                 res = new MeanSquaredResidueNorm(data, types, cache, summariseIndividualObjectives);

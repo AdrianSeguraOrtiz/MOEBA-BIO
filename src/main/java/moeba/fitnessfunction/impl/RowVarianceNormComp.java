@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import moeba.fitnessfunction.IndividualFitnessFunction;
 import moeba.utils.storage.CacheStorage;
 
-public class RowVariance extends IndividualFitnessFunction {
+public class RowVarianceNormComp extends IndividualFitnessFunction {
 
-    public RowVariance(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
+    public RowVarianceNormComp(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
         super(data, types, internalCache, summariseIndividualObjectives);
     }
 
