@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
 import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
+import moeba.fitnessfunction.impl.DistanceBetweenBiclustersNormComp;
 import moeba.fitnessfunction.impl.MeanSquaredResidueNorm;
 import moeba.fitnessfunction.impl.RowVarianceNormComp;
 
@@ -122,5 +123,19 @@ public class FitnessFunctionTest {
         biclusters.add(b);
 
         assert(Math.abs((1.0 - (1.0 - (Math.pow(0.5-0.3-0.65+0.5, 2) + Math.pow(0.1-0.3-0.35+0.5, 2) + Math.pow(0.8-0.7-0.65+0.5, 2) + Math.pow(0.6-0.7-0.35+0.5, 2) / 4.0) / 4.0)) - f.run(biclusters)) < epsilon);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testDistanceBetweenBiclustersNormCompMean() {
+        FitnessFunction f = new DistanceBetweenBiclustersNormComp(data, types, null, "Mean");
+
+        ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
+        ArrayList<Integer>[] b1 = new ArrayList[]{new ArrayList<>(Arrays.asList(0, 1)), new ArrayList<>(Arrays.asList(0, 1))};
+        ArrayList<Integer>[] b2 = new ArrayList[]{new ArrayList<>(Arrays.asList(2, 3)), new ArrayList<>(Arrays.asList(2, 3))};
+        biclusters.add(b1);
+        biclusters.add(b2);
+
+        assert(Math.abs((1.0 - (4*(Math.pow(0.7-0.3, 2) + Math.pow(0.8-0.3, 2) + Math.pow(0.2-0.3, 2) + Math.pow(0.3-0.3, 2))/4.0 + 4*(Math.pow(0.7-0.5, 2) + Math.pow(0.3-0.5, 2) + Math.pow(0.6-0.5, 2) + Math.pow(0.8-0.5, 2))/4.0)/2) - f.run(biclusters)) < epsilon);
     }
 }
