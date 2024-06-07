@@ -1,7 +1,7 @@
 package moeba.fitnessfunction;
 
 import java.util.ArrayList;
-
+import java.util.function.BiFunction;
 import moeba.StaticUtils;
 import moeba.utils.storage.CacheStorage;
 
@@ -12,24 +12,28 @@ public abstract class BiclusterFitnessFunction extends FitnessFunction {
     public BiclusterFitnessFunction(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
         super(data, types);
         this.internalCache = internalCache;
+        this.func = selectRunnableFunc(summariseIndividualObjectives);
+    }
 
-        if (summariseIndividualObjectives == null) {
-            this.func = internalCache == null ? this::runMeanWithoutCache : this::runMeanWithCache;
-        } else {
-            switch (summariseIndividualObjectives.toLowerCase()) {
-                case "mean":
-                    this.func = internalCache == null ? this::runMeanWithoutCache : this::runMeanWithCache;
-                    break;
-                case "harmonicmean":
-                    this.func = internalCache == null ? this::runHarmonicMeanWithoutCache : this::runHarmonicMeanWithCache;
-                    break;
-                case "geometricmean":
-                    this.func = internalCache == null ? this::runGeometricMeanWithoutCache : this::runGeometricMeanWithCache;
-                    break;
-                default:
-                    throw new IllegalArgumentException("Summarise method not supported: " + summariseIndividualObjectives);
-            }
+    private RunnableFunc selectRunnableFunc(String summariseMethod) {
+        if (summariseMethod == null) summariseMethod = "mean";
+
+        BiFunction<ArrayList<ArrayList<Integer>[]>, BiclusterScoreFunction, Double> summariser;
+        switch (summariseMethod.toLowerCase()) {
+            case "mean":
+                summariser = this::calculateMean;
+                break;
+            case "harmonicmean":
+                summariser = this::calculateHarmonicMean;
+                break;
+            case "geometricmean":
+                summariser = this::calculateGeometricMean;
+                break;
+            default:
+                throw new IllegalArgumentException("Summarise method not supported: " + summariseMethod);
         }
+        return internalCache == null ? biclusters -> summariser.apply(biclusters, this::getBiclusterScore)
+                                     : biclusters -> summariser.apply(biclusters, this::getCachedBiclusterScore);
     }
 
     @Override
@@ -37,87 +41,35 @@ public abstract class BiclusterFitnessFunction extends FitnessFunction {
         return 1 - super.func.run(biclusters);
     }
 
-    protected double runMeanWithoutCache(ArrayList<ArrayList<Integer>[]> biclusters) {
-        double res = 0;
-        int n = biclusters.size();
-        for (int i = 0; i < n; i++) {
-            res += getBiclusterScore(biclusters, i);
-        }
-        return res / n;
+    private double calculateMean(ArrayList<ArrayList<Integer>[]> biclusters, BiclusterScoreFunction scoreFunc) {
+        return biclusters.stream()
+                         .mapToDouble(bicluster -> scoreFunc.apply(biclusters, biclusters.indexOf(bicluster)))
+                         .average()
+                         .orElse(0);
     }
 
-    protected double runMeanWithCache(ArrayList<ArrayList<Integer>[]> biclusters) {
-        double res = 0;
-        String key;
-        double bicScore;
-        int n = biclusters.size();
-        for (int i = 0; i < n; i++) {
-            key = StaticUtils.biclusterToString(biclusters.get(i));
-            if (internalCache.containsKey(key)){
-                bicScore = internalCache.get(key);
-            } else {
-                bicScore = getBiclusterScore(biclusters, i);
-                internalCache.put(key, bicScore);
-            }
-            res += bicScore;
-        }
-        return res / n;
+    private double calculateHarmonicMean(ArrayList<ArrayList<Integer>[]> biclusters, BiclusterScoreFunction scoreFunc) {
+        return biclusters.size() / biclusters.stream()
+                                             .mapToDouble(bicluster -> 1.0 / scoreFunc.apply(biclusters, biclusters.indexOf(bicluster)))
+                                             .sum();
     }
 
-    protected double runHarmonicMeanWithoutCache(ArrayList<ArrayList<Integer>[]> biclusters) {
-        double res = 0;
-        int n = biclusters.size();
-        for (int i = 0; i < n; i++) {
-            res += 1 / getBiclusterScore(biclusters, i);
-        }
-        return n / res;
+    private double calculateGeometricMean(ArrayList<ArrayList<Integer>[]> biclusters, BiclusterScoreFunction scoreFunc) {
+        return Math.pow(biclusters.stream()
+                                  .mapToDouble(bicluster -> scoreFunc.apply(biclusters, biclusters.indexOf(bicluster)))
+                                  .reduce(1, (a, b) -> a * b), 
+                        1.0 / biclusters.size());
     }
 
-    protected double runHarmonicMeanWithCache(ArrayList<ArrayList<Integer>[]> biclusters) {
-        double res = 0;
-        String key;
-        double bicScore;
-        int n = biclusters.size();
-        for (int i = 0; i < n; i++) {
-            key = StaticUtils.biclusterToString(biclusters.get(i));
-            if (internalCache.containsKey(key)){
-                bicScore = internalCache.get(key);
-            } else {
-                bicScore = getBiclusterScore(biclusters, i);
-                internalCache.put(key, bicScore);
-            }
-            res += 1 / bicScore;
-        }
-        return n / res;
+    @FunctionalInterface
+    private interface BiclusterScoreFunction {
+        double apply(ArrayList<ArrayList<Integer>[]> biclusters, int i);
     }
 
-    protected double runGeometricMeanWithoutCache(ArrayList<ArrayList<Integer>[]> biclusters) {
-        double res = 1;
-        int n = biclusters.size();
-        for (int i = 0; i < n; i++) {
-            res *= getBiclusterScore(biclusters, i);
-        }
-        return Math.pow(res, (double) 1 / n);
-    }
-
-    protected double runGeometricMeanWithCache(ArrayList<ArrayList<Integer>[]> biclusters) {
-        double res = 1;
-        String key;
-        double bicScore;
-        int n = biclusters.size();
-        for (int i = 0; i < n; i++) {
-            key = StaticUtils.biclusterToString(biclusters.get(i));
-            if (internalCache.containsKey(key)){
-                bicScore = internalCache.get(key);
-            } else {
-                bicScore = getBiclusterScore(biclusters, i);
-                internalCache.put(key, bicScore);
-            }
-            res *= bicScore;
-        }
-        return Math.pow(res, (double) 1 / n);
+    private double getCachedBiclusterScore(ArrayList<ArrayList<Integer>[]> biclusters, int i) {
+        String key = StaticUtils.biclusterToString(biclusters.get(i));
+        return internalCache.computeIfAbsent(key, k -> getBiclusterScore(biclusters, i));
     }
 
     protected abstract double getBiclusterScore(ArrayList<ArrayList<Integer>[]> biclusters, int i);
-    
 }

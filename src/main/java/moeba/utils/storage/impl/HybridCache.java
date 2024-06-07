@@ -1,6 +1,7 @@
 package moeba.utils.storage.impl;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import moeba.utils.storage.CacheStorage;
 import org.ehcache.Cache;
@@ -36,6 +37,16 @@ public class HybridCache<K,V> implements CacheStorage<K,V> {
     @Override
     public int getNumGetters() {
         return numGetters.get();
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        V value = cache.get(key);
+        if (value == null) {
+            value = mappingFunction.apply(key);
+            cache.put(key, value);
+        }
+        return value;
     }
 
 }

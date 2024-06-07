@@ -2,6 +2,7 @@ package moeba.utils.storage.impl;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import moeba.utils.storage.CacheStorage;
 
@@ -33,6 +34,11 @@ public class LocalCache<K,V> implements CacheStorage<K,V> {
     @Override
     public int getNumGetters() {
         return numGetters.get();
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        return cache.computeIfAbsent(key, mappingFunction);
     }
 
 }
