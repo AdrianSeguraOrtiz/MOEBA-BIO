@@ -75,7 +75,7 @@ public class ParameterizationRunner implements Runnable {
         ParameterizationExercise unsupervisedParameterizationExercise = new ParameterizationExercise(unsupervisedConfFile, externalUnsupervisedEvaluations, externalUnsupervisedPopulationSize, numThreads);
         
         // Get parameterization problem
-        String staticConf = "--max-evaluations " + internalEvaluations + " --num-threads " + 1 + " --observers FitnessEvolutionMinObserver";
+        String staticConf = "--max-evaluations=" + internalEvaluations + " --num-threads=1" + " --observers=FitnessEvolutionMinObserver";
         CEProblem ceproblem = new CEProblem(supervisedParameterizationExercise, staticConf, validPrefixes.toArray(new String[validPrefixes.size()]), unsupervisedParameterizationExercise);
 
         // Run parameterization
