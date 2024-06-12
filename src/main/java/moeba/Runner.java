@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.CacheManagerBuilder;
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
@@ -162,6 +165,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         data = null;
 
         // Create Hybrid Caches Manager
+        BasicConfigurator.configure();
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.OFF);
         CacheManager hybridCacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
         hybridCacheManager.init();
 
