@@ -18,7 +18,7 @@ public class IndividualMutation implements MutationOperator<CompositeSolution> {
     private RowColBinaryMutation rowColBinaryMutation;
     
     public IndividualMutation(String mutationProbability, int numApproxMutations, RowColBinaryMutation rowColBinaryMutation) {
-        String[] parts = mutationProbability.split("-");
+        String[] parts = mutationProbability.split("->");
         if (parts.length == 1) {
             double p = Double.parseDouble(mutationProbability);
             this.maxMutationProbability = p;

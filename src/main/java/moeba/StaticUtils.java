@@ -54,6 +54,7 @@ import org.uma.jmetal.util.SolutionListUtils;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
 import org.uma.jmetal.util.termination.Termination;
 import org.uma.jmetal.util.termination.impl.TerminationByEvaluations;
+import org.uma.jmetal.problem.Problem;
 
 public final class StaticUtils {
 
@@ -338,7 +339,7 @@ public final class StaticUtils {
      * @throws IllegalArgumentException If the specified algorithm is not supported for the problem type
      */
     public static AlgorithmResult executeEvolutionaryAlgorithm(
-            Problem problem,
+            Problem<CompositeSolution> problem,
             int populationSize,
             int maxEvaluations,
             String strAlgorithm,

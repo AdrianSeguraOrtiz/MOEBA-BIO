@@ -73,7 +73,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--crossover-probability"}, description = "Crossover probability", defaultValue = "0.9")
     private double crossoverProbability;
 
-    @Option(names = {"--mutation-probability"}, description = "Mutation probability. If a progressive mutation is desired, a range must be defined by using '-' (e.g. 0.3-0.05).", defaultValue = "0.1")
+    @Option(names = {"--mutation-probability"}, description = "Mutation probability. If a progressive mutation is desired, a range must be defined by using '->' (e.g. 0.3->0.05).", defaultValue = "0.1")
     private String mutationProbability;
 
     @Option(names = {"--crossover-operator"}, 
@@ -242,7 +242,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         System.out.println("Threads used: " + numThreads);
         System.out.println("Total execution time: " + result.computingTime + "ms");
             
-        System.exit(0);
+        if (numThreads > 1) {
+            System.exit(0);
+        }
     }
 
     public static void main(String[] args) {
