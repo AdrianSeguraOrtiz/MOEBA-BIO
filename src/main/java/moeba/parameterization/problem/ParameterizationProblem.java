@@ -1,8 +1,5 @@
 package moeba.parameterization.problem;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,15 +8,15 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.uma.jmetal.problem.Problem;
-import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import org.uma.jmetal.solution.doublesolution.DoubleSolution;
 import org.uma.jmetal.solution.doublesolution.impl.DefaultDoubleSolution;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
 import org.uma.jmetal.solution.integersolution.impl.DefaultIntegerSolution;
 
 import moeba.parameterization.ParameterizationExercise;
+import moeba.parameterization.ParameterizationSolution;
 
-public abstract class ParameterizationProblem implements Problem<CompositeSolution> {
+public abstract class ParameterizationProblem implements Problem<ParameterizationSolution> {
     protected ParameterizationExercise parameterizationExercise;
     protected String staticConf;
     protected AtomicInteger parallelCount;
@@ -51,29 +48,11 @@ public abstract class ParameterizationProblem implements Problem<CompositeSoluti
     }
 
     @Override
-    public CompositeSolution createSolution() {
+    public ParameterizationSolution createSolution() {
         DoubleSolution doubleSolution = new DefaultDoubleSolution(getNumberOfObjectives(), getNumberOfConstraints(), this.parameterizationExercise.doubleBounds);
         IntegerSolution integerSolution = new DefaultIntegerSolution(getNumberOfObjectives(), getNumberOfConstraints(), this.parameterizationExercise.integerBounds);
 
-        return new CompositeSolution(Arrays.asList(doubleSolution, integerSolution));
-    }
-
-    public String getArgsFromSolution(CompositeSolution solution) {
-        String res = "";
-
-        DoubleSolution doubleSolution = (DoubleSolution) solution.variables().get(0);
-        IntegerSolution integerSolution = (IntegerSolution) solution.variables().get(1);
-
-        for (int i = 0; i < doubleSolution.variables().size(); i++) {
-            res += this.parameterizationExercise.doubleNames.get(i) + "=";
-            res += this.parameterizationExercise.doubleFuncs.get(i).getValue(doubleSolution.variables().get(i)) + " ";
-        }
-        for (int i = 0; i < integerSolution.variables().size(); i++) {
-            res += this.parameterizationExercise.integerNames.get(i) + "=";
-            res += this.parameterizationExercise.integerFuncs.get(i).getValue(integerSolution.variables().get(i)) + " ";
-        }
-
-        return res.substring(0, res.length() - 1);
+        return new ParameterizationSolution(Arrays.asList(doubleSolution, integerSolution));
     }
 
     /**
@@ -143,51 +122,6 @@ public abstract class ParameterizationProblem implements Problem<CompositeSoluti
         
         // Return the final processed arguments
         return finalArguments.toArray(new String[0]);
-    }
-
-    /**
-     * Reads vectors from a file and returns them as a two-dimensional array of doubles.
-     *
-     * @param filePath The path to the file containing the vectors.
-     * @param separator The separator used to split the string representation of the vectors.
-     * @return A two-dimensional array of doubles representing the vectors.
-     */
-    protected double[][] readVectors(String filePath, String separator) {
-        // Array to store the vectors
-        double[][] referenceVectors;
-
-        // Read all lines from the file
-        List<String> vectorStrList = new ArrayList<>();
-        try {
-            vectorStrList = Files.readAllLines(Paths.get(filePath));
-            vectorStrList.remove(0); // Remove header
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Allocate memory for the array based on the number of vectors
-        referenceVectors = new double[vectorStrList.size()][];
-
-        // Iterate over each vector string and parse it into doubles
-        for (int i = 0; i < vectorStrList.size(); i++) {
-            // Get the string representation of the vector
-            String vectorStr = vectorStrList.get(i);
-
-            // Split the string into objects
-            String[] objectArray = vectorStr.split(separator);
-
-            // Create a new array to store the vector
-            referenceVectors[i] = new double[objectArray.length];
-
-            // Iterate over each object and parse it into a double
-            for (int j = 0; j < objectArray.length; j++) {
-                // Parse the object into a double and store it in the array
-                referenceVectors[i][j] = Double.parseDouble(objectArray[j]);
-            }
-        }
-
-        // Return the array of vectors
-        return referenceVectors;
     }
 
     public ParameterizationExercise getParameterizationExercise() {

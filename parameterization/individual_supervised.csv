@@ -1,0 +1,3 @@
+Parameter,Type,Values
+--representation,String,INDIVIDUAL
+--str-fitness-functions,String-Comb,BiclusterSizeNormComp|BiclusterSizeWeightedNormComp|BiclusterVarianceNorm|RowVarianceNormComp|MeanSquaredResidueNorm

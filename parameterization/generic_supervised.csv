@@ -1,0 +1,4 @@
+Parameter,Type,Values
+--representation,String,GENERIC
+--str-fitness-functions,String-Comb,BiclusterSizeNormComp|BiclusterSizeWeightedNormComp|BiclusterVarianceNorm|RowVarianceNormComp|MeanSquaredResidueNorm|DistanceBetweenBiclustersNormComp
+--summarise-individual-objectives,String,Mean|HarmonicMean|GeometricMean

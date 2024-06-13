@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.uma.jmetal.solution.doublesolution.DoubleSolution;
+import org.uma.jmetal.solution.integersolution.IntegerSolution;
 import org.uma.jmetal.util.bounds.Bounds;
 
 public class ParameterizationExercise {
@@ -70,6 +72,65 @@ public class ParameterizationExercise {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Retrieves the values of all arguments from the given solution.
+     *
+     * @param solution The solution containing the variables.
+     * @return The values of all arguments as a string, separated by spaces.
+     */
+    public String getArgsFromSolution(ParameterizationSolution solution) {
+        // Initialize an empty string to store the arguments
+        String res = "";
+
+        // Get the double and integer solutions from the given solution
+        DoubleSolution doubleSolution = (DoubleSolution) solution.variables().get(0);
+        IntegerSolution integerSolution = (IntegerSolution) solution.variables().get(1);
+
+        // Iterate over the double variables and add their names and values to the result string
+        for (int i = 0; i < doubleSolution.variables().size(); i++) {
+            res += this.doubleNames.get(i) + "=";
+            res += this.doubleFuncs.get(i).getValue(doubleSolution.variables().get(i)) + " ";
+        }
+
+        // Iterate over the integer variables and add their names and values to the result string
+        for (int i = 0; i < integerSolution.variables().size(); i++) {
+            res += this.integerNames.get(i) + "=";
+            res += this.integerFuncs.get(i).getValue(integerSolution.variables().get(i)) + " ";
+        }
+
+        // Remove the trailing space and return the result string
+        return res.substring(0, res.length() - 1);
+    }
+
+
+    /**
+     * Retrieves the value of a specific argument from the given solution.
+     *
+     * @param arg The name of the argument to retrieve the value of.
+     * @param solution The solution containing the variables.
+     * @return The value of the argument, or null if the argument is not found.
+     */
+    public String getValueOfArg(String arg, ParameterizationSolution solution) {
+        // Iterate over the double names and check if the argument matches
+        for (int i = 0; i < this.doubleNames.size(); i++) {
+            if (this.doubleNames.get(i).equals(arg)) {
+                // If it matches, retrieve the value using the double function
+                return this.doubleFuncs.get(i).getValue((double) solution.variables().get(0).variables().get(i));
+            }
+        }
+
+        // Iterate over the integer names and check if the argument matches
+        for (int i = 0; i < this.integerNames.size(); i++) {    
+            if (this.integerNames.get(i).equals(arg)) {
+                // If it matches, retrieve the value using the integer function
+                return this.integerFuncs.get(i).getValue((int) solution.variables().get(1).variables().get(i));
+            }
+        }
+
+        // If the argument is not found, return null
+        return null;
     }
 
     /**

@@ -1,52 +1,39 @@
 package moeba.parameterization.problem.impl;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.uma.jmetal.experimental.qualityIndicator.impl.hypervolume.impl.PISAHypervolume;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 
 import moeba.Runner;
 import moeba.parameterization.ParameterizationExercise;
+import moeba.parameterization.ParameterizationSolution;
 import moeba.parameterization.problem.ParameterizationProblem;
+import picocli.CommandLine;
 
 public class HVProblem extends ParameterizationProblem {
-    private String outputFolder;
     private String[] prefixes;
+    private int numObjectives;
 
-    public HVProblem(ParameterizationExercise parameterizationExercise, String staticConf, String[] prefixes, String outputFolder) {
+    public HVProblem(ParameterizationExercise parameterizationExercise, String staticConf, String[] prefixes, int numObjectives) {
         super(parameterizationExercise, staticConf);
         this.prefixes = prefixes;
-        this.outputFolder = outputFolder;
+        this.numObjectives = numObjectives;
     }
 
     @Override
-    public CompositeSolution evaluate(CompositeSolution solution) {
-
-        // Get solution id
-        int cnt = super.parallelCount.incrementAndGet();
-        String solutionOutputFolder = outputFolder + "/HV-" + String.format("%03d", cnt) + "/";
+    public ParameterizationSolution evaluate(ParameterizationSolution solution) {
 
         // Get arguments
-        String solutionArgs = super.getArgsFromSolution(solution);
+        String solutionArgs = this.parameterizationExercise.getArgsFromSolution(solution);
         String strArgs = staticConf + " " + solutionArgs;
         String[] args = super.preprocessArguments(strArgs.split(" "));
 
-        // Get number of objectives
-        int numObjectives = 0;
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].startsWith("--str-fitness-functions=")) {
-                numObjectives = args[i].split(";").length;
-                break;
-            }
-        }
-
         // Create reference point
-        double[] referencePoint = new double[numObjectives];
-        for (int i = 0; i < numObjectives; i++) {
+        double[] referencePoint = new double[this.numObjectives];
+        for (int i = 0; i < this.numObjectives; i++) {
             referencePoint[i] = 1.0;
         }
 
@@ -58,32 +45,35 @@ public class HVProblem extends ParameterizationProblem {
         for (int i = 0; i < prefixes.length; i++) {
 
             // Config problem
-            String benchSolOutputFolder = solutionOutputFolder + "/bench-" + i + "/";
             ArrayList<String> listArgs = new ArrayList<>(Arrays.asList(args));
             listArgs.add("--input-dataset=" + prefixes[i] + "-data.csv");
             listArgs.add("--input-column-types=" + prefixes[i] + "-types.json");
-            listArgs.add("--output-folder=" + benchSolOutputFolder);
             String[] benchArgs = listArgs.toArray(new String[0]);
 
             // Run MOEBA algorithm
-            Runner.main(benchArgs);
+            Runner runner = new Runner();
+            CommandLine commandLine = new CommandLine(runner);
+            commandLine.execute(benchArgs);
 
-            // Get the front
-            String funFile = benchSolOutputFolder + "/FUN.csv";
-            double[][] front = super.readVectors(funFile, ",");
+            // Get solutions
+            List<CompositeSolution> benchSolutions = runner.getSolutions();
 
+            // Get front and store MOEBA solutions to HV individual
+            double[][] front = new double[benchSolutions.size()][this.numObjectives];
+            List<ParameterizationSolution> subPopulation = new ArrayList<>();
+            for (int j = 0; j < benchSolutions.size(); j++) {
+                ParameterizationSolution subSolution = new ParameterizationSolution(benchSolutions.get(j));
+                subPopulation.add(subSolution);
+                front[j] = subSolution.objectives();
+            }
+            solution.subPopulations.add(subPopulation);
+
+            // Compute HV
             score += -1 * hv.compute(front);
         }
         
         // Evaluate solution
         solution.objectives()[0] = score / prefixes.length;
-
-        // Delete solution output folder
-        try {
-            FileUtils.deleteDirectory(new File(solutionOutputFolder));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         return solution;
     }

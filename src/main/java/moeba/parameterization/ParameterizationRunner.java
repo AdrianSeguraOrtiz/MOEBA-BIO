@@ -1,12 +1,19 @@
 package moeba.parameterization;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.uma.jmetal.experimental.componentbasedalgorithm.algorithm.singleobjective.geneticalgorithm.GeneticAlgorithm;
+import org.uma.jmetal.experimental.componentbasedalgorithm.catalogue.replacement.Replacement;
+import org.uma.jmetal.experimental.componentbasedalgorithm.catalogue.replacement.impl.MuPlusLambdaReplacement;
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.crossover.impl.CompositeCrossover;
 import org.uma.jmetal.operator.crossover.impl.IntegerSBXCrossover;
@@ -16,13 +23,22 @@ import org.uma.jmetal.operator.mutation.impl.CompositeMutation;
 import org.uma.jmetal.operator.mutation.impl.IntegerPolynomialMutation;
 import org.uma.jmetal.operator.mutation.impl.PolynomialMutation;
 import org.uma.jmetal.operator.selection.impl.BinaryTournamentSelection;
-import org.uma.jmetal.solution.compositesolution.CompositeSolution;
+import org.uma.jmetal.operator.selection.impl.NaryTournamentSelection;
+import org.uma.jmetal.util.SolutionListUtils;
+import org.uma.jmetal.util.comparator.ObjectiveComparator;
 import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
+import org.uma.jmetal.util.termination.Termination;
+import org.uma.jmetal.util.termination.impl.TerminationByEvaluations;
 
+import moeba.Representation;
 import moeba.StaticUtils;
 import moeba.StaticUtils.AlgorithmResult;
+import moeba.algorithm.AsyncMultiThreadGAParents;
+import moeba.parameterization.operator.ParameterizationCrossover;
+import moeba.parameterization.operator.ParameterizationMutation;
 import moeba.parameterization.problem.ParameterizationProblem;
 import moeba.parameterization.problem.impl.CEProblem;
+import moeba.representationwrapper.RepresentationWrapper;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -79,9 +95,49 @@ public class ParameterizationRunner implements Runnable {
         CEProblem ceproblem = new CEProblem(supervisedParameterizationExercise, staticConf, validPrefixes.toArray(new String[validPrefixes.size()]), unsupervisedParameterizationExercise);
 
         // Run parameterization
-        AlgorithmResult result = ParameterizationRunner.executeParameterizationAlgorithm(ceproblem);
+        AlgorithmResult<ParameterizationSolution> result = ParameterizationRunner.executeParameterizationAlgorithm(ceproblem);
 
-        // TODO: Save solution
+        // Save solutions recursively
+        // 1. Create output folder
+        try {
+            Files.createDirectories(Paths.get(outputFolder));
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
+
+        // 2. Get CE solutions
+        ParameterizationSolution ceSolution = result.population.get(0);
+        double ceFUN = ceSolution.objectives()[0];
+        String ceVAR = supervisedParameterizationExercise.getArgsFromSolution(ceSolution);
+        System.out.println("ceFUN: " + ceFUN + ", ceVAR: " + ceVAR);
+
+        // 3. Get HV solutions
+        ParameterizationSolution hvSolution = ceSolution.subPopulations.get(0).get(0);
+        double hvFUN = hvSolution.objectives()[0];
+        String hvVAR = unsupervisedParameterizationExercise.getArgsFromSolution(hvSolution);
+        System.out.println("hvFUN: " + hvFUN + ", hvVAR: " + hvVAR);
+
+        // 4. Get MOEBA solutions
+        double[][][] moebaFUN = new double[validPrefixes.size()][][];
+        String[][] moebaVAR = new String[validPrefixes.size()][];
+        String representation = supervisedParameterizationExercise.getValueOfArg("--representation", ceSolution);
+        int numObjectives = supervisedParameterizationExercise.getValueOfArg("--str-fitness-functions", ceSolution).split(";").length;
+
+        for (int i = 0; i < validPrefixes.size(); i++) {
+            List<ParameterizationSolution> moebaSolutions = hvSolution.subPopulations.get(i);
+            moebaFUN[i] = new double[moebaSolutions.size()][numObjectives];
+            moebaVAR[i] = new String[moebaSolutions.size()];
+
+            RepresentationWrapper wrapper = StaticUtils.getRepresentationWrapperFromRepresentation(Representation.valueOf(representation), ceproblem.numRows[i], ceproblem.numCols[i], 0, 0, 0, null);
+            for (int j = 0; j < moebaSolutions.size(); j++) {
+                moebaFUN[i][j] = moebaSolutions.get(j).objectives();
+                moebaVAR[i][j] = StaticUtils.biclustersToString(wrapper.getBiclustersFromRepresentation(moebaSolutions.get(j)));
+            }
+
+            System.out.println("Benchmark: " + validPrefixes.toArray()[i]);
+            System.out.println("moebaFUN: " + Arrays.deepToString(moebaFUN[i]));
+            System.out.println("moebaVAR: " + Arrays.deepToString(moebaVAR[i]));
+        }
 
         System.out.println("Threads used: " + numThreads);
         System.out.println("Total execution time: " + result.computingTime + "ms");
@@ -96,8 +152,7 @@ public class ParameterizationRunner implements Runnable {
      * @param problem the parameterization problem
      * @return the result of the parameterization algorithm
      */
-    public static AlgorithmResult executeParameterizationAlgorithm(
-            ParameterizationProblem problem) {
+    public static AlgorithmResult<ParameterizationSolution> executeParameterizationAlgorithm(ParameterizationProblem problem) {
 
         // Get the exercise
         ParameterizationExercise exercise = problem.getParameterizationExercise();
@@ -105,36 +160,66 @@ public class ParameterizationRunner implements Runnable {
         // Create the crossover operator.
         // The crossover operator is a composite crossover that combines
         // SBX crossover and integer SBX crossover.
-        CrossoverOperator<CompositeSolution> crossover =
-                new CompositeCrossover(Arrays.asList(
+        CrossoverOperator<ParameterizationSolution> crossover =
+                new ParameterizationCrossover(new CompositeCrossover(Arrays.asList(
                         new SBXCrossover(1.0, 20.0),
                         new IntegerSBXCrossover(1.0, 20.0)
-                ));
+                )));
 
         // Create the mutation operator.
         // The mutation operator is a composite mutation that combines
         // polynomial mutation and integer polynomial mutation.
-        MutationOperator<CompositeSolution> mutation =
-                new CompositeMutation(Arrays.asList(
+        MutationOperator<ParameterizationSolution> mutation =
+                new ParameterizationMutation(new CompositeMutation(Arrays.asList(
                         new PolynomialMutation(0.1, 20.0),
                         new IntegerPolynomialMutation(0.1, 2.0)
-                ));
+                )));
 
         // Execute the evolutionary algorithm.
-        // The algorithm is a genetic algorithm (GA) running in a single thread.
-        AlgorithmResult result = StaticUtils.executeEvolutionaryAlgorithm(
-                problem,
-                exercise.populationSize,
-                exercise.evaluations,
-                exercise.numThreads == 1 ? "GA-SingleThread" : "GA-AsyncParallel",
-                new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>()),
-                crossover,
-                mutation,
-                exercise.numThreads
-        );
+        // The algorithm is a genetic algorithm (GA) running in a single or parallel thread.
+        long computingTime;
+        List<ParameterizationSolution> population;
+        Termination termination = new TerminationByEvaluations(exercise.evaluations);
+        Replacement<ParameterizationSolution> replacement = new MuPlusLambdaReplacement<>(new ObjectiveComparator<>(0));
+        NaryTournamentSelection<ParameterizationSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
+
+        if (exercise.numThreads == 1) {
+            // Instantiates and executes a single-threaded genetic algorithm
+            GeneticAlgorithm<ParameterizationSolution> algorithm = new GeneticAlgorithm<>(
+                    problem,
+                    exercise.populationSize,
+                    exercise.populationSize,
+                    selection,
+                    crossover,
+                    mutation,
+                    termination);
+
+            algorithm.run();
+            computingTime = algorithm.getTotalComputingTime();
+            population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
+
+        } else {
+            // Instantiates and executes an asynchronous parallel genetic algorithm
+            long initTime = System.currentTimeMillis();
+
+            AsyncMultiThreadGAParents<ParameterizationSolution> algorithm = new AsyncMultiThreadGAParents<>(
+                    exercise.numThreads,
+                    problem,
+                    exercise.populationSize,
+                    crossover,
+                    mutation,
+                    selection,
+                    replacement,
+                    termination);
+
+            algorithm.run();
+            long endTime = System.currentTimeMillis();
+            computingTime = endTime - initTime;
+            population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
+        } 
 
         // Return the result of the parameterization algorithm.
-        return result;
+        return new AlgorithmResult<>(computingTime, population);
     }
 
 

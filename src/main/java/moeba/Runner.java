@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -110,8 +111,11 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--num-threads"}, description = "Number of threads. Default: All")
     private int numThreads = Runtime.getRuntime().availableProcessors();
 
-    @Option(names = {"--output-folder"}, description = "Output folder", defaultValue = "./MOEBA-HeCliDa/")
+    @Option(names = {"--output-folder"}, description = "Output folder")
     private String outputFolder;
+
+    // Store solutions
+    private List<CompositeSolution> solutions;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -211,7 +215,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         NaryTournamentSelection<CompositeSolution> selection = new BinaryTournamentSelection<>(new RankingAndCrowdingDistanceComparator<>());
 
         // Algorithm
-        AlgorithmResult result = StaticUtils.executeEvolutionaryAlgorithm(
+        AlgorithmResult<CompositeSolution> result = StaticUtils.executeEvolutionaryAlgorithm(
                 problem,
                 populationSize,
                 maxEvaluations,
@@ -222,27 +226,33 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
                 numThreads
         );
 
-        // Create output folder
-        try {
-            Files.createDirectories(Paths.get(outputFolder));
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
+        // Store population
+        this.solutions = result.population;
+
+        // Write output to files if outputFolder is specified
+        if (outputFolder != null) {
+            // Create output folder
+            try {
+                Files.createDirectories(Paths.get(outputFolder));
+            } catch (IOException ioe) {
+                throw new RuntimeException(ioe);
+            }
+
+            // Write the evolution of fitness values to an output txt file
+            for (ObserverInterface observer : observers) {
+                observer.writeToFile(outputFolder + "/" + observer.getClass().getSimpleName() + ".csv");
+            }
+
+            // Write the data of the last population (pareto front approximation)
+            new SolutionListVARWithHeader(result.population, strFitnessFormulas.split(";"), representationWrapper.getVarLabels())
+                    .setVarFileOutputContext(new DefaultFileOutputContext(outputFolder + "/VAR.csv", ","))
+                    .setFunFileOutputContext(new DefaultFileOutputContext(outputFolder + "/FUN.csv", ","))
+                    .print();
+
+            // Write translated VAR
+            new SolutionListTranslatedVAR(representationWrapper)
+                .printTranslatedVAR(outputFolder + "/VAR-translated.csv", result.population);
         }
-
-        // Write the evolution of fitness values to an output txt file
-        for (ObserverInterface observer : observers) {
-            observer.writeToFile(outputFolder + "/" + observer.getClass().getSimpleName() + ".csv");
-        }
-
-        // Write the data of the last population (pareto front approximation)
-        new SolutionListVARWithHeader(result.population, strFitnessFormulas.split(";"), representationWrapper.getVarLabels())
-                .setVarFileOutputContext(new DefaultFileOutputContext(outputFolder + "/VAR.csv", ","))
-                .setFunFileOutputContext(new DefaultFileOutputContext(outputFolder + "/FUN.csv", ","))
-                .print();
-
-        // Write translated VAR
-        new SolutionListTranslatedVAR(representationWrapper)
-            .printTranslatedVAR(outputFolder + "/VAR-translated.csv", result.population);
 
 
         System.out.println("Threads used: " + numThreads);
@@ -256,5 +266,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     public static void main(String[] args) {
         CommandLine commandLine = new CommandLine(new Runner());
         commandLine.execute(args);
+    }
+
+    public List<CompositeSolution> getSolutions() {
+        return solutions;
     }
 }

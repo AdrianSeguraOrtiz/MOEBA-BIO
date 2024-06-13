@@ -1,42 +1,69 @@
 package moeba.parameterization.problem.impl;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-import org.uma.jmetal.solution.compositesolution.CompositeSolution;
-import org.uma.jmetal.util.fileoutput.SolutionListOutput;
-import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
-
-import moeba.Runner;
+import moeba.Representation;
+import moeba.StaticUtils;
 import moeba.StaticUtils.AlgorithmResult;
 import moeba.parameterization.ParameterizationExercise;
 import moeba.parameterization.ParameterizationRunner;
+import moeba.parameterization.ParameterizationSolution;
 import moeba.parameterization.problem.ParameterizationProblem;
+import moeba.representationwrapper.RepresentationWrapper;
 import moeba.validation.ValidationRunner;
+import moeba.validation.metric.MetricInterface;
+import moeba.validation.metric.impl.ClusteringErrorComplementary;
 
 public class CEProblem extends ParameterizationProblem {
 
     private String[] prefixes;
     private ParameterizationExercise subExercise;
+    public int[] numRows;
+    public int[] numCols;
 
     public CEProblem(ParameterizationExercise parameterizationExercise, String staticConf, String[] prefixes, ParameterizationExercise subExercise) {
         super(parameterizationExercise, staticConf);
 
         this.prefixes = prefixes;
         this.subExercise = subExercise;
+        this.numRows = new int[prefixes.length];
+        this.numCols = new int[prefixes.length];
+
+        for (int i = 0; i < prefixes.length; i++) {
+            String dataset = prefixes[i] + "-data.csv";
+            int rowCount = 0;
+            int columnCount = 0;
+
+            try (BufferedReader br = new BufferedReader(new FileReader(dataset))) {
+                columnCount = br.readLine().split(",").length - 1;
+                while (br.readLine() != null) {
+                    rowCount++;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            this.numRows[i] = rowCount;
+            this.numCols[i] = columnCount;
+        }
+
     }
 
     @Override
-    public CompositeSolution evaluate(CompositeSolution solution) {
-
-        // Get solution id
-        int cnt = super.parallelCount.incrementAndGet();
-        String solutionOutputFolder = "./tmp/CE-" + String.format("%03d", cnt) + "/";
+    public ParameterizationSolution evaluate(ParameterizationSolution solution) { 
         
         // Get arguments
-        String solutionArgs = super.getArgsFromSolution(solution);
+        String solutionArgs = this.parameterizationExercise.getArgsFromSolution(solution);
+
+        // Get representation and number of objectives
+        String representation = this.parameterizationExercise.getValueOfArg("--representation", solution);
+        int numObjectives = this.parameterizationExercise.getValueOfArg("--str-fitness-functions", solution).split(";").length;
 
         // Config HV problem
         String strArgs = staticConf + " " + solutionArgs;
@@ -44,63 +71,36 @@ public class CEProblem extends ParameterizationProblem {
             this.subExercise,
             strArgs,
             prefixes,
-            solutionOutputFolder
+            numObjectives
         );
 
         // Run HV problem
-        AlgorithmResult result = ParameterizationRunner.executeParameterizationAlgorithm(hvproblem);
+        AlgorithmResult<ParameterizationSolution> result = ParameterizationRunner.executeParameterizationAlgorithm(hvproblem);
 
-        // Save HV problem results
-        new SolutionListOutput(result.population)
-            .setVarFileOutputContext(new DefaultFileOutputContext(solutionOutputFolder + "HV-VAR.csv", ","))
-            .setFunFileOutputContext(new DefaultFileOutputContext(solutionOutputFolder + "HV-FUN.csv", ","))
-            .print();
+        // Save HV winner into CE individual
+        solution.subPopulations.add(result.population);
 
-        // Save translated arguments of the unsupervised best solution for all benchmarks
-        CompositeSolution hvsolution = result.population.get(0);
-        String varTranslated = hvproblem.getArgsFromSolution(hvsolution);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(solutionOutputFolder + "HV-VAR-translated.csv"))) {
-            writer.write(varTranslated);
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Run unsupervised best solution for each benchmark to get the clustering errors
+        // Get clustering error obtained by HV winner for each benchmark
         double score = 0.0;
         for (int i = 0; i < prefixes.length; i++) {
 
-            // Config problem
-            String benchSolOutputFolder = solutionOutputFolder + "/bench-" + i + "/";
-            String strBenchArgs = strArgs + " " + varTranslated + " --input-dataset=" + prefixes[i] + "-data.csv" + " --input-column-types=" + prefixes[i] + "-types.json" + " --output-folder=" + benchSolOutputFolder;
-            String[] benchArgs = super.preprocessArguments(strBenchArgs.split(" "));
+            // Get representation wrapper
+            RepresentationWrapper wrapper = StaticUtils.getRepresentationWrapperFromRepresentation(Representation.valueOf(representation), numRows[i], numCols[i], 0, 0, 0, null);
 
-            // Run MOEBA algorithm
-            Runner.main(benchArgs);
-
-            // Get representation
-            String representation = "";
-            for (int j = 0; j < benchArgs.length; j++) {
-                if (benchArgs[j].startsWith("--representation=")) {
-                    representation = benchArgs[j].split("=")[1];
-                    break;
-                }
+            // Get inferred biclusters from the MOEBA winner population after apply the configuration of HV winner
+            List<ParameterizationSolution> subSolutions = solution.subPopulations.get(0).get(0).subPopulations.get(i);
+            ArrayList<ArrayList<ArrayList<Integer>[]>> inferredBiclusters = new ArrayList<>();
+            for (ParameterizationSolution ss : subSolutions) {
+                inferredBiclusters.add(wrapper.getBiclustersFromRepresentation(ss));
             }
 
-            // Run validation to get the clustering errors of the solutions in the front of the winner unsupervised configuration
-            String winnerVarTranslatedFile = benchSolOutputFolder + "VAR-translated.csv";
-            String gsTranslated = prefixes[i] + "-translated.csv";
-            String validationArgs = 
-                "--inferred-translated=" + winnerVarTranslatedFile +
-                " --representation=" + representation +
-                " --gold-standard-translated=" + gsTranslated +
-                " --validation-metrics=ClusteringErrorComplementary" +
-                " --num-threads=1" +
-                " --output-file=" + benchSolOutputFolder + "/ClusteringError.csv";
-            ValidationRunner.main(validationArgs.split(" "));
-
-            // Read clustering errors
-            double[][] clusteringErrors = super.readVectors(benchSolOutputFolder + "/ClusteringError.csv", ",");       
+            // Run validation to get the clustering errors
+            ArrayList<ArrayList<Integer>[]> goldStandard = StaticUtils.loadGoldStandardBiclusters(new File(prefixes[i] + "-translated.csv"));
+            MetricInterface[] metricInterfaces = new MetricInterface[1];
+            metricInterfaces[0] = new ClusteringErrorComplementary(false, null);
+            double[][] clusteringErrors = ValidationRunner.computeScores(inferredBiclusters, goldStandard, metricInterfaces, 1);
+            
+            // Sort clustering errors
             double[] values = new double[clusteringErrors.length];
             for (int j = 0; j < clusteringErrors.length; j++) {
                 values[j] = clusteringErrors[j][0];
@@ -118,16 +118,9 @@ public class CEProblem extends ParameterizationProblem {
 
         // Evaluate solution
         solution.objectives()[0] += score / prefixes.length;
- 
-        // Delete solution output folder
-        /**
-        try {
-            FileUtils.deleteDirectory(new File(solutionOutputFolder));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
 
+        // Print progress
+        int cnt = super.parallelCount.incrementAndGet();
         if (cnt % parameterizationExercise.populationSize == 0) {
             System.out.println(cnt);
         }

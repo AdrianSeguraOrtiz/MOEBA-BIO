@@ -49,6 +49,7 @@ import org.uma.jmetal.experimental.componentbasedalgorithm.catalogue.replacement
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.mutation.MutationOperator;
 import org.uma.jmetal.operator.selection.impl.NaryTournamentSelection;
+import org.uma.jmetal.solution.Solution;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import org.uma.jmetal.util.SolutionListUtils;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
@@ -306,11 +307,11 @@ public final class StaticUtils {
     /**
      * Represents the result of an evolutionary algorithm execution.
      */
-    public static class AlgorithmResult {
+    public static class AlgorithmResult<S extends Solution<?>> {
         // Execution time of the algorithm
         public long computingTime;
         // Population at the last iteration of the algorithm
-        public List<CompositeSolution> population;
+        public List<S> population;
 
         /**
          * Constructs an instance of AlgorithmResult.
@@ -318,7 +319,7 @@ public final class StaticUtils {
          * @param computingTime The total execution time of the algorithm
          * @param population The population at the last iteration of the algorithm
          */
-        public AlgorithmResult(long computingTime, List<CompositeSolution> population) {
+        public AlgorithmResult(long computingTime, List<S> population) {
             this.computingTime = computingTime;
             this.population = population;
         }
@@ -338,7 +339,7 @@ public final class StaticUtils {
      * @return An AlgorithmResult containing the total execution time and the final population
      * @throws IllegalArgumentException If the specified algorithm is not supported for the problem type
      */
-    public static AlgorithmResult executeEvolutionaryAlgorithm(
+    public static AlgorithmResult<CompositeSolution> executeEvolutionaryAlgorithm(
             Problem<CompositeSolution> problem,
             int populationSize,
             int maxEvaluations,
@@ -449,7 +450,7 @@ public final class StaticUtils {
             }
         }
 
-        return new AlgorithmResult(computingTime, population);
+        return new AlgorithmResult<>(computingTime, population);
     } 
 
     /**

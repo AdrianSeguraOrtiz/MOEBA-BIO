@@ -124,7 +124,7 @@ public class ValidationRunner implements Runnable {
      * @return An array of MetricInterface implementations corresponding to the names provided.
      * @throws IllegalArgumentException if a specified metric name does not correspond to a known implementation.
      */
-    private MetricInterface[] parseValidationMetrics(String metrics, boolean saveProcess, String parentFolderName) {
+    private static MetricInterface[] parseValidationMetrics(String metrics, boolean saveProcess, String parentFolderName) {
         String[] metricNames = metrics.split(";");
         MetricInterface[] metricInterfaces = new MetricInterface[metricNames.length];
         for (int i = 0; i < metricNames.length; i++) {
@@ -171,7 +171,7 @@ public class ValidationRunner implements Runnable {
      * @param numThreads The number of threads to use for validation.
      * @return A 2D array of scores, where each row corresponds to an inferred bicluster and each column to a metric.
      */
-    private double[][] computeScores(ArrayList<ArrayList<ArrayList<Integer>[]>> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandard, MetricInterface[] metrics, int numThreads) {
+    public static double[][] computeScores(ArrayList<ArrayList<ArrayList<Integer>[]>> inferredBiclusters, ArrayList<ArrayList<Integer>[]> goldStandard, MetricInterface[] metrics, int numThreads) {
         double[][] scores = new double[inferredBiclusters.size()][metrics.length];
         ForkJoinPool customThreadPool = new ForkJoinPool(numThreads);
         try {
@@ -198,7 +198,7 @@ public class ValidationRunner implements Runnable {
      * @param outputFile The file to write the scores to.
      * @throws IOException if an I/O error occurs writing to the file.
      */
-    private void writeScoresToFile(double[][] scores, String[] metricNames, File outputFile) {
+    private static void writeScoresToFile(double[][] scores, String[] metricNames, File outputFile) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(outputFile))) {
             for (int i = 0; i < metricNames.length; i++) {
                 writer.print(metricNames[i]);

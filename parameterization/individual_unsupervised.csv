@@ -1,0 +1,7 @@
+Parameter,Type,Values
+--population-size,Integer,100-1000-100
+--str-algorithm,String,NSGAII-SingleThread
+--crossover-operator,String,RowColUniformCrossover
+--crossover-probability,Double,0-1
+--mutation-operator,String,RowColUniformMutation
+--mutation-probability,Double,0-1
