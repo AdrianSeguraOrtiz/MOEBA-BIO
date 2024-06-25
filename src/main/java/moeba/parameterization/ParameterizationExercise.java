@@ -50,10 +50,13 @@ public class ParameterizationExercise {
                     this.integerBounds.add(Bounds.create(0, options.length - 1));
                     this.integerFuncs.add((i) -> options[i]);
                 } else if (values[1].equalsIgnoreCase("string-comb")) {
-                    String[] options = getCombinations(values[2].split("\\|"));
-                    this.integerNames.add(values[0]);
-                    this.integerBounds.add(Bounds.create(0, options.length - 1));
-                    this.integerFuncs.add((i) -> options[i]);
+                    String[] options = values[2].split("\\|");
+                    for (int i = 0; i < options.length; i++) {
+                        String currentOption = options[i];
+                        this.integerNames.add("--comb" + values[0] + "--" + i);
+                        this.integerBounds.add(Bounds.create(0, 1));
+                        this.integerFuncs.add((j) -> j == 0 ? "''" : currentOption);
+                    }
                 } else if (values[1].equalsIgnoreCase("double")) {
                     String[] bounds = values[2].split("\\-");
                     this.doubleNames.add(values[0]);
@@ -131,50 +134,6 @@ public class ParameterizationExercise {
 
         // If the argument is not found, return null
         return null;
-    }
-
-    /**
-     * Generates all possible combinations of the input strings.
-     *
-     * @param input The input strings to generate combinations from.
-     * @return An array of strings representing all possible combinations.
-     */
-    private static String[] getCombinations(String[] input) {
-        // List to store the generated combinations
-        List<String> result = new ArrayList<>();
-
-        // Recursively generate combinations and add them to the result list
-        generateCombinations(input, 0, new ArrayList<>(), result);
-
-        // Convert the list to an array and return it
-        return result.toArray(new String[result.size()]);
-    }
-
-    /**
-     * Recursively generates all possible combinations of elements from the input array.
-     *
-     * @param input     The input array of elements.
-     * @param index     The current index being processed.
-     * @param current   The current combination being built.
-     * @param result    The list to store all generated combinations.
-     */
-    private static void generateCombinations(String[] input, int index, List<String> current, List<String> result) {
-        // Base case: all elements processed
-        if (index == input.length) {
-            if (current.size() > 1) {
-                // Add the combination to the result list
-                result.add(String.join(";", current));
-            }
-            return;
-        }
-
-        // Exclude current element
-        generateCombinations(input, index + 1, current, result);
-
-        // Include current element
-        current.add(input[index]);
-        generateCombinations(input, index + 1, current, result);
-        current.remove(current.size() - 1);
     }
     
 }

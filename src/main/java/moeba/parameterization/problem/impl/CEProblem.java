@@ -61,9 +61,26 @@ public class CEProblem extends ParameterizationProblem {
         // Get arguments
         String solutionArgs = this.parameterizationExercise.getArgsFromSolution(solution);
 
-        // Get representation and number of objectives
+        // Get representation
         String representation = this.parameterizationExercise.getValueOfArg("--representation", solution);
-        int numObjectives = this.parameterizationExercise.getValueOfArg("--str-fitness-functions", solution).split(";").length;
+
+        // Get number of objectives
+        int numObjectives = 0;
+        int cntO = 0;
+        String value = "";
+        while (value != null) {
+            value = this.parameterizationExercise.getValueOfArg("--comb--str-fitness-functions--" + cntO, solution);
+            if (value != null && !value.equals("''")) {
+                numObjectives++;
+            }
+            cntO++;
+        }
+
+        // Penalize solution if the number of objectives is less than 2
+        if (numObjectives < 2) {
+            solution.objectives()[0] = 1.0;
+            return solution;
+        }
 
         // Config HV problem
         String strArgs = staticConf + " " + solutionArgs;
@@ -114,6 +131,9 @@ public class CEProblem extends ParameterizationProblem {
                 mean += values[j];
             }
             score += mean / div;
+
+            // Get the complementary of the complementary to get the clustering error
+            score = 1 - score;
         }
 
         // Evaluate solution

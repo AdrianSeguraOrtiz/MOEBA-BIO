@@ -64,6 +64,9 @@ public abstract class ParameterizationProblem implements Problem<Parameterizatio
     protected String[] preprocessArguments(String[] args) {
         // Map to store the values of sub-arguments
         Map<String, Map<String, Map<String, String>>> subArguments = new HashMap<>();
+
+        // Map to store the values of comb-arguments
+        Map<String, String> combArguments = new HashMap<>();
         
         // List to store the final processed arguments
         List<String> finalArguments = new ArrayList<>();
@@ -84,6 +87,18 @@ public abstract class ParameterizationProblem implements Problem<Parameterizatio
                 subArguments.putIfAbsent(mainArg, new HashMap<>());
                 subArguments.get(mainArg).putIfAbsent(subString, new HashMap<>());
                 subArguments.get(mainArg).get(subString).put(subKey, subValue);
+            } else if (arg.startsWith("--comb")) {
+                // Process comb-arguments
+                String[] parts = arg.split("--");
+                String mainArg = "--" + parts[2];
+                String combValue = parts[3].split("=")[1];
+                
+                // Add to the map of comb-arguments
+                if (!combValue.equals("''")) {
+                    String value = combArguments.containsKey(mainArg) ? combArguments.get(mainArg) + ";" + combValue : combValue;
+                    combArguments.put(mainArg, value);
+                }
+
             } else {
                 // Add main argument to the final arguments list
                 finalArguments.add(arg);
@@ -119,6 +134,9 @@ public abstract class ParameterizationProblem implements Problem<Parameterizatio
                 finalArguments.set(i, mainArg + "=" + newValue.toString());
             }
         }
+
+        // Add comb-arguments values as a main argument
+        combArguments.forEach((key, value) -> finalArguments.add(key + "=" + value));
         
         // Return the final processed arguments
         return finalArguments.toArray(new String[0]);
