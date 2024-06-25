@@ -22,7 +22,7 @@ public class GenericMutation implements MutationOperator<CompositeSolution> {
     private CellBinaryMutation cellBinaryMutation; 
 
     public GenericMutation(String mutationProbability, int numApproxMutations, RowPermutationMutation rowPermutationMutation, BiclusterBinaryMutation biclusterBinaryMutation, CellBinaryMutation cellBinaryMutation) {
-        String[] parts = mutationProbability.split("-");
+        String[] parts = mutationProbability.split("->");
         if (parts.length == 1) {
             double p = Double.parseDouble(mutationProbability);
             this.maxMutationProbability = p;
