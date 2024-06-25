@@ -69,7 +69,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--str-algorithm"}, 
             description = "Algorithm as a string. Possible values: \n" + //
                 "\t- Single Objective: GA-AsyncParallel, GA-SingleThread \n" + //
-                "\t- Multi Objective: NSGAII-AsyncParallel, NSGAII-SingleThread \n" + //
+                "\t- Multi Objective: NSGAII-AsyncParallel, NSGAII-SingleThread, MOEAD-SingleThread, SMS-EMOA-SingleThread, MOCell-SingleThread, SPEA2-SingleThread, IBEA-SingleThread \n" + //
                 "\t- Many Objective: NSGAII-ExternalFile-AsyncParallel", 
             defaultValue = "NSGAII-AsyncParallel")
     private String strAlgorithm;

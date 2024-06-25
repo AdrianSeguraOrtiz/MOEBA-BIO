@@ -40,9 +40,15 @@ import moeba.utils.observer.impl.FitnessEvolutionMinObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
 import moeba.utils.observer.impl.NumEvaluationsObserver;
 import moeba.utils.storage.CacheStorage;
+
 import org.uma.jmetal.algorithm.Algorithm;
+import org.uma.jmetal.algorithm.multiobjective.ibea.IBEA;
+import org.uma.jmetal.algorithm.multiobjective.mocell.MOCell;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAIIBuilder;
+import org.uma.jmetal.algorithm.multiobjective.smsemoa.SMSEMOA;
+import org.uma.jmetal.algorithm.multiobjective.spea2.SPEA2;
 import org.uma.jmetal.example.AlgorithmRunner;
+import org.uma.jmetal.experimental.componentbasedalgorithm.algorithm.multiobjective.moead.MOEAD;
 import org.uma.jmetal.experimental.componentbasedalgorithm.algorithm.singleobjective.geneticalgorithm.GeneticAlgorithm;
 import org.uma.jmetal.experimental.componentbasedalgorithm.catalogue.replacement.Replacement;
 import org.uma.jmetal.experimental.componentbasedalgorithm.catalogue.replacement.impl.MuPlusLambdaReplacement;
@@ -52,11 +58,18 @@ import org.uma.jmetal.operator.selection.impl.NaryTournamentSelection;
 import org.uma.jmetal.solution.Solution;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import org.uma.jmetal.util.SolutionListUtils;
+import org.uma.jmetal.util.aggregativefunction.impl.Tschebyscheff;
+import org.uma.jmetal.util.archive.impl.CrowdingDistanceArchive;
+import org.uma.jmetal.util.comparator.DominanceComparator;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
+import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
+import org.uma.jmetal.util.legacy.qualityindicator.impl.hypervolume.impl.PISAHypervolume;
+import org.uma.jmetal.util.neighborhood.impl.C9;
 import org.uma.jmetal.util.termination.Termination;
 import org.uma.jmetal.util.termination.impl.TerminationByEvaluations;
 import org.uma.jmetal.problem.Problem;
 
+@SuppressWarnings("deprecation")
 public final class StaticUtils {
 
     /**
@@ -90,23 +103,6 @@ public final class StaticUtils {
             case "distancebetweenbiclustersnormcomp":
                 res = new DistanceBetweenBiclustersNormComp(data, types, cache, summariseIndividualObjectives);
                 break;
-            /**
-            case "scalingmeansquaredresidue":
-                res = new ScalingMeanSquaredResidue(data, types);
-                break;
-            case "averagecorrelationfunction":
-                res = new AverageCorrelationFunction(data, types);
-                break;
-            case "averagecorrelationvalue":
-                res = new AverageCorrelationValue(data, types);
-                break;
-            case "virtualerror":
-                res = new VirtualError(data, types);
-                break;
-            case "coefficientofvariationfunction":
-                res = new CoefficientOfVariationFunction(data, types);
-                break;
-            */
             default:
                 throw new RuntimeException("The fitness function " + str + " is not implemented.");
         }
@@ -445,6 +441,108 @@ public final class StaticUtils {
                 computingTime = endTime - initTime;
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
 
+            } else if (strAlgorithm.equals("MOEAD-SingleThread")) {
+                // Instantiates and executes a single-threaded MOEAD algorithm
+                MOEAD<CompositeSolution> algorithm = new MOEAD<CompositeSolution>(
+                    problem, 
+                    populationSize, 
+                    mutation, 
+                    crossover, 
+                    new Tschebyscheff(), 
+                    0.1, 
+                    2, 
+                    20, 
+                    "resources/weightVectorFiles/moead", 
+                    termination
+                );
+
+                algorithm.run();
+                computingTime = algorithm.getTotalComputingTime();
+                population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
+            
+            } else if (strAlgorithm.equals("SMS-EMOA-SingleThread")) {
+                // Instantiates and executes a single-threaded SMS-EMOA algorithm
+                long initTime = System.currentTimeMillis();
+
+                SMSEMOA<CompositeSolution> algorithm = new SMSEMOA<CompositeSolution>(
+                    problem,
+                    maxEvaluations,
+                    populationSize,
+                    populationSize,
+                    crossover,
+                    mutation,
+                    selection,
+                    new DominanceComparator<>(),
+                    new PISAHypervolume<>()
+                );
+
+
+                algorithm.run();
+                long endTime = System.currentTimeMillis();
+                computingTime = endTime - initTime;
+                population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
+            
+            } else if (strAlgorithm.equals("MOCell-SingleThread")) {
+                // Instantiates and executes a single-threaded MOCell algorithm
+                long initTime = System.currentTimeMillis();
+
+                populationSize = nearestPerfectSquare(populationSize);
+                MOCell<CompositeSolution> algorithm = new MOCell<CompositeSolution>(
+                    problem,
+                    maxEvaluations,
+                    populationSize,
+                    new CrowdingDistanceArchive<>(populationSize),
+                    new C9<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize)),
+                    crossover,
+                    mutation,
+                    selection,
+                    new SequentialSolutionListEvaluator<>()
+                );
+
+                algorithm.run();
+                long endTime = System.currentTimeMillis();
+                computingTime = endTime - initTime;
+                population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
+            
+            } else if (strAlgorithm.equals("SPEA2-SingleThread")) {
+                // Instantiates and executes a single-threaded SPEA2 algorithm
+                long initTime = System.currentTimeMillis();
+
+                SPEA2<CompositeSolution> algorithm = new SPEA2<CompositeSolution>(
+                   problem,
+                   maxEvaluations / populationSize,
+                   populationSize,
+                   crossover,
+                   mutation,
+                   selection,
+                   new SequentialSolutionListEvaluator<>(),
+                   1
+                );
+
+                algorithm.run();
+                long endTime = System.currentTimeMillis();
+                computingTime = endTime - initTime;
+                population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
+            
+            } else if (strAlgorithm.equals("IBEA-SingleThread")) {
+                // Instantiates and executes a single-threaded IBEA algorithm
+                long initTime = System.currentTimeMillis();
+
+                IBEA<CompositeSolution> algorithm = new IBEA<CompositeSolution>(
+                    problem,
+                    populationSize,
+                    populationSize,
+                    maxEvaluations,
+                    selection,
+                    crossover,
+                    mutation
+                );
+
+                algorithm.run();
+                long endTime = System.currentTimeMillis();
+                computingTime = endTime - initTime;
+                population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
+            
             } else {
                 throw new IllegalArgumentException("The algorithm " + strAlgorithm + " is not available for multi-objective problems.");
             }
@@ -452,6 +550,32 @@ public final class StaticUtils {
 
         return new AlgorithmResult<>(computingTime, population);
     } 
+
+    /**
+     * Finds the nearest perfect square to a given number.
+     * 
+     * @param number The number to find the nearest perfect square for.
+     * @return The nearest perfect square.
+     */
+    public static int nearestPerfectSquare(int number) {
+        // Calculate the floor of the square root of the number
+        int lower = (int) Math.floor(Math.sqrt(number));
+        
+        // Calculate the square of the lower value
+        int lowerSquare = lower * lower;
+        
+        // Calculate the square of the lower value plus one
+        int upper = lower + 1;
+        int upperSquare = upper * upper;
+
+        // Compare which perfect square is closer to the number
+        // and return the square of the closer value
+        if ((number - lowerSquare) < (upperSquare - number)) {
+            return lowerSquare;
+        } else {
+            return upperSquare;
+        }
+    }
 
     /**
      * Converts a bicluster to a string representation
