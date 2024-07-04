@@ -1,6 +1,6 @@
 Parameter,Type,Values
 --population-size,Integer,100-1000-100
---str-algorithm,String,NSGAII-SingleThread|MOEAD-SingleThread|MOCell-SingleThread|SPEA2-SingleThread|IBEA-SingleThread
+--str-algorithm,String,NSGAII-SingleThread|MOEAD-SingleThread|MOCell-SingleThread|SPEA2-SingleThread|IBEA-SingleThread|NSGAIII-SingleThread|MOSA-SingleThread
 --crossover-operator,String,GroupedBasedCrossover;CellUniformCrossover|PartiallyMappedCrossover;BicUniformCrossover;CellUniformCrossover
 --sub--crossover-operator--GroupedBasedCrossover--shuffleEnd,Double,0-1
 --sub--crossover-operator--GroupedBasedCrossover--dynamicStartAmount,Double,0-1

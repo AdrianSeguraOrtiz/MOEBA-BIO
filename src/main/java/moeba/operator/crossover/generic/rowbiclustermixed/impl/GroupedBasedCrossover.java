@@ -82,8 +82,8 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         int numBicsP2 = Math.max((int) ((bs2.cardinality() + (bs2.get(n -1) ? 0 : 1 )) * amount), 1);
 
         // Calculate the range of positions for the biclusters to be crossed
-        int[] limits1 = amount != 1 ? getLimits(bs1, random.nextInt(n-2)+1, numBicsP1, n) : new int[] {-1, n-1};
-        int[] limits2 = amount != 1 ? getLimits(bs2, random.nextInt(n-2)+1, numBicsP2, n) : new int[] {-1, n-1};
+        int[] limits1 = amount != 1 ? getLimits(bs1, random.nextInt(n-3)+1, numBicsP1, n) : new int[] {-1, n-1};
+        int[] limits2 = amount != 1 ? getLimits(bs2, random.nextInt(n-3)+1, numBicsP2, n) : new int[] {-1, n-1};
         if (limits1[0] == 0 && !bs1.get(0)) limits1[0] = -1;
         if (limits2[0] == 0 && !bs2.get(0)) limits2[0] = -1;
         

@@ -50,11 +50,15 @@ import moeba.utils.observer.impl.FitnessEvolutionMinObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
 import moeba.utils.observer.impl.NumEvaluationsObserver;
 import moeba.utils.storage.CacheStorage;
-
+import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.uma.jmetal.algorithm.Algorithm;
 import org.uma.jmetal.algorithm.multiobjective.ibea.IBEA;
 import org.uma.jmetal.algorithm.multiobjective.mocell.MOCell;
+import org.uma.jmetal.algorithm.multiobjective.mosa.MOSA;
+import org.uma.jmetal.algorithm.multiobjective.mosa.cooling.impl.Exponential;
 import org.uma.jmetal.algorithm.multiobjective.nsgaii.NSGAIIBuilder;
+import org.uma.jmetal.algorithm.multiobjective.nsgaiii.NSGAIII;
+import org.uma.jmetal.algorithm.multiobjective.nsgaiii.NSGAIIIBuilder;
 import org.uma.jmetal.algorithm.multiobjective.smsemoa.SMSEMOA;
 import org.uma.jmetal.algorithm.multiobjective.spea2.SPEA2;
 import org.uma.jmetal.example.AlgorithmRunner;
@@ -70,8 +74,10 @@ import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import org.uma.jmetal.util.SolutionListUtils;
 import org.uma.jmetal.util.aggregativefunction.impl.Tschebyscheff;
 import org.uma.jmetal.util.archive.impl.CrowdingDistanceArchive;
+import org.uma.jmetal.util.archive.impl.GenericBoundedArchive;
 import org.uma.jmetal.util.comparator.DominanceComparator;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
+import org.uma.jmetal.util.densityestimator.impl.CrowdingDistanceDensityEstimator;
 import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
 import org.uma.jmetal.util.legacy.qualityindicator.impl.hypervolume.impl.PISAHypervolume;
 import org.uma.jmetal.util.neighborhood.impl.C9;
@@ -557,6 +563,39 @@ public final class StaticUtils {
                     crossover,
                     mutation
                 );
+
+                algorithm.run();
+                long endTime = System.currentTimeMillis();
+                computingTime = endTime - initTime;
+                population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
+            
+            } else if (strAlgorithm.equals("NSGAIII-SingleThread")) {
+                // Instantiates and executes a single-threaded NSGAIII algorithm
+                NSGAIII<CompositeSolution> algorithm = new NSGAIIIBuilder<>(problem)
+                    .setCrossoverOperator(crossover)
+                    .setMutationOperator(mutation)
+                    .setSelectionOperator(selection)
+                    .setPopulationSize(populationSize)
+                    .setMaxIterations(maxEvaluations / (int) CombinatoricsUtils.binomialCoefficient(12 + problem.getNumberOfObjectives() - 1, problem.getNumberOfObjectives() - 1))
+                    .setNumberOfDivisions(12)
+                    .build();
+
+                AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm).execute();
+                computingTime = algorithmRunner.getComputingTime();
+                population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
+            
+            } else if (strAlgorithm.equals("MOSA-SingleThread")) {
+                // Instantiates and executes a single-threaded MOSA algorithm
+                long initTime = System.currentTimeMillis();
+
+                MOSA<CompositeSolution> algorithm = new MOSA<CompositeSolution>(
+                    problem,
+                    maxEvaluations,
+                    new GenericBoundedArchive<>(populationSize, new CrowdingDistanceDensityEstimator<>()),
+                    mutation,
+                    1.0, 
+                    new Exponential(0.95)
+                );  
 
                 algorithm.run();
                 long endTime = System.currentTimeMillis();

@@ -1,6 +1,6 @@
 Parameter,Type,Values
 --population-size,Integer,100-1000-100
---str-algorithm,String,NSGAII-SingleThread|MOEAD-SingleThread|MOCell-SingleThread|SPEA2-SingleThread|IBEA-SingleThread
+--str-algorithm,String,NSGAII-SingleThread|MOEAD-SingleThread|MOCell-SingleThread|SPEA2-SingleThread|IBEA-SingleThread|NSGAIII-SingleThread|MOSA-SingleThread
 --crossover-operator,String,RowColUniformCrossover
 --crossover-probability,Double,0-1
 --mutation-operator,String,RowColUniformMutation
