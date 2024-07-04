@@ -5,17 +5,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 import moeba.algorithm.AsyncMultiThreadGAParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
@@ -442,6 +452,16 @@ public final class StaticUtils {
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
 
             } else if (strAlgorithm.equals("MOEAD-SingleThread")) {
+                // Get the directory where the weight vector files are located
+                String weightVectorDirectory = null;
+                try {
+                    weightVectorDirectory = createTempDirectoryFromResource("weightVectorFiles/moead/").toString();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+
                 // Instantiates and executes a single-threaded MOEAD algorithm
                 MOEAD<CompositeSolution> algorithm = new MOEAD<CompositeSolution>(
                     problem, 
@@ -452,7 +472,7 @@ public final class StaticUtils {
                     0.1, 
                     2, 
                     20, 
-                    "resources/weightVectorFiles/moead", 
+                    weightVectorDirectory, 
                     termination
                 );
 
@@ -701,5 +721,67 @@ public final class StaticUtils {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+
+    /**
+     * Creates a temporary directory and copies the resources from the specified resource path into it.
+     * The resource path can be a directory or a JAR file. If the resource path is a JAR file,
+     * the resources are extracted from the JAR file and copied into the temporary directory.
+     *
+     * @param resourcePath The path of the resources to be copied.
+     * @return The path of the temporary directory.
+     * @throws IOException if an I/O error occurs while creating the temporary directory or copying the resources.
+     * @throws URISyntaxException if the resource path is not a valid URI.
+     */
+    public static Path createTempDirectoryFromResource(String resourcePath) throws IOException, URISyntaxException {
+        // Create a temporary directory
+        Path tempDir = Files.createTempDirectory("temp_resources_");
+
+        // Get the URL of the resource
+        URL resourceUrl = StaticUtils.class.getClassLoader().getResource(resourcePath);
+        if (resourceUrl == null) {
+            throw new IOException("Resource path not found: " + resourcePath);
+        }
+
+        if (resourceUrl.getProtocol().equals("jar")) {
+            // If the resources are inside a JAR file
+            String jarPath = resourceUrl.getPath().substring(5, resourceUrl.getPath().indexOf("!"));
+
+            // Extract the resources from the JAR file and copy them into the temporary directory
+            try (JarFile jar = new JarFile(jarPath)) {
+                Enumeration<JarEntry> entries = jar.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    if (entry.getName().startsWith(resourcePath) && !entry.isDirectory()) {
+                        File tempFile = new File(tempDir.toFile(),
+                                entry.getName().substring(resourcePath.length()));
+                        if (!tempFile.getParentFile().exists()) {
+                            tempFile.getParentFile().mkdirs();
+                        }
+                        try (InputStream inputStream = jar.getInputStream(entry);
+                             FileOutputStream outputStream = new FileOutputStream(tempFile)) {
+                            byte[] buffer = new byte[1024];
+                            int bytesRead;
+                            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                outputStream.write(buffer, 0, bytesRead);
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // If the resources are in the file system
+            Path sourcePath = Paths.get(resourceUrl.toURI());
+            Files.walk(sourcePath)
+                 .forEach(source -> {
+                     Path destination = tempDir.resolve(sourcePath.relativize(source).toString());
+                     try {
+                         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+                     } catch (IOException e) {
+                         e.printStackTrace();
+                     }
+                 });
+        }
+        return tempDir;
     }
 }
