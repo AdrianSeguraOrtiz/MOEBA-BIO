@@ -50,7 +50,7 @@ public class ParameterizationExercise {
                     for (int i = 0; i < options.length; i++) {
                         String currentOption = options[i];
                         this.integerNames.add("--comb" + values[0] + "--" + i);
-                        this.integerBounds.add(Bounds.create(0, 1));
+                        this.integerBounds.add(Bounds.create(options.length == 1 ? 1 : 0, 1));
                         this.integerFuncs.add((j) -> j == 0 ? "''" : currentOption);
                     }
                 } else if (values[1].equalsIgnoreCase("double")) {
@@ -74,13 +74,14 @@ public class ParameterizationExercise {
             e.printStackTrace();
         }
         
-        this.numThreads = numThreads;
-        if (this.doubleBounds.stream().allMatch(b -> b.getLowerBound() == b.getUpperBound()) && this.integerBounds.stream().allMatch(b -> b.getLowerBound() == b.getUpperBound())) {
+        if (this.doubleBounds.stream().allMatch(b -> b.getLowerBound().equals(b.getUpperBound())) && this.integerBounds.stream().allMatch(b -> b.getLowerBound().equals(b.getUpperBound()))) {
             this.evaluations = 1;
             this.populationSize = 1;
+            this.numThreads = 1;
         } else {
             this.evaluations = evaluations;
             this.populationSize = populationSize;
+            this.numThreads = numThreads;
         }
     }
 

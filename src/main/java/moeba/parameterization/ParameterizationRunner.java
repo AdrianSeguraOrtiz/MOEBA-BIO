@@ -122,7 +122,16 @@ public class ParameterizationRunner implements Runnable {
         double[][][] moebaFUN = new double[validPrefixes.size()][][];
         String[][] moebaVAR = new String[validPrefixes.size()][];
         String representation = supervisedParameterizationExercise.getValueOfArg("--representation", ceSolution);
-        int numObjectives = supervisedParameterizationExercise.getValueOfArg("--str-fitness-functions", ceSolution).split(";").length;
+        int numObjectives = 0;
+        int cntO = 0;
+        String value = "";
+        while (value != null) {
+            value = supervisedParameterizationExercise.getValueOfArg("--comb--str-fitness-functions--" + cntO, ceSolution);
+            if (value != null && !value.equals("''")) {
+                numObjectives += value.split(";").length;
+            }
+            cntO++;
+        }
 
         for (int i = 0; i < validPrefixes.size(); i++) {
             List<ParameterizationSolution> moebaSolutions = hvSolution.subPopulations.get(i);
@@ -138,7 +147,7 @@ public class ParameterizationRunner implements Runnable {
             String benchmarkInfo = "Benchmark: " + validPrefixes.toArray()[i];
             String funInfo = "moebaFUN: " + Arrays.deepToString(moebaFUN[i]);
             String varInfo = "moebaVAR: " + Arrays.deepToString(moebaVAR[i]);
-            saveToFile(outputFolder, "moebaSolution_" + validPrefixes.toArray()[i] + ".txt", benchmarkInfo + "\n" + funInfo + "\n" + varInfo);
+            saveToFile(outputFolder, "moebaSolution-D" + i + ".txt", benchmarkInfo + "\n" + funInfo + "\n" + varInfo);
         }
 
         System.out.println("Threads used: " + numThreads);

@@ -71,7 +71,7 @@ public class CEProblem extends ParameterizationProblem {
         while (value != null) {
             value = this.parameterizationExercise.getValueOfArg("--comb--str-fitness-functions--" + cntO, solution);
             if (value != null && !value.equals("''")) {
-                numObjectives++;
+                numObjectives += value.split(";").length;
             }
             cntO++;
         }
@@ -148,4 +148,8 @@ public class CEProblem extends ParameterizationProblem {
         return solution;
     }
     
+    @Override
+    public String getName() {
+        return "Clustering Error Problem (supervised)";
+    }
 }

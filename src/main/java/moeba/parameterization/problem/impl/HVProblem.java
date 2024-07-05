@@ -78,4 +78,9 @@ public class HVProblem extends ParameterizationProblem {
         return solution;
     }
     
+    @Override
+    public String getName() {
+        return "HyperVolume Problem (unsupervised)";
+    }
+    
 }
