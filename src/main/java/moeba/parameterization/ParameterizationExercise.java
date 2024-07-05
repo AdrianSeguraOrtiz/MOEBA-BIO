@@ -28,10 +28,6 @@ public class ParameterizationExercise {
     }
 
     public ParameterizationExercise (File confFile, int evaluations, int populationSize, int numThreads) {
-        this.evaluations = evaluations;
-        this.populationSize = populationSize;
-        this.numThreads = numThreads;
-
         this.doubleNames = new ArrayList<>();
         this.integerNames = new ArrayList<>();
         this.doubleBounds = new ArrayList<>();
@@ -59,11 +55,13 @@ public class ParameterizationExercise {
                     }
                 } else if (values[1].equalsIgnoreCase("double")) {
                     String[] bounds = values[2].split("\\-");
+                    if (bounds.length == 1) bounds = new String[]{bounds[0], bounds[0]};
                     this.doubleNames.add(values[0]);
                     this.doubleBounds.add(Bounds.create(Double.parseDouble(bounds[0]), Double.parseDouble(bounds[1])));
                     this.doubleFuncs.add((d) -> String.valueOf(d));
                 } else if (values[1].equalsIgnoreCase("integer")) {
                     String[] bounds = values[2].split("\\-");
+                    if (bounds.length == 1) bounds = new String[]{bounds[0], bounds[0], bounds[0]};
                     int step = Integer.parseInt(bounds[2]);
                     this.integerNames.add(values[0]);
                     this.integerBounds.add(Bounds.create(Integer.parseInt(bounds[0]) / step, Integer.parseInt(bounds[1]) / step));
@@ -74,6 +72,15 @@ public class ParameterizationExercise {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        
+        this.numThreads = numThreads;
+        if (this.doubleBounds.stream().allMatch(b -> b.getLowerBound() == b.getUpperBound()) && this.integerBounds.stream().allMatch(b -> b.getLowerBound() == b.getUpperBound())) {
+            this.evaluations = 1;
+            this.populationSize = 1;
+        } else {
+            this.evaluations = evaluations;
+            this.populationSize = populationSize;
         }
     }
 
