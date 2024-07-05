@@ -64,7 +64,6 @@ import org.uma.jmetal.algorithm.multiobjective.spea2.SPEA2;
 import org.uma.jmetal.example.AlgorithmRunner;
 import org.uma.jmetal.experimental.componentbasedalgorithm.algorithm.multiobjective.moead.MOEAD;
 import org.uma.jmetal.experimental.componentbasedalgorithm.algorithm.singleobjective.geneticalgorithm.GeneticAlgorithm;
-import org.uma.jmetal.experimental.componentbasedalgorithm.catalogue.replacement.Replacement;
 import org.uma.jmetal.experimental.componentbasedalgorithm.catalogue.replacement.impl.MuPlusLambdaReplacement;
 import org.uma.jmetal.operator.crossover.CrossoverOperator;
 import org.uma.jmetal.operator.mutation.MutationOperator;
@@ -72,15 +71,26 @@ import org.uma.jmetal.operator.selection.impl.NaryTournamentSelection;
 import org.uma.jmetal.solution.Solution;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 import org.uma.jmetal.util.SolutionListUtils;
+import org.uma.jmetal.util.aggregativefunction.AggregativeFunction;
+import org.uma.jmetal.util.aggregativefunction.impl.PenaltyBoundaryIntersection;
 import org.uma.jmetal.util.aggregativefunction.impl.Tschebyscheff;
+import org.uma.jmetal.util.aggregativefunction.impl.WeightedSum;
+import org.uma.jmetal.util.archive.BoundedArchive;
 import org.uma.jmetal.util.archive.impl.CrowdingDistanceArchive;
 import org.uma.jmetal.util.archive.impl.GenericBoundedArchive;
+import org.uma.jmetal.util.archive.impl.HypervolumeArchive;
+import org.uma.jmetal.util.archive.impl.SpatialSpreadDeviationArchive;
 import org.uma.jmetal.util.comparator.DominanceComparator;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
 import org.uma.jmetal.util.densityestimator.impl.CrowdingDistanceDensityEstimator;
 import org.uma.jmetal.util.evaluator.impl.SequentialSolutionListEvaluator;
 import org.uma.jmetal.util.legacy.qualityindicator.impl.hypervolume.impl.PISAHypervolume;
+import org.uma.jmetal.util.neighborhood.Neighborhood;
+import org.uma.jmetal.util.neighborhood.impl.C25;
 import org.uma.jmetal.util.neighborhood.impl.C9;
+import org.uma.jmetal.util.neighborhood.impl.L13;
+import org.uma.jmetal.util.neighborhood.impl.L25;
+import org.uma.jmetal.util.neighborhood.impl.L5;
 import org.uma.jmetal.util.termination.Termination;
 import org.uma.jmetal.util.termination.impl.TerminationByEvaluations;
 import org.uma.jmetal.problem.Problem;
@@ -366,14 +376,14 @@ public final class StaticUtils {
 
         // Defines the termination condition for the algorithm
         Termination termination = new TerminationByEvaluations(maxEvaluations);
-        // Replacement strategy for creating the next generation
-        Replacement<CompositeSolution> replacement = new MuPlusLambdaReplacement<>(new ObjectiveComparator<>(0));
+        
+        // Set offspring population size to be equal to the population size
         int offspringPopulationSize = populationSize;
 
         // Executes the algorithm based on the problem's number of objectives and specified algorithm name
         if (problem.getNumberOfObjectives() == 1) {
             // Single-objective problem logic
-            if (strAlgorithm.equals("GA-SingleThread")) {
+            if (strAlgorithm.startsWith("GA-SingleThread")) {
                 // Instantiates and executes a single-threaded genetic algorithm
                 GeneticAlgorithm<CompositeSolution> algorithm = new GeneticAlgorithm<>(
                         problem,
@@ -388,7 +398,7 @@ public final class StaticUtils {
                 computingTime = algorithm.getTotalComputingTime();
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
 
-            } else if (strAlgorithm.equals("GA-AsyncParallel")) {
+            } else if (strAlgorithm.startsWith("GA-AsyncParallel")) {
                 // Instantiates and executes an asynchronous parallel genetic algorithm
                 long initTime = System.currentTimeMillis();
 
@@ -399,7 +409,7 @@ public final class StaticUtils {
                         crossover,
                         mutation,
                         selection,
-                        replacement,
+                        new MuPlusLambdaReplacement<>(new ObjectiveComparator<>(0)),
                         termination);
 
                 algorithm.run();
@@ -412,7 +422,7 @@ public final class StaticUtils {
             }
         } else {
             // Multi-objective problem logic
-            if (strAlgorithm.equals("NSGAII-SingleThread")) {
+            if (strAlgorithm.startsWith("NSGAII-SingleThread")) {
                 // Instantiates and executes a single-threaded NSGA-II algorithm
                 Algorithm<List<CompositeSolution>> algorithm = new NSGAIIBuilder<>(problem, crossover, mutation, populationSize)
                         .setSelectionOperator(selection)
@@ -423,7 +433,7 @@ public final class StaticUtils {
                 computingTime = algorithmRunner.getComputingTime();
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
 
-            } else if (strAlgorithm.equals("NSGAII-AsyncParallel")) {
+            } else if (strAlgorithm.startsWith("NSGAII-AsyncParallel")) {
                 // Instantiates and executes an asynchronous parallel NSGA-II algorithm
                 long initTime = System.currentTimeMillis();
 
@@ -440,7 +450,7 @@ public final class StaticUtils {
                 computingTime = endTime - initTime;
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
 
-            } else if (strAlgorithm.equals("NSGAII-ExternalFile-AsyncParallel")) {
+            } else if (strAlgorithm.startsWith("NSGAII-ExternalFile-AsyncParallel")) {
                 // Instantiates and executes an asynchronous parallel NSGA-II algorithm with external file support
                 long initTime = System.currentTimeMillis();
 
@@ -457,7 +467,7 @@ public final class StaticUtils {
                 computingTime = endTime - initTime;
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
 
-            } else if (strAlgorithm.equals("MOEAD-SingleThread")) {
+            } else if (strAlgorithm.startsWith("MOEAD-SingleThread")) {
                 // Get the directory where the weight vector files are located
                 String weightVectorDirectory = null;
                 try {
@@ -468,16 +478,58 @@ public final class StaticUtils {
                     e.printStackTrace();
                 }
 
+                // Get subparameters
+                AggregativeFunction aggregativeFunction = new Tschebyscheff();
+                double neighborhoodSelectionProbability = 0.1; 
+                int maximumNumberOfReplacedSolutions = 2; 
+                int neighborhoodSize = 20;
+
+                if (strAlgorithm.matches("MOEAD-SingleThread((.*))")) {
+                    String[] strParams = strAlgorithm.split("[()=, ]");
+                    for (int i = 0; i < strParams.length; i++) {
+                        switch (strParams[i].toLowerCase()) {
+
+                            case "aggregativefunction":
+                                switch (strParams[i + 1].toLowerCase()) {
+                                    case "tschebyscheff":
+                                        aggregativeFunction = new Tschebyscheff();
+                                        break;
+                                    case "weightedsum":
+                                        aggregativeFunction = new WeightedSum();
+                                        break;
+                                    case "penaltyboundaryintersection":
+                                        aggregativeFunction = new PenaltyBoundaryIntersection();
+                                        break;
+                                    default:
+                                        throw new IllegalArgumentException("The aggregative function " + strParams[i + 1] + " is not implemented.");
+                                }
+                                break;
+
+                            case "neighborhoodselectionprobability":
+                                neighborhoodSelectionProbability = Float.parseFloat(strParams[i + 1]);
+                                break;
+
+                            case "maximumnumberofreplacedsolutions":
+                                maximumNumberOfReplacedSolutions = Integer.parseInt(strParams[i + 1]);
+                                break;
+
+                            case "neighborhoodsize":
+                                neighborhoodSize = Integer.parseInt(strParams[i + 1]);
+                                break;
+                        }
+                    }
+                }
+
                 // Instantiates and executes a single-threaded MOEAD algorithm
                 MOEAD<CompositeSolution> algorithm = new MOEAD<CompositeSolution>(
                     problem, 
                     populationSize, 
                     mutation, 
                     crossover, 
-                    new Tschebyscheff(), 
-                    0.1, 
-                    2, 
-                    20, 
+                    aggregativeFunction, 
+                    neighborhoodSelectionProbability, 
+                    maximumNumberOfReplacedSolutions, 
+                    neighborhoodSize, 
                     weightVectorDirectory, 
                     termination
                 );
@@ -486,7 +538,7 @@ public final class StaticUtils {
                 computingTime = algorithm.getTotalComputingTime();
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
             
-            } else if (strAlgorithm.equals("SMS-EMOA-SingleThread")) {
+            } else if (strAlgorithm.startsWith("SMS-EMOA-SingleThread")) {
                 // Instantiates and executes a single-threaded SMS-EMOA algorithm
                 long initTime = System.currentTimeMillis();
 
@@ -508,17 +560,69 @@ public final class StaticUtils {
                 computingTime = endTime - initTime;
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
             
-            } else if (strAlgorithm.equals("MOCell-SingleThread")) {
+            } else if (strAlgorithm.startsWith("MOCell-SingleThread")) {
                 // Instantiates and executes a single-threaded MOCell algorithm
                 long initTime = System.currentTimeMillis();
 
+                // Adjust population size
                 populationSize = nearestPerfectSquare(populationSize);
+
+                // Get subparameters
+                BoundedArchive<CompositeSolution> archive = new CrowdingDistanceArchive<>(populationSize);
+                Neighborhood<CompositeSolution> neighborhood = new C9<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+
+                if (strAlgorithm.matches("MOCell-SingleThread((.*))")) {
+                    String[] strParams = strAlgorithm.split("[()=, ]");
+                    for (int i = 0; i < strParams.length; i++) {
+                        switch (strParams[i].toLowerCase()) {
+
+                            case "archive":
+                                switch (strParams[i + 1].toLowerCase()) {
+                                    case "crowdingdistancearchive":
+                                        archive = new CrowdingDistanceArchive<>(populationSize);
+                                        break;
+                                    case "hypervolumearchive":
+                                        archive = new HypervolumeArchive<>(populationSize, new PISAHypervolume<>());
+                                        break;
+                                    case "spatialspreaddeviationarchive":
+                                        archive = new SpatialSpreadDeviationArchive<>(populationSize);
+                                        break;
+                                    default:
+                                        throw new IllegalArgumentException("The archive " + strParams[i + 1] + " is not implemented.");
+                                }
+                                break;
+
+                            case "neighborhood":
+                                switch (strParams[i + 1].toLowerCase()) {
+                                    case "c9":
+                                        neighborhood = new C9<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                        break;
+                                    case "c25":
+                                        neighborhood = new C25<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                        break;
+                                    case "l5":
+                                        neighborhood = new L5<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                        break;
+                                    case "l13":
+                                        neighborhood = new L13<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                        break;
+                                    case "l25":
+                                        neighborhood = new L25<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                        break;
+                                    default:
+                                        throw new IllegalArgumentException("The neighborhood " + strParams[i + 1] + " is not implemented.");
+                                }
+                                break;
+                        }
+                    }
+                }
+
                 MOCell<CompositeSolution> algorithm = new MOCell<CompositeSolution>(
                     problem,
                     maxEvaluations,
                     populationSize,
-                    new CrowdingDistanceArchive<>(populationSize),
-                    new C9<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize)),
+                    archive,
+                    neighborhood,
                     crossover,
                     mutation,
                     selection,
@@ -530,9 +634,24 @@ public final class StaticUtils {
                 computingTime = endTime - initTime;
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
             
-            } else if (strAlgorithm.equals("SPEA2-SingleThread")) {
+            } else if (strAlgorithm.startsWith("SPEA2-SingleThread")) {
                 // Instantiates and executes a single-threaded SPEA2 algorithm
                 long initTime = System.currentTimeMillis();
+
+                // Get subparameters
+                int k = 1;
+
+                if (strAlgorithm.matches("SPEA2-SingleThread((.*))")) {
+                    String[] strParams = strAlgorithm.split("[()=, ]");
+                    for (int i = 0; i < strParams.length; i++) {
+                        switch (strParams[i].toLowerCase()) {
+
+                            case "k":
+                                k = Integer.parseInt(strParams[i + 1]);
+                                break;
+                        }
+                    }
+                }
 
                 SPEA2<CompositeSolution> algorithm = new SPEA2<CompositeSolution>(
                    problem,
@@ -542,7 +661,7 @@ public final class StaticUtils {
                    mutation,
                    selection,
                    new SequentialSolutionListEvaluator<>(),
-                   1
+                   k
                 );
 
                 algorithm.run();
@@ -550,7 +669,7 @@ public final class StaticUtils {
                 computingTime = endTime - initTime;
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
             
-            } else if (strAlgorithm.equals("IBEA-SingleThread")) {
+            } else if (strAlgorithm.startsWith("IBEA-SingleThread")) {
                 // Instantiates and executes a single-threaded IBEA algorithm
                 long initTime = System.currentTimeMillis();
 
@@ -569,31 +688,61 @@ public final class StaticUtils {
                 computingTime = endTime - initTime;
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
             
-            } else if (strAlgorithm.equals("NSGAIII-SingleThread")) {
+            } else if (strAlgorithm.startsWith("NSGAIII-SingleThread")) {
+                // Get subparameters
+                int numberOfDivisions = 12;
+
+                if (strAlgorithm.matches("NSGAIII-SingleThread((.*))")) {
+                    String[] strParams = strAlgorithm.split("[()=, ]");
+                    for (int i = 0; i < strParams.length; i++) {
+                        switch (strParams[i].toLowerCase()) {
+
+                            case "numberofdivisions":
+                                numberOfDivisions = Integer.parseInt(strParams[i + 1]);
+                                break;
+                        }
+                    }
+                }
+                
                 // Instantiates and executes a single-threaded NSGAIII algorithm
                 NSGAIII<CompositeSolution> algorithm = new NSGAIIIBuilder<>(problem)
                     .setCrossoverOperator(crossover)
                     .setMutationOperator(mutation)
                     .setSelectionOperator(selection)
                     .setPopulationSize(populationSize)
-                    .setMaxIterations(maxEvaluations / (int) CombinatoricsUtils.binomialCoefficient(12 + problem.getNumberOfObjectives() - 1, problem.getNumberOfObjectives() - 1))
-                    .setNumberOfDivisions(12)
+                    .setMaxIterations(maxEvaluations / (int) CombinatoricsUtils.binomialCoefficient(numberOfDivisions + problem.getNumberOfObjectives() - 1, problem.getNumberOfObjectives() - 1))
+                    .setNumberOfDivisions(numberOfDivisions)
                     .build();
 
                 AlgorithmRunner algorithmRunner = new AlgorithmRunner.Executor(algorithm).execute();
                 computingTime = algorithmRunner.getComputingTime();
                 population = SolutionListUtils.getNonDominatedSolutions(algorithm.getResult());
             
-            } else if (strAlgorithm.equals("MOSA-SingleThread")) {
+            } else if (strAlgorithm.startsWith("MOSA-SingleThread")) {
                 // Instantiates and executes a single-threaded MOSA algorithm
                 long initTime = System.currentTimeMillis();
+
+                // Get subparameters
+                double initialTemperature = 1.0;
+
+                if (strAlgorithm.matches("MOSA-SingleThread((.*))")) {
+                    String[] strParams = strAlgorithm.split("[()=, ]");
+                    for (int i = 0; i < strParams.length; i++) {
+                        switch (strParams[i].toLowerCase()) {
+
+                            case "initialtemperature":
+                                initialTemperature = Double.parseDouble(strParams[i + 1]);
+                                break;
+                        }
+                    }
+                }
 
                 MOSA<CompositeSolution> algorithm = new MOSA<CompositeSolution>(
                     problem,
                     maxEvaluations,
                     new GenericBoundedArchive<>(populationSize, new CrowdingDistanceDensityEstimator<>()),
                     mutation,
-                    1.0, 
+                    initialTemperature, 
                     new Exponential(0.95)
                 );  
 

@@ -1,6 +1,15 @@
 Parameter,Type,Values
 --population-size,Integer,100-1000-100
 --str-algorithm,String,NSGAII-SingleThread|MOEAD-SingleThread|MOCell-SingleThread|SPEA2-SingleThread|IBEA-SingleThread|NSGAIII-SingleThread|MOSA-SingleThread
+--sub--str-algorithm--MOEAD-SingleThread--AggregativeFunction,String,Tschebyscheff|WeightedSum|PenaltyBoundaryIntersection
+--sub--str-algorithm--MOEAD-SingleThread--NeighborhoodSelectionProbability,Double,0-1
+--sub--str-algorithm--MOEAD-SingleThread--MaximumNumberOfReplacedSolutions,Integer,1-10-1
+--sub--str-algorithm--MOEAD-SingleThread--NeighborhoodSize,Integer,5-20-1
+--sub--str-algorithm--MOCell-SingleThread--Archive,String,CrowdingDistanceArchive|HypervolumeArchive|SpatialSpreadDeviationArchive
+--sub--str-algorithm--MOCell-SingleThread--Neighborhood,String,C9|C25|L5|L13|L25
+--sub--str-algorithm--SPEA2-SingleThread--K,Integer,1-10-1
+--sub--str-algorithm--NSGAIII-SingleThread--NumberOfDivisions,Integer,6-14-1
+--sub--str-algorithm--MOSA-SingleThread--InitialTemperature,Double,0-1
 --crossover-operator,String,RowColUniformCrossover
 --crossover-probability,Double,0-1
 --mutation-operator,String,RowColUniformMutation
