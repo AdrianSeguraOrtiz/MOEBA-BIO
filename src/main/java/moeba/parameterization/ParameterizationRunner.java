@@ -3,6 +3,7 @@ package moeba.parameterization;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -109,13 +110,13 @@ public class ParameterizationRunner implements Runnable {
         ParameterizationSolution ceSolution = result.population.get(0);
         double ceFUN = ceSolution.objectives()[0];
         String ceVAR = supervisedParameterizationExercise.getArgsFromSolution(ceSolution);
-        System.out.println("ceFUN: " + ceFUN + ", ceVAR: " + ceVAR);
+        saveToFile(outputFolder, "ceSolution.txt", "ceFUN: " + ceFUN + "\n" + "ceVAR: " + ceVAR);
 
         // 3. Get HV solutions
         ParameterizationSolution hvSolution = ceSolution.subPopulations.get(0).get(0);
         double hvFUN = hvSolution.objectives()[0];
         String hvVAR = unsupervisedParameterizationExercise.getArgsFromSolution(hvSolution);
-        System.out.println("hvFUN: " + hvFUN + ", hvVAR: " + hvVAR);
+        saveToFile(outputFolder, "hvSolution.txt", "hvFUN: " + hvFUN + "\n" + "hvVAR: " + hvVAR);
 
         // 4. Get MOEBA solutions
         double[][][] moebaFUN = new double[validPrefixes.size()][][];
@@ -134,9 +135,10 @@ public class ParameterizationRunner implements Runnable {
                 moebaVAR[i][j] = StaticUtils.biclustersToString(wrapper.getBiclustersFromRepresentation(moebaSolutions.get(j)));
             }
 
-            System.out.println("Benchmark: " + validPrefixes.toArray()[i]);
-            System.out.println("moebaFUN: " + Arrays.deepToString(moebaFUN[i]));
-            System.out.println("moebaVAR: " + Arrays.deepToString(moebaVAR[i]));
+            String benchmarkInfo = "Benchmark: " + validPrefixes.toArray()[i];
+            String funInfo = "moebaFUN: " + Arrays.deepToString(moebaFUN[i]);
+            String varInfo = "moebaVAR: " + Arrays.deepToString(moebaVAR[i]);
+            saveToFile(outputFolder, "moebaSolution_" + validPrefixes.toArray()[i] + ".txt", benchmarkInfo + "\n" + funInfo + "\n" + varInfo);
         }
 
         System.out.println("Threads used: " + numThreads);
@@ -144,6 +146,26 @@ public class ParameterizationRunner implements Runnable {
             
         System.exit(0);
 
+    }
+
+    /**
+     * Saves the given content to a file in the specified folder.
+     *
+     * @param folder   the folder where the file will be saved
+     * @param fileName the name of the file
+     * @param content  the content to be saved
+     */
+    private static void saveToFile(String folder, String fileName, String content) {
+        try {
+            // Get the path of the file to be created
+            Path filePath = Paths.get(folder, fileName);
+
+            // Write the content to the file
+            Files.write(filePath, content.getBytes());
+        } catch (IOException e) {
+            // Print the stack trace if an error occurs
+            e.printStackTrace();
+        }
     }
 
     /**
