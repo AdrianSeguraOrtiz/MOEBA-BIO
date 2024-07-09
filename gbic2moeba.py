@@ -15,13 +15,14 @@ Finally, the script outputs several files:
 3. A JSON file detailing the data types of the dataset columns.
 
 Usage:
-    python script.py --biclusters-file <path_to_biclusters_json> --data-file <path_to_data_tsv>
+    python script.py --biclusters-file <path_to_biclusters_json> --data-file <path_to_data_tsv> --policy <replace|remove>
 """
 
 # Command-line arguments parsing
 parser = argparse.ArgumentParser(description='Process bicluster and data files with explicit parameter names.')
 parser.add_argument("--biclusters-file", required=True, help="JSON file containing the biclusters' specification")
 parser.add_argument("--data-file", required=True, help="TSV file containing the dataset")
+parser.add_argument("--policy", choices=["replace", "remove"], default="replace", help="Policy to handle non grouped rows")
 args = parser.parse_args()
 
 # Load biclusters specification from JSON
@@ -78,21 +79,35 @@ for row_index in range(len(df)):
         # At the end overlapped row is grouped
         status[row_index] = 1
 
-# The rows that remain ungrouped are replaced by copies of grouped rows
-for row_index in range(len(df)):
-    if status[row_index] == 0:
-        chosen_bic = random.choice(biclusters_list)
-        random_row_index = random.choice(chosen_bic[0])
-        df.iloc[row_index] = df.iloc[random_row_index]
-        chosen_bic[0].append(row_index)
-        status[row_index] = 1
+# The rows that remain ungrouped are:
+if args.policy == "replace":
+    # Replaced by copies of grouped rows
+    for row_index in range(len(df)):
+        if status[row_index] == 0:
+            chosen_bic = random.choice(biclusters_list)
+            random_row_index = random.choice(chosen_bic[0])
+            df.iloc[row_index] = df.iloc[random_row_index]
+            chosen_bic[0].append(row_index)
+            status[row_index] = 1
+elif args.policy == "remove":
+    # Removed
+    tmp_df = df.copy()
+    num_removes = 0
+    for row_index in range(len(df)):
+        if status[row_index] == 0:
+            tmp_df.drop(index=row_index, inplace=True)
+            for bic in biclusters_list:
+                for i in range(len(bic[0])):
+                    if bic[0][i] > row_index - num_removes:
+                        bic[0][i] -= 1
+            num_removes += 1
+    df = tmp_df
 
 # Check the status of each row
 ungrouped = 0
 grouped = 0
 overlapped = 0
-num_rows = biclusters_data['#DatasetRows']
-for row_index in range(int(num_rows)):
+for row_index in range(len(df)):
     value = sum(row_index in bic[0] for bic in biclusters_list)
     if value == 0:
         ungrouped += 1
@@ -102,7 +117,7 @@ for row_index in range(int(num_rows)):
         overlapped += 1
 
 # Printing statistics
-print(f"Grouped: {grouped/num_rows*100}%, Ungrouped: {ungrouped/num_rows*100}%, Overlapped: {overlapped/num_rows*100}%")
+print(f"Grouped: {grouped} rows, Ungrouped: {ungrouped} rows, Overlapped: {overlapped} rows")
 
 # Save biclusters to CSV
 output_base = args.data_file.split(".")[0]
