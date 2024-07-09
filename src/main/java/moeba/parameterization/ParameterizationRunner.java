@@ -40,6 +40,9 @@ import moeba.parameterization.operator.ParameterizationMutation;
 import moeba.parameterization.problem.ParameterizationProblem;
 import moeba.parameterization.problem.impl.CEProblem;
 import moeba.representationwrapper.RepresentationWrapper;
+import moeba.utils.observer.ProblemObserver.ObserverInterface;
+import moeba.utils.observer.impl.FitnessEvolutionMinObserver;
+import moeba.utils.observer.impl.NumEvaluationsObserver;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -93,7 +96,9 @@ public class ParameterizationRunner implements Runnable {
         
         // Get parameterization problem
         String staticConf = "--max-evaluations=" + internalEvaluations + " --num-threads=1" + " --observers=FitnessEvolutionMinObserver";
-        CEProblem ceproblem = new CEProblem(supervisedParameterizationExercise, staticConf, validPrefixes.toArray(new String[validPrefixes.size()]), unsupervisedParameterizationExercise);
+        ObserverInterface[] externalSupervisedObservers = new ObserverInterface[]{new NumEvaluationsObserver(externalSupervisedPopulationSize), new FitnessEvolutionMinObserver(externalSupervisedPopulationSize, 1)};
+        String externalUnsupervisedObservers = "FitnessEvolutionMinObserver";
+        CEProblem ceproblem = new CEProblem(supervisedParameterizationExercise, staticConf, externalSupervisedObservers, externalUnsupervisedObservers, validPrefixes.toArray(new String[validPrefixes.size()]), unsupervisedParameterizationExercise);
 
         // Run parameterization
         AlgorithmResult<ParameterizationSolution> result = ParameterizationRunner.executeParameterizationAlgorithm(ceproblem);
@@ -109,14 +114,20 @@ public class ParameterizationRunner implements Runnable {
         // 2. Get CE solutions
         ParameterizationSolution ceSolution = result.population.get(0);
         double ceFUN = ceSolution.objectives()[0];
-        String ceVAR = supervisedParameterizationExercise.getArgsFromSolution(ceSolution);
+        String ceVAR = Arrays.toString(ParameterizationProblem.preprocessArguments(supervisedParameterizationExercise.getArgsFromSolution(ceSolution).split(" ")));
         saveToFile(outputFolder, "ceSolution.txt", "ceFUN: " + ceFUN + "\n" + "ceVAR: " + ceVAR);
+        for (ObserverInterface observer : externalSupervisedObservers) {
+            observer.writeToFile(outputFolder + "/ce-" + observer.getClass().getSimpleName() + ".csv");
+        }
 
         // 3. Get HV solutions
         ParameterizationSolution hvSolution = ceSolution.subPopulations.get(0).get(0);
         double hvFUN = hvSolution.objectives()[0];
-        String hvVAR = unsupervisedParameterizationExercise.getArgsFromSolution(hvSolution);
+        String hvVAR = Arrays.toString(ParameterizationProblem.preprocessArguments(unsupervisedParameterizationExercise.getArgsFromSolution(hvSolution).split(" ")));
         saveToFile(outputFolder, "hvSolution.txt", "hvFUN: " + hvFUN + "\n" + "hvVAR: " + hvVAR);
+        for (ObserverInterface observer : ceSolution.subObservers) {
+            observer.writeToFile(outputFolder + "/hv-" + observer.getClass().getSimpleName() + ".csv");
+        }
 
         // 4. Get MOEBA solutions
         double[][][] moebaFUN = new double[validPrefixes.size()][][];

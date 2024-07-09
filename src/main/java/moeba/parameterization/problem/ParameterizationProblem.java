@@ -15,16 +15,19 @@ import org.uma.jmetal.solution.integersolution.impl.DefaultIntegerSolution;
 
 import moeba.parameterization.ParameterizationExercise;
 import moeba.parameterization.ParameterizationSolution;
+import moeba.utils.observer.ProblemObserver.ObserverInterface;
 
 public abstract class ParameterizationProblem implements Problem<ParameterizationSolution> {
     protected ParameterizationExercise parameterizationExercise;
     protected String staticConf;
     protected AtomicInteger parallelCount;
+    protected ObserverInterface[] observers;
 
-    public ParameterizationProblem(ParameterizationExercise parameterizationExercise, String staticConf) {
+    public ParameterizationProblem(ParameterizationExercise parameterizationExercise, String staticConf, ObserverInterface[] observers) {
         this.parameterizationExercise = parameterizationExercise;
         this.staticConf = staticConf;
         this.parallelCount = new AtomicInteger();
+        this.observers = observers;
     }
 
     @Override
@@ -61,7 +64,7 @@ public abstract class ParameterizationProblem implements Problem<Parameterizatio
      * @param args the command line arguments to be preprocessed
      * @return an array of preprocessed arguments
      */
-    protected String[] preprocessArguments(String[] args) {
+    public static String[] preprocessArguments(String[] args) {
         // Map to store the values of sub-arguments
         Map<String, Map<String, Map<String, String>>> subArguments = new HashMap<>();
 
@@ -144,5 +147,12 @@ public abstract class ParameterizationProblem implements Problem<Parameterizatio
 
     public ParameterizationExercise getParameterizationExercise() {
         return parameterizationExercise;
+    }
+
+    public void registerInfo(ParameterizationSolution solution) {
+        // Notify all registered observers with the evaluation result
+        for (ObserverInterface observer : observers) {
+            observer.register(solution);
+        }
     }
 }

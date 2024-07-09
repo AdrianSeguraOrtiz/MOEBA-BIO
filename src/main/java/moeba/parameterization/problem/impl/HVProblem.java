@@ -11,14 +11,15 @@ import moeba.Runner;
 import moeba.parameterization.ParameterizationExercise;
 import moeba.parameterization.ParameterizationSolution;
 import moeba.parameterization.problem.ParameterizationProblem;
+import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import picocli.CommandLine;
 
 public class HVProblem extends ParameterizationProblem {
     private String[] prefixes;
     private int numObjectives;
 
-    public HVProblem(ParameterizationExercise parameterizationExercise, String staticConf, String[] prefixes, int numObjectives) {
-        super(parameterizationExercise, staticConf);
+    public HVProblem(ParameterizationExercise parameterizationExercise, String staticConf, ObserverInterface[] observers, String[] prefixes, int numObjectives) {
+        super(parameterizationExercise, staticConf, observers);
         this.prefixes = prefixes;
         this.numObjectives = numObjectives;
     }
@@ -67,6 +68,7 @@ public class HVProblem extends ParameterizationProblem {
                 front[j] = subSolution.objectives();
             }
             solution.subPopulations.add(subPopulation);
+            solution.subObservers = null;
 
             // Compute HV
             score += -1 * hv.compute(front);
@@ -74,6 +76,9 @@ public class HVProblem extends ParameterizationProblem {
         
         // Evaluate solution
         solution.objectives()[0] = score / prefixes.length;
+
+        // Observers
+        this.registerInfo(solution);
 
         return solution;
     }

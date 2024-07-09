@@ -16,6 +16,7 @@ import moeba.parameterization.ParameterizationRunner;
 import moeba.parameterization.ParameterizationSolution;
 import moeba.parameterization.problem.ParameterizationProblem;
 import moeba.representationwrapper.RepresentationWrapper;
+import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.validation.ValidationRunner;
 import moeba.validation.metric.MetricInterface;
 import moeba.validation.metric.impl.ClusteringErrorComplementary;
@@ -24,12 +25,14 @@ public class CEProblem extends ParameterizationProblem {
 
     private String[] prefixes;
     private ParameterizationExercise subExercise;
+    private String subObservers;
     public int[] numRows;
     public int[] numCols;
 
-    public CEProblem(ParameterizationExercise parameterizationExercise, String staticConf, String[] prefixes, ParameterizationExercise subExercise) {
-        super(parameterizationExercise, staticConf);
+    public CEProblem(ParameterizationExercise parameterizationExercise, String staticConf, ObserverInterface[] observers, String subObservers, String[] prefixes, ParameterizationExercise subExercise) {
+        super(parameterizationExercise, staticConf, observers);
 
+        this.subObservers = subObservers;
         this.prefixes = prefixes;
         this.subExercise = subExercise;
         this.numRows = new int[prefixes.length];
@@ -82,11 +85,19 @@ public class CEProblem extends ParameterizationProblem {
             return solution;
         }
 
+        // Get subObservers
+        String[] subObserversArrayStr = this.subObservers.split(";");
+        ObserverInterface[] subObserversArray = new ObserverInterface[subObserversArrayStr.length];
+        for (int i = 0; i < subObserversArrayStr.length; i++) {
+            subObserversArray[i] = StaticUtils.getObserverFromString(subObserversArrayStr[i], subExercise.populationSize, new String[]{"HV"}, 0, null, null);
+        }
+
         // Config HV problem
         String strArgs = staticConf + " " + solutionArgs;
         HVProblem hvproblem = new HVProblem(
             this.subExercise,
             strArgs,
+            subObserversArray,
             prefixes,
             numObjectives
         );
@@ -96,6 +107,7 @@ public class CEProblem extends ParameterizationProblem {
 
         // Save HV winner into CE individual
         solution.subPopulations.add(result.population);
+        solution.subObservers = subObserversArray;
 
         // Get clustering error obtained by HV winner for each benchmark
         double score = 0.0;
@@ -139,11 +151,8 @@ public class CEProblem extends ParameterizationProblem {
         // Evaluate solution
         solution.objectives()[0] += score / prefixes.length;
 
-        // Print progress
-        int cnt = super.parallelCount.incrementAndGet();
-        if (cnt % parameterizationExercise.populationSize == 0) {
-            System.out.println(cnt);
-        }
+        // Observers
+        this.registerInfo(solution);
 
         return solution;
     }
