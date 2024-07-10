@@ -74,7 +74,7 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         // Determine the amount of biclusters to cross based on the dynamic start amount and the progress
         float amount = (1 - dynamicStartAmount) * doned + dynamicStartAmount;
 
-        // Ensure the last bit of each individual is set to true to match their cardinality with the number of biclusters
+        // Determine the number of rows
         int n = is1.variables().size();
 
         // Determine the number of biclusters to cross for each individual, ensuring at least one is crossed
@@ -82,10 +82,8 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         int numBicsP2 = Math.max((int) ((bs2.cardinality() + (bs2.get(n -1) ? 0 : 1 )) * amount), 1);
 
         // Calculate the range of positions for the biclusters to be crossed
-        int[] limits1 = amount != 1 ? getLimits(bs1, random.nextInt(n-3)+1, numBicsP1, n) : new int[] {-1, n-1};
-        int[] limits2 = amount != 1 ? getLimits(bs2, random.nextInt(n-3)+1, numBicsP2, n) : new int[] {-1, n-1};
-        if (limits1[0] == 0 && !bs1.get(0)) limits1[0] = -1;
-        if (limits2[0] == 0 && !bs2.get(0)) limits2[0] = -1;
+        int[] limits1 = amount != 1 ? getLimits(bs1, random.nextInt(n-4)+2, numBicsP1, n) : new int[] {-1, n-1};
+        int[] limits2 = amount != 1 ? getLimits(bs2, random.nextInt(n-4)+2, numBicsP2, n) : new int[] {-1, n-1};
         
         // The bics vector stores at position i the identifier of the bicluster to which row i belongs. If row i has been out of range, it will be assigned the value 0
         // The cuts vector stores at position i the cut point of bicluster i. Since bicluster 0 represents out-of-range leftovers, cuts[0] will be left at the default value of 0.
@@ -94,13 +92,13 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         int size1, maxSize1 = 0, minSize1 = n;
         int[] bicsP1 = new int[n];
         int[] cutsP1 = new int[numBicsP1 + 1];
-        for (int i = limits1[0]+1; i < limits1[1]+1; i++) {
+        for (int i = limits1[0]+1; i <= limits1[1]; i++) {
             bicsP1[is1.variables().get(i)] = b1;
             if (bs1.get(i) || i == n-1) {
                 cutsP1[b1] = i;
                 size1 = i - cutsP1[b1-1];
-                if (b1 != 1 && size1 > maxSize1) maxSize1 = size1;
-                if (b1 != 1 && size1 < minSize1) minSize1 = size1;
+                if (size1 > maxSize1) maxSize1 = size1;
+                if (size1 < minSize1) minSize1 = size1;
                 b1 += 1;
             }
         }
@@ -110,13 +108,13 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         int size2, maxSize2 = 0, minSize2 = n;
         int[] bicsP2 = new int[n];
         int[] cutsP2 = new int[numBicsP2 + 1];
-        for (int i = limits2[0]+1; i < limits2[1]+1; i++) {
+        for (int i = limits2[0]+1; i <= limits2[1]; i++) {
             bicsP2[is2.variables().get(i)] = b2;
             if (bs2.get(i) || i == n-1) {
                 cutsP2[b2] = i;
                 size2 = i - cutsP2[b2-1];
-                if (b2 != 1 && size2 > maxSize2) maxSize2 = size2;
-                if (b2 != 1 && size2 < minSize2) minSize2 = size2;
+                if (size2 > maxSize2) maxSize2 = size2;
+                if (size2 < minSize2) minSize2 = size2;
                 b2 += 1;
             }
         }
@@ -183,36 +181,36 @@ public class GroupedBasedCrossover implements RowBiclusterMixedCrossover {
         // If the seed falls on 0, when the first expansion is achieved on both sides, a single bicluster is generated, so we start it at -1 so that when they are added it remains at 1
         int nb = bs.get(seed) ? 0 : -1;
         while (nb < numBics) {
-            nextStart = bs.previousSetBit(res[0]-1);
-            nextEnd = bs.nextSetBit(res[1]+1);
+            nextStart = res[0] != -1 ? bs.previousSetBit(res[0]-1) : -1;
+            nextEnd = res[1] != n-1 ? bs.nextSetBit(res[1]+1) : n-1;
             if (nb % 2 == 0) {
-                // If the previous bit set to true is other than -1, a bicluster has been added behind
-                if (nextStart != -1) {
+                // Bicluster has been added behind
+                if (nextStart != res[0]) {
                     res[0] = nextStart;
-                } 
-                // If it is -1 for the first time it means that we have reached the first 1 or that the seed has fallen between the start and the first 1
-                // If the seed has fallen between the beginning and the first 1, the first bicluster is added so as not to take only a part
-                else if (res[0] == seed) {
-                    res[0] = 0;
-                } 
-                // If the next bit is other than -1, a bicluster has been added ahead
-                else if (nextEnd != -1) {
-                    res[1] = nextEnd;
+                } else {
+                    // If the next bit is -1, the next bicluster has been added ahead
+                    if (nextEnd != -1) {
+                        res[1] = nextEnd;
+                    }
+                    // If the next bit is -1, the next bicluster is at the end
+                    else {
+                        res[1] = n-1;
+                    }
                 }
-                // If the next bit is -1, the seed has fallen between the end and the last 1
-                else if (res[1] == seed) {
-                    res[1] = n-1;
-                }
+                
             } else {
-                // Same as before but giving priority to the queue
-                if (nextEnd != -1) {
-                    res[1] = nextEnd;
-                } else if (res[1] == seed) {
-                    res[1] = n-1;
-                } else if (nextStart != -1) {
+                if (nextEnd != res[1]) {
+                    // If the next bit is -1, the next bicluster has been added ahead
+                    if (nextEnd != -1) {
+                        res[1] = nextEnd;
+                    }
+                    // If the next bit is -1, the next bicluster is at the end
+                    else {
+                        res[1] = n-1;
+                    }
+                } else {
+                    // Bicluster has been added behind
                     res[0] = nextStart;
-                } else if (res[0] == seed) {
-                    res[0] = 0;
                 }
             }
             nb++;
