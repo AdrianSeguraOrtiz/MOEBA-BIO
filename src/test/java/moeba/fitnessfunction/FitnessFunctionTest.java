@@ -6,7 +6,6 @@ import java.util.Arrays;
 import org.testng.annotations.Test;
 
 import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
-import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
 import moeba.fitnessfunction.impl.DistanceBetweenBiclustersNormComp;
 import moeba.fitnessfunction.impl.MeanSquaredResidueNorm;
@@ -26,19 +25,19 @@ public class FitnessFunctionTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testBiclusterSizeNormCompOneBicluster() {
-        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "Mean");
+        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "Mean", 0.5);
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
         biclusters.add(b);
 
-        assert(Math.abs((1.0 - 4.0/16.0) - f.run(biclusters)) < epsilon);
+        assert(Math.abs((1.0 - (0.5*(2.0/4.0) + 0.5*(2.0/4.0))) - f.run(biclusters)) < epsilon);
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testBiclusterSizeNormCompTwoBiclustersMean() {
-        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "Mean");
+        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "Mean", 0.5);
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b1 = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
@@ -46,13 +45,13 @@ public class FitnessFunctionTest {
         biclusters.add(b1);
         biclusters.add(b2);
 
-        assert(Math.abs((1.0 - (4.0/16.0 + 6.0/16.0)/2) - f.run(biclusters)) < epsilon);
+        assert(Math.abs((1.0 - ((0.5*(2.0/4.0) + 0.5*(2.0/4.0)) + (0.5*(3.0/4.0) + 0.5*(2.0/4.0)))/2) - f.run(biclusters)) < epsilon);
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testBiclusterSizeNormCompTwoBiclustersHarmonicMean() {
-        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "HarmonicMean");
+        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "HarmonicMean", 0.5);
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b1 = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
@@ -60,13 +59,13 @@ public class FitnessFunctionTest {
         biclusters.add(b1);
         biclusters.add(b2);
 
-        assert(Math.abs((1.0 - 2.0/(1.0/(4.0/16.0) + 1.0/(6.0/16.0))) - f.run(biclusters)) < epsilon);
+        assert(Math.abs((1.0 - 2.0/(1.0/(0.5*(2.0/4.0) + 0.5*(2.0/4.0)) + 1.0/(0.5*(3.0/4.0) + 0.5*(2.0/4.0)))) - f.run(biclusters)) < epsilon);
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testBiclusterSizeNormCompTwoBiclustersGeometricMean() {
-        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "GeometricMean");
+        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "GeometricMean", 0.5);
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b1 = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
@@ -74,13 +73,13 @@ public class FitnessFunctionTest {
         biclusters.add(b1);
         biclusters.add(b2);
 
-        assert(Math.abs((1.0 - Math.sqrt((4.0/16.0) * (6.0/16.0))) - f.run(biclusters)) < epsilon);
+        assert(Math.abs((1.0 - Math.sqrt((0.5*(2.0/4.0) + 0.5*(2.0/4.0)) * (0.5*(3.0/4.0) + 0.5*(2.0/4.0)))) - f.run(biclusters)) < epsilon);
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testBiclusterSizeWeightedNormCompOneBicluster() {
-        FitnessFunction f = new BiclusterSizeWeightedNormComp(data, types, null, "Mean");
+        FitnessFunction f = new BiclusterSizeNormComp(data, types, null, "Mean", 0.75);
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2, 3)), new ArrayList<>(Arrays.asList(1))};

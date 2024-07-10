@@ -107,6 +107,9 @@ public abstract class ParameterizationProblem implements Problem<Parameterizatio
                 finalArguments.add(arg);
             }
         }
+
+        // Add comb-arguments values as a main argument
+        combArguments.forEach((key, value) -> finalArguments.add(key + "=" + value));
         
         // Inject sub-argument values into main arguments
         for (int i = 0; i < finalArguments.size(); i++) {
@@ -137,9 +140,6 @@ public abstract class ParameterizationProblem implements Problem<Parameterizatio
                 finalArguments.set(i, mainArg + "=" + newValue.toString());
             }
         }
-
-        // Add comb-arguments values as a main argument
-        combArguments.forEach((key, value) -> finalArguments.add(key + "=" + value));
         
         // Return the final processed arguments
         return finalArguments.toArray(new String[0]);

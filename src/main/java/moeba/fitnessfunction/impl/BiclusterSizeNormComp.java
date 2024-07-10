@@ -6,12 +6,16 @@ import moeba.fitnessfunction.IndividualBiclusterFitnessFunction;
 import moeba.utils.storage.CacheStorage;
 
 public class BiclusterSizeNormComp extends IndividualBiclusterFitnessFunction {
+    private double rowsWeight;
+    private double colsWeight;
 
-    public BiclusterSizeNormComp(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives) {
+    public BiclusterSizeNormComp(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache, String summariseIndividualObjectives, double rowsWeight) {
         super(data, types, internalCache, summariseIndividualObjectives);
+        this.rowsWeight = rowsWeight;
+        this.colsWeight = 1 - rowsWeight;
     }
 
     protected double getBiclusterScore(ArrayList<Integer>[] bicluster) {
-        return (double) (bicluster[0].size() * bicluster[1].size()) / (data.length * data[0].length);
+        return this.rowsWeight * ((double) bicluster[0].size() / data.length) + this.colsWeight * ((double) bicluster[1].size() / data[0].length);
     }
 }

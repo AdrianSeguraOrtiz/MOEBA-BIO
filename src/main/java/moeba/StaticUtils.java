@@ -32,7 +32,6 @@ import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
-import moeba.fitnessfunction.impl.BiclusterSizeWeightedNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
 import moeba.fitnessfunction.impl.MeanSquaredResidueNorm;
 import moeba.fitnessfunction.impl.RowVarianceNormComp;
@@ -111,12 +110,6 @@ public final class StaticUtils {
         FitnessFunction res;
         switch (str.toLowerCase()) {
 
-            case "biclustersizenormcomp":
-                res = new BiclusterSizeNormComp(data, types, cache, summariseIndividualObjectives);
-                break;
-            case "biclustersizeweightednormcomp":
-                res = new BiclusterSizeWeightedNormComp(data, types, cache, summariseIndividualObjectives);
-                break;
             case "biclustervariancenorm":
                 res = new BiclusterVarianceNorm(data, types, cache, summariseIndividualObjectives);
                 break;
@@ -130,7 +123,22 @@ public final class StaticUtils {
                 res = new DistanceBetweenBiclustersNormComp(data, types, cache, summariseIndividualObjectives);
                 break;
             default:
-                throw new RuntimeException("The fitness function " + str + " is not implemented.");
+                if (str.toLowerCase().startsWith("biclustersizenormcomp")){
+                    double rowsWeight = 0.5;
+                    if (str.toLowerCase().matches("biclustersizenormcomp((.*))")) {
+                        String[] strParams = str.split("[()=, ]");
+                        for (int i = 0; i < strParams.length; i++) {
+                            switch (strParams[i].toLowerCase()) {
+                                case "rowsweight":
+                                    rowsWeight = Double.parseDouble(strParams[i + 1]);
+                                    break;
+                            }
+                        }
+                    }
+                    res = new BiclusterSizeNormComp(data, types, cache, summariseIndividualObjectives, rowsWeight);
+                } else {
+                    throw new RuntimeException("The fitness function " + str + " is not implemented.");
+                }
         }
 
         return res;
