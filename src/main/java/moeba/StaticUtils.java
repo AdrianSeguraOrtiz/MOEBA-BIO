@@ -478,6 +478,13 @@ public final class StaticUtils {
                     e.printStackTrace();
                 }
 
+                // Check if the weight vector file exists
+                File weightVectorFile = new File(weightVectorDirectory + "/W" + problem.getNumberOfObjectives() + "D_" + populationSize + ".dat");
+                if (!weightVectorFile.exists()) {
+                    System.out.println("The weight vector file " + weightVectorFile.getAbsolutePath() + " does not exist.");
+                    return new AlgorithmResult<>(0, new ArrayList<>());
+                }
+
                 // Get subparameters
                 AggregativeFunction aggregativeFunction = new Tschebyscheff();
                 double neighborhoodSelectionProbability = 0.1; 
