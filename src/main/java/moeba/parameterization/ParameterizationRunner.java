@@ -125,7 +125,7 @@ public class ParameterizationRunner implements Runnable {
         double hvFUN = hvSolution.objectives()[0];
         String hvVAR = Arrays.toString(ParameterizationProblem.preprocessArguments(unsupervisedParameterizationExercise.getArgsFromSolution(hvSolution).split(" ")));
         saveToFile(outputFolder, "hvSolution.txt", "hvFUN: " + hvFUN + "\n" + "hvVAR: " + hvVAR);
-        for (ObserverInterface observer : ceSolution.subObservers) {
+        for (ObserverInterface observer : ceSolution.subObservers.get(0)) {
             observer.writeToFile(outputFolder + "/hv-" + observer.getClass().getSimpleName() + ".csv");
         }
 
@@ -159,6 +159,10 @@ public class ParameterizationRunner implements Runnable {
             String funInfo = "moebaFUN: " + Arrays.deepToString(moebaFUN[i]);
             String varInfo = "moebaVAR: " + Arrays.deepToString(moebaVAR[i]);
             saveToFile(outputFolder, "moebaSolution-D" + i + ".txt", benchmarkInfo + "\n" + funInfo + "\n" + varInfo);
+
+            for (ObserverInterface observer : hvSolution.subObservers.get(i)) {
+                observer.writeToFile(outputFolder + "/moeba-" + observer.getClass().getSimpleName() + "-D" + i + ".csv");
+            }
         }
 
         System.out.println("Threads used: " + numThreads);

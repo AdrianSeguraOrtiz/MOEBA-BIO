@@ -10,16 +10,18 @@ import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 public class ParameterizationSolution extends CompositeSolution {
 
     public List<List<ParameterizationSolution>> subPopulations;
-    public ObserverInterface[] subObservers;
+    public List<ObserverInterface[]> subObservers;
 
     public ParameterizationSolution(CompositeSolution solution) {
         super(solution);
         this.subPopulations = new ArrayList<>();
+        this.subObservers = new ArrayList<>();
     }
 
     public ParameterizationSolution(List<Solution<?>> solutions) {
         super(solutions);
         this.subPopulations = new ArrayList<>();
+        this.subObservers = new ArrayList<>();
     }
     
 }

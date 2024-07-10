@@ -117,6 +117,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     // Store solutions
     private List<CompositeSolution> solutions;
 
+    // Store observers
+    private ObserverInterface[] observers;
+
     @SuppressWarnings("unchecked")
     @Override
     public void run() {
@@ -193,16 +196,16 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
         // 4. Observadores
         String[] strObserversArray = strObservers.split(";");
-        ObserverInterface[] observers = new ObserverInterface[strObserversArray.length];
-        for (int i = 0; i < observers.length; i++) {
-            observers[i] = StaticUtils.getObserverFromString(strObserversArray[i], populationSize, fitnessFunctions, maxEvaluations / populationSize, externalCache, internalCaches);
+        this.observers = new ObserverInterface[strObserversArray.length];
+        for (int i = 0; i < this.observers.length; i++) {
+            this.observers[i] = StaticUtils.getObserverFromString(strObserversArray[i], populationSize, fitnessFunctions, maxEvaluations / populationSize, externalCache, internalCaches);
         }
 
         // Problem
         float genericInitialMinPercBics = genericInitialMinNumBics != -1 ? (float) genericInitialMinNumBics / numericData.length : 0.05f;
         float genericInitialMaxPercBics = genericInitialMaxNumBics != -1 ? (float) genericInitialMaxNumBics / numericData.length : 0.25f;
         RepresentationWrapper representationWrapper = StaticUtils.getRepresentationWrapperFromRepresentation(representation, numericData.length, numericData[0].length, specificNumBiclusters, genericInitialMinPercBics, genericInitialMaxPercBics, summariseIndividualObjectives);
-        Problem problem = new ProblemObserver(numericData, types, fitnessFunctions, externalCache, internalCaches, representationWrapper, observers);
+        Problem problem = new ProblemObserver(numericData, types, fitnessFunctions, externalCache, internalCaches, representationWrapper, this.observers);
 
         // Operators
         // 1. Crossover
@@ -239,7 +242,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
             }
 
             // Write the evolution of fitness values to an output txt file
-            for (ObserverInterface observer : observers) {
+            for (ObserverInterface observer : this.observers) {
                 observer.writeToFile(outputFolder + "/" + observer.getClass().getSimpleName() + ".csv");
             }
 
@@ -270,5 +273,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
 
     public List<CompositeSolution> getSolutions() {
         return solutions;
+    }
+
+    public ObserverInterface[] getObservers() {
+        return observers;
     }
 }

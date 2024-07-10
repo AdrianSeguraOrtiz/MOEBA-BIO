@@ -59,19 +59,21 @@ public class HVProblem extends ParameterizationProblem {
             // Get solutions
             List<CompositeSolution> benchSolutions = runner.getSolutions();
 
-            // Get front and store MOEBA solutions to HV individual
-            double[][] front = new double[benchSolutions.size()][this.numObjectives];
-            List<ParameterizationSolution> subPopulation = new ArrayList<>();
-            for (int j = 0; j < benchSolutions.size(); j++) {
-                ParameterizationSolution subSolution = new ParameterizationSolution(benchSolutions.get(j));
-                subPopulation.add(subSolution);
-                front[j] = subSolution.objectives();
-            }
-            solution.subPopulations.add(subPopulation);
-            solution.subObservers = null;
+            if (benchSolutions.size() != 0) {
+                // Get front and store MOEBA solutions to HV individual
+                double[][] front = new double[benchSolutions.size()][this.numObjectives];
+                List<ParameterizationSolution> subPopulation = new ArrayList<>();
+                for (int j = 0; j < benchSolutions.size(); j++) {
+                    ParameterizationSolution subSolution = new ParameterizationSolution(benchSolutions.get(j));
+                    subPopulation.add(subSolution);
+                    front[j] = subSolution.objectives();
+                }
+                solution.subPopulations.add(subPopulation);
+                solution.subObservers.add(runner.getObservers());
 
-            // Compute HV
-            score += -1 * hv.compute(front);
+                // Compute HV
+                score += -1 * hv.compute(front);
+            }
         }
         
         // Evaluate solution

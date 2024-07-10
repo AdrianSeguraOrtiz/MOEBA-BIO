@@ -107,7 +107,7 @@ public class CEProblem extends ParameterizationProblem {
 
         // Save HV winner into CE individual
         solution.subPopulations.add(result.population);
-        solution.subObservers = subObserversArray;
+        solution.subObservers.add(subObserversArray);
 
         // Get clustering error obtained by HV winner for each benchmark
         double score = 0.0;
