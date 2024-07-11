@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.uma.jmetal.operator.selection.impl.NaryTournamentSelection;
 import org.uma.jmetal.util.SolutionListUtils;
 import org.uma.jmetal.util.comparator.ObjectiveComparator;
 import org.uma.jmetal.util.comparator.RankingAndCrowdingDistanceComparator;
+import org.uma.jmetal.util.fileoutput.impl.DefaultFileOutputContext;
 import org.uma.jmetal.util.termination.Termination;
 import org.uma.jmetal.util.termination.impl.TerminationByEvaluations;
 
@@ -43,6 +45,8 @@ import moeba.representationwrapper.RepresentationWrapper;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.observer.impl.FitnessEvolutionMinObserver;
 import moeba.utils.observer.impl.NumEvaluationsObserver;
+import moeba.utils.output.SolutionListTranslatedVAR;
+import moeba.utils.output.SolutionListVARWithHeader;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -92,7 +96,7 @@ public class ParameterizationRunner implements Runnable {
 
         // Get parameterization exercises
         ParameterizationExercise supervisedParameterizationExercise = new ParameterizationExercise(supervisedConfFile, externalSupervisedEvaluations, externalSupervisedPopulationSize, 1);
-        ParameterizationExercise unsupervisedParameterizationExercise = new ParameterizationExercise(unsupervisedConfFile, externalUnsupervisedEvaluations, externalUnsupervisedPopulationSize, numThreads);
+        ParameterizationExercise unsupervisedParameterizationExercise = new ParameterizationExercise(unsupervisedConfFile, externalUnsupervisedEvaluations, externalUnsupervisedPopulationSize, numThreads/validPrefixes.size());
         
         // Get parameterization problem
         String staticConf = "--max-evaluations=" + internalEvaluations + " --num-threads=1" + " --observers=FitnessEvolutionMinObserver";
@@ -130,38 +134,37 @@ public class ParameterizationRunner implements Runnable {
         }
 
         // 4. Get MOEBA solutions
-        double[][][] moebaFUN = new double[validPrefixes.size()][][];
-        String[][] moebaVAR = new String[validPrefixes.size()][];
         String representation = supervisedParameterizationExercise.getValueOfArg("--representation", ceSolution);
-        int numObjectives = 0;
+        List<String> objectives = new ArrayList<>();
         int cntO = 0;
         String value = "";
         while (value != null) {
             value = supervisedParameterizationExercise.getValueOfArg("--comb--str-fitness-functions--" + cntO, ceSolution);
             if (value != null && !value.equals("''")) {
-                numObjectives += value.split(";").length;
+                for(String o : value.split(";")) {
+                    objectives.add(o);
+                }
             }
             cntO++;
         }
 
         for (int i = 0; i < validPrefixes.size(); i++) {
             List<ParameterizationSolution> moebaSolutions = hvSolution.subPopulations.get(i);
-            moebaFUN[i] = new double[moebaSolutions.size()][numObjectives];
-            moebaVAR[i] = new String[moebaSolutions.size()];
-
             RepresentationWrapper wrapper = StaticUtils.getRepresentationWrapperFromRepresentation(Representation.valueOf(representation), ceproblem.numRows[i], ceproblem.numCols[i], 0, 0, 0, null);
-            for (int j = 0; j < moebaSolutions.size(); j++) {
-                moebaFUN[i][j] = moebaSolutions.get(j).objectives();
-                moebaVAR[i][j] = StaticUtils.biclustersToString(wrapper.getBiclustersFromRepresentation(moebaSolutions.get(j)));
-            }
 
-            String benchmarkInfo = "Benchmark: " + validPrefixes.toArray()[i];
-            String funInfo = "moebaFUN: " + Arrays.deepToString(moebaFUN[i]);
-            String varInfo = "moebaVAR: " + Arrays.deepToString(moebaVAR[i]);
-            saveToFile(outputFolder, "moebaSolution-D" + i + ".txt", benchmarkInfo + "\n" + funInfo + "\n" + varInfo);
+            // Write the data of the moeba population
+            new SolutionListVARWithHeader(moebaSolutions, objectives.toArray(new String[0]), wrapper.getVarLabels())
+                    .setVarFileOutputContext(new DefaultFileOutputContext(outputFolder + "/VAR-" + hvSolution.tags.get(i) + ".csv", ","))
+                    .setFunFileOutputContext(new DefaultFileOutputContext(outputFolder + "/FUN-" + hvSolution.tags.get(i) + ".csv", ","))
+                    .print();
 
+            // Write translated VAR
+            new SolutionListTranslatedVAR(wrapper)
+                .printTranslatedVAR(outputFolder + "/VAR-translated-" + hvSolution.tags.get(i) + ".csv", moebaSolutions);
+
+            // Write observers registered data
             for (ObserverInterface observer : hvSolution.subObservers.get(i)) {
-                observer.writeToFile(outputFolder + "/moeba-" + observer.getClass().getSimpleName() + "-D" + i + ".csv");
+                observer.writeToFile(outputFolder + "/moeba-" + observer.getClass().getSimpleName() + "-" + hvSolution.tags.get(i) + ".csv");
             }
         }
 

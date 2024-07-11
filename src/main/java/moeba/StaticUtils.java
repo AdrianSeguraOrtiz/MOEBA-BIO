@@ -123,25 +123,25 @@ public final class StaticUtils {
 
         OBJETIVES_MAP.put("biclustervariancenorm", (str, op) -> {
             Map<String, String> subParams = getSubParams("biclustervariancenorm", str);
-            String sumIndObjs = StaticUtils.getOne("biclustersizenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
+            String sumIndObjs = StaticUtils.getOne("biclustervariancenorm", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
             return new BiclusterVarianceNorm(op.data, op.types, op.cache, sumIndObjs);
         });
 
         OBJETIVES_MAP.put("rowvariancenormcomp", (str, op) -> {
             Map<String, String> subParams = getSubParams("rowvariancenormcomp", str);
-            String sumIndObjs = StaticUtils.getOne("biclustersizenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
+            String sumIndObjs = StaticUtils.getOne("rowvariancenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
             return new RowVarianceNormComp(op.data, op.types, op.cache, sumIndObjs);
         });
 
         OBJETIVES_MAP.put("meansquaredresiduenorm", (str, op) -> {
             Map<String, String> subParams = getSubParams("meansquaredresiduenorm", str);
-            String sumIndObjs = StaticUtils.getOne("biclustersizenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
+            String sumIndObjs = StaticUtils.getOne("meansquaredresiduenorm", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
             return new MeanSquaredResidueNorm(op.data, op.types, op.cache, sumIndObjs);
         });
 
         OBJETIVES_MAP.put("distancebetweenbiclustersnormcomp", (str, op) -> {
             Map<String, String> subParams = getSubParams("distancebetweenbiclustersnormcomp", str);
-            String sumIndObjs = StaticUtils.getOne("biclustersizenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
+            String sumIndObjs = StaticUtils.getOne("distancebetweenbiclustersnormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
             return new DistanceBetweenBiclustersNormComp(op.data, op.types, op.cache, sumIndObjs);
         });
     }

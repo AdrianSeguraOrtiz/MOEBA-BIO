@@ -7,6 +7,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import moeba.Representation;
 import moeba.StaticUtils;
@@ -109,44 +114,62 @@ public class CEProblem extends ParameterizationProblem {
         solution.subPopulations.add(result.population);
         solution.subObservers.add(subObserversArray);
 
+        // Executor service for parallel execution
+        ExecutorService executorService = Executors.newFixedThreadPool(prefixes.length);
+        List<Future<Double>> futures = new ArrayList<>();
+
         // Get clustering error obtained by HV winner for each benchmark
-        double score = 0.0;
         for (int i = 0; i < prefixes.length; i++) {
+            final int finalI = i;
+            Callable<Double> task = () -> {
 
-            // Get representation wrapper
-            RepresentationWrapper wrapper = StaticUtils.getRepresentationWrapperFromRepresentation(Representation.valueOf(representation), numRows[i], numCols[i], 0, 0, 0, null);
+                // Get representation wrapper
+                RepresentationWrapper wrapper = StaticUtils.getRepresentationWrapperFromRepresentation(Representation.valueOf(representation), numRows[finalI], numCols[finalI], 0, 0, 0, null);
 
-            // Get inferred biclusters from the MOEBA winner population after apply the configuration of HV winner
-            List<ParameterizationSolution> subSolutions = solution.subPopulations.get(0).get(0).subPopulations.get(i);
-            ArrayList<ArrayList<ArrayList<Integer>[]>> inferredBiclusters = new ArrayList<>();
-            for (ParameterizationSolution ss : subSolutions) {
-                inferredBiclusters.add(wrapper.getBiclustersFromRepresentation(ss));
-            }
+                // Get inferred biclusters from the MOEBA winner population after apply the configuration of HV winner
+                List<ParameterizationSolution> subSolutions = solution.subPopulations.get(0).get(0).subPopulations.get(finalI);
+                ArrayList<ArrayList<ArrayList<Integer>[]>> inferredBiclusters = new ArrayList<>();
+                for (ParameterizationSolution ss : subSolutions) {
+                    inferredBiclusters.add(wrapper.getBiclustersFromRepresentation(ss));
+                }
 
-            // Run validation to get the clustering errors
-            ArrayList<ArrayList<Integer>[]> goldStandard = StaticUtils.loadGoldStandardBiclusters(new File(prefixes[i] + "-translated.csv"));
-            MetricInterface[] metricInterfaces = new MetricInterface[1];
-            metricInterfaces[0] = new ClusteringErrorComplementary(false, null);
-            double[][] clusteringErrors = ValidationRunner.computeScores(inferredBiclusters, goldStandard, metricInterfaces, 1);
-            
-            // Sort clustering errors
-            double[] values = new double[clusteringErrors.length];
-            for (int j = 0; j < clusteringErrors.length; j++) {
-                values[j] = clusteringErrors[j][0];
-            }
-            Arrays.sort(values);
+                // Run validation to get the clustering errors
+                ArrayList<ArrayList<Integer>[]> goldStandard = StaticUtils.loadGoldStandardBiclusters(new File(prefixes[finalI] + "-translated.csv"));
+                MetricInterface[] metricInterfaces = new MetricInterface[1];
+                metricInterfaces[0] = new ClusteringErrorComplementary(false, null);
+                double[][] clusteringErrors = ValidationRunner.computeScores(inferredBiclusters, goldStandard, metricInterfaces, subExercise.numThreads);
+                
+                // Sort clustering errors
+                double[] values = new double[clusteringErrors.length];
+                for (int j = 0; j < clusteringErrors.length; j++) {
+                    values[j] = clusteringErrors[j][0];
+                }
+                Arrays.sort(values);
 
-            // Set as score the mean of the best 5 solutions
-            double mean = 0.0;
-            int div = Math.min(values.length, 5);
-            for (int j = values.length - 1; j >= values.length - div; j--) {
-                mean += values[j];
-            }
-            score += mean / div;
+                // Set as score the mean of the best 5 solutions
+                double mean = 0.0;
+                int div = Math.min(values.length, 5);
+                for (int j = values.length - 1; j >= values.length - div; j--) {
+                    mean += values[j];
+                }
 
-            // Get the complementary of the complementary to get the clustering error
-            score = 1 - score;
+                // Get the complementary of the complementary to get the clustering error
+                return  1 - (mean / div);
+            };
+            futures.add(executorService.submit(task));
         }
+
+        double score = 0.0;
+        for (Future<Double> future : futures) {
+            try {
+                score += future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Shutdown executor service
+        executorService.shutdown();
 
         // Evaluate solution
         solution.objectives()[0] += score / prefixes.length;
