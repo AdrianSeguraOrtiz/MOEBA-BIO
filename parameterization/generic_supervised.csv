@@ -2,4 +2,8 @@ Parameter,Type,Values
 --representation,String,GENERIC
 --str-fitness-functions,String-Comb,BiclusterSizeNormComp|BiclusterVarianceNorm|RowVarianceNormComp|MeanSquaredResidueNorm|DistanceBetweenBiclustersNormComp
 --sub--str-fitness-functions--BiclusterSizeNormComp--rowsWeight,Double,0-1
---summarise-individual-objectives,String,Mean|HarmonicMean|GeometricMean
+--sub--str-fitness-functions--BiclusterSizeNormComp--summariseIndividualObjectives,String,Mean|HarmonicMean|GeometricMean
+--sub--str-fitness-functions--BiclusterVarianceNorm--summariseIndividualObjectives,String,Mean|HarmonicMean|GeometricMean
+--sub--str-fitness-functions--RowVarianceNormComp--summariseIndividualObjectives,String,Mean|HarmonicMean|GeometricMean
+--sub--str-fitness-functions--MeanSquaredResidueNorm--summariseIndividualObjectives,String,Mean|HarmonicMean|GeometricMean
+--sub--str-fitness-functions--DistanceBetweenBiclustersNormComp--summariseIndividualObjectives,String,Mean|HarmonicMean|GeometricMean

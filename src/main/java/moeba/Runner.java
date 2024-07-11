@@ -54,10 +54,16 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--generic-initial-max-num-bics"}, description = "Initial maximum number of biclusters. Only for GENERIC representation. Default: 25%% of the number of rows", defaultValue = "-1")
     private int genericInitialMaxNumBics;
 
-    @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSizeNormComp, BiclusterSizeWeightedNormComp, BiclusterVarianceNorm, RowVarianceNormComp, MeanSquaredResidueNorm, DistanceBetweenBiclustersNormComp", defaultValue = "BiclusterSizeNormComp;RowVarianceNormComp;MeanSquaredResidueNorm")
+    @Option(names = {"--str-fitness-functions"}, 
+            description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSizeNormComp, BiclusterVarianceNorm, RowVarianceNormComp, MeanSquaredResidueNorm, DistanceBetweenBiclustersNormComp \n" + //
+                "In case any objective requires additional parameters, they shall be specified in brackets in the following way ObjectiveName(parameter1=value, parameter2=value, ...)", 
+            defaultValue = "BiclusterSizeNormComp;RowVarianceNormComp;MeanSquaredResidueNorm")
     private String strFitnessFormulas;
 
-    @Option(names = {"--summarise-individual-objectives"}, description = "Way to summarise the overall quality of the solutions from the individual quality of their biclusters. Only for GENERIC, SPECIFIC or DYNAMIC representation. Possible values: Mean, HarmonicMean, GeometricMean", defaultValue = "Mean")
+    @Option(names = {"--summarise-individual-objectives"}, 
+            description = "Way to summarise the overall quality of the solutions from the individual quality of their biclusters. Only for GENERIC, SPECIFIC or DYNAMIC representation. Possible values: Mean, HarmonicMean, GeometricMean \n" + //
+                "If this value has already been specified for any objective, this parameter will be ignored for that case",
+            defaultValue = "Mean")
     private String summariseIndividualObjectives;
 
     @Option(names = {"--population-size"}, description = "Population size", defaultValue = "100")
@@ -69,8 +75,9 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     @Option(names = {"--str-algorithm"}, 
             description = "Algorithm as a string. Possible values: \n" + //
                 "\t- Single Objective: GA-AsyncParallel, GA-SingleThread \n" + //
-                "\t- Multi Objective: NSGAII-AsyncParallel, NSGAII-SingleThread, MOEAD-SingleThread, SMS-EMOA-SingleThread, MOCell-SingleThread, SPEA2-SingleThread, IBEA-SingleThread \n" + //
-                "\t- Many Objective: NSGAII-ExternalFile-AsyncParallel", 
+                "\t- Multi Objective: NSGAII-AsyncParallel, NSGAII-SingleThread, MOEAD-SingleThread, SMS-EMOA-SingleThread, MOCell-SingleThread, SPEA2-SingleThread, IBEA-SingleThread, NSGAIII-SingleThread, MOSA-SingleThread \n" + //
+                "\t- Many Objective: NSGAII-ExternalFile-AsyncParallel \n" + //
+                "In case any algorithm requires additional parameters, they shall be specified in brackets in the following way AlgorithmName(parameter1=value, parameter2=value, ...)", 
             defaultValue = "NSGAII-AsyncParallel")
     private String strAlgorithm;
 

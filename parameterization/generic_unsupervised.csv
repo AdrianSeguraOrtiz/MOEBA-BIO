@@ -10,7 +10,7 @@ Parameter,Type,Values
 --sub--str-algorithm--SPEA2-SingleThread--K,Integer,1-10-1
 --sub--str-algorithm--NSGAIII-SingleThread--NumberOfDivisions,Integer,6-14-1
 --sub--str-algorithm--MOSA-SingleThread--InitialTemperature,Double,0-1
---crossover-operator,String,GroupedBasedCrossover;CellUniformCrossover|PartiallyMappedCrossover;BicUniformCrossover;CellUniformCrossover
+--crossover-operator,String,GroupedBasedCrossover;CellUniformCrossover|PartiallyMappedCrossover;BicUniformCrossover;CellUniformCrossover|EdgeRecombinationCrossover;BicUniformCrossover;CellUniformCrossover|CycleCrossover;BicUniformCrossover;CellUniformCrossover
 --sub--crossover-operator--GroupedBasedCrossover--shuffleEnd,Double,0-1
 --sub--crossover-operator--GroupedBasedCrossover--dynamicStartAmount,Double,0-1
 --crossover-probability,Double,0-1

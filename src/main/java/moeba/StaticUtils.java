@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiFunction;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -97,50 +98,84 @@ import org.uma.jmetal.problem.Problem;
 @SuppressWarnings("deprecation")
 public final class StaticUtils {
 
+    private static class ObjectivesParams {
+        public double[][] data;
+        public Class<?>[] types;
+        public CacheStorage<String, Double> cache;
+        public String summariseIndividualObjectives;
+
+        public ObjectivesParams(double[][] data, Class<?>[] types, CacheStorage<String, Double> cache, String summariseIndividualObjectives) {
+            this.data = data;
+            this.types = types;
+            this.cache = cache;
+            this.summariseIndividualObjectives = summariseIndividualObjectives;
+        }
+    }
+
+    static final Map<String, BiFunction<String, ObjectivesParams, FitnessFunction>> OBJETIVES_MAP = new HashMap<>();
+    static {
+        OBJETIVES_MAP.put("biclustersizenormcomp", (str, op) -> {
+            Map<String, String> subParams = getSubParams(str, "biclustersizenormcomp");
+            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
+            Double rowsWeight = Double.parseDouble(subParams.getOrDefault("rowsweight", "0.5"));
+            return new BiclusterSizeNormComp(op.data, op.types, op.cache, sumIndObjs, rowsWeight);
+        });
+
+        OBJETIVES_MAP.put("biclustervariancenorm", (str, op) -> {
+            Map<String, String> subParams = getSubParams(str, "biclustervariancenorm");
+            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
+            return new BiclusterVarianceNorm(op.data, op.types, op.cache, sumIndObjs);
+        });
+
+        OBJETIVES_MAP.put("rowvariancenormcomp", (str, op) -> {
+            Map<String, String> subParams = getSubParams(str, "rowvariancenormcomp");
+            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
+            return new RowVarianceNormComp(op.data, op.types, op.cache, sumIndObjs);
+        });
+
+        OBJETIVES_MAP.put("meansquaredresiduenorm", (str, op) -> {
+            Map<String, String> subParams = getSubParams(str, "meansquaredresiduenorm");
+            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
+            return new MeanSquaredResidueNorm(op.data, op.types, op.cache, sumIndObjs);
+        });
+
+        OBJETIVES_MAP.put("distancebetweenbiclustersnormcomp", (str, op) -> {
+            Map<String, String> subParams = getSubParams(str, "distancebetweenbiclustersnormcomp");
+            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
+            return new DistanceBetweenBiclustersNormComp(op.data, op.types, op.cache, sumIndObjs);
+        });
+    }
+
     /**
-     * Returns a FitnessFunction object based on a given identifier string
-     * @param str identifier string for the fitness function
-     * @param data 2D array of data
-     * @param types array of data types
+     * Returns a FitnessFunction object based on a given identifier string.
+     *
+     * @param str the identifier string for the fitness function
+     * @param data the 2D array of data
+     * @param types the array of data types
      * @param cache the internal cache of the fitness function
-     * @param summariseIndividualObjectives way to summarise the overall quality of the solutions from the individual quality of their biclusters
+     * @param summariseIndividualObjectives the way to summarise the overall quality of the solutions from the individual quality of their biclusters
      * @return a FitnessFunction object
+     * @throws RuntimeException if the fitness function is not implemented
      */
     public static FitnessFunction getFitnessFunctionFromString(String str, double[][] data, Class<?>[] types, CacheStorage<String, Double> cache, String summariseIndividualObjectives) {
-        FitnessFunction res;
-        switch (str.toLowerCase()) {
+        // Create an ObjectivesParams object with the given data, types and cache
+        ObjectivesParams op = new ObjectivesParams(data, types, cache, summariseIndividualObjectives);
 
-            case "biclustervariancenorm":
-                res = new BiclusterVarianceNorm(data, types, cache, summariseIndividualObjectives);
+        // Iterate over the entries in the OBJETIVES_MAP
+        FitnessFunction res = null;
+        for (Map.Entry<String, BiFunction<String, ObjectivesParams, FitnessFunction>> entry : OBJETIVES_MAP.entrySet()) {
+            if (str.toLowerCase().startsWith(entry.getKey())) {
+                res = entry.getValue().apply(str, op);
                 break;
-            case "rowvariancenormcomp":
-                res = new RowVarianceNormComp(data, types, cache, summariseIndividualObjectives);
-                break;
-            case "meansquaredresiduenorm":
-                res = new MeanSquaredResidueNorm(data, types, cache, summariseIndividualObjectives);
-                break;
-            case "distancebetweenbiclustersnormcomp":
-                res = new DistanceBetweenBiclustersNormComp(data, types, cache, summariseIndividualObjectives);
-                break;
-            default:
-                if (str.toLowerCase().startsWith("biclustersizenormcomp")){
-                    double rowsWeight = 0.5;
-                    if (str.toLowerCase().matches("biclustersizenormcomp((.*))")) {
-                        String[] strParams = str.split("[()=, ]");
-                        for (int i = 0; i < strParams.length; i++) {
-                            switch (strParams[i].toLowerCase()) {
-                                case "rowsweight":
-                                    rowsWeight = Double.parseDouble(strParams[i + 1]);
-                                    break;
-                            }
-                        }
-                    }
-                    res = new BiclusterSizeNormComp(data, types, cache, summariseIndividualObjectives, rowsWeight);
-                } else {
-                    throw new RuntimeException("The fitness function " + str + " is not implemented.");
-                }
+            }
         }
 
+        // If no matching fitness function is found, throw a RuntimeException
+        if (res == null) {
+            throw new RuntimeException("Fitness function not implemented: " + str);
+        }
+
+        // Return the found fitness function
         return res;
     }
 
@@ -494,43 +529,22 @@ public final class StaticUtils {
                 }
 
                 // Get subparameters
+                Map<String, String> subParams = StaticUtils.getSubParams("MOEAD-SingleThread", strAlgorithm);
                 AggregativeFunction aggregativeFunction = new Tschebyscheff();
-                double neighborhoodSelectionProbability = 0.1; 
-                int maximumNumberOfReplacedSolutions = 2; 
-                int neighborhoodSize = 20;
-
-                if (strAlgorithm.matches("MOEAD-SingleThread((.*))")) {
-                    String[] strParams = strAlgorithm.split("[()=, ]");
-                    for (int i = 0; i < strParams.length; i++) {
-                        switch (strParams[i].toLowerCase()) {
-
-                            case "aggregativefunction":
-                                switch (strParams[i + 1].toLowerCase()) {
-                                    case "tschebyscheff":
-                                        aggregativeFunction = new Tschebyscheff();
-                                        break;
-                                    case "weightedsum":
-                                        aggregativeFunction = new WeightedSum();
-                                        break;
-                                    case "penaltyboundaryintersection":
-                                        aggregativeFunction = new PenaltyBoundaryIntersection();
-                                        break;
-                                    default:
-                                        throw new IllegalArgumentException("The aggregative function " + strParams[i + 1] + " is not implemented.");
-                                }
+                for (Map.Entry<String, String> entry : subParams.entrySet()) {
+                    if (entry.getKey().equals("aggregativefunction")) {
+                        switch (entry.getValue()) {
+                            case "tschebyscheff":
+                                aggregativeFunction = new Tschebyscheff();
                                 break;
-
-                            case "neighborhoodselectionprobability":
-                                neighborhoodSelectionProbability = Float.parseFloat(strParams[i + 1]);
+                            case "weightedsum":
+                                aggregativeFunction = new WeightedSum();
                                 break;
-
-                            case "maximumnumberofreplacedsolutions":
-                                maximumNumberOfReplacedSolutions = Integer.parseInt(strParams[i + 1]);
+                            case "penaltyboundaryintersection":
+                                aggregativeFunction = new PenaltyBoundaryIntersection();
                                 break;
-
-                            case "neighborhoodsize":
-                                neighborhoodSize = Integer.parseInt(strParams[i + 1]);
-                                break;
+                            default:
+                                throw new IllegalArgumentException("The aggregative function " + entry.getValue() + " is not implemented.");
                         }
                     }
                 }
@@ -542,9 +556,9 @@ public final class StaticUtils {
                     mutation, 
                     crossover, 
                     aggregativeFunction, 
-                    neighborhoodSelectionProbability, 
-                    maximumNumberOfReplacedSolutions, 
-                    neighborhoodSize, 
+                    Double.parseDouble(subParams.getOrDefault("neighborhoodselectionprobability", "0.1")), 
+                    Integer.parseInt(subParams.getOrDefault("maximumnumberofreplacedsolutions", "2")),
+                    Integer.parseInt(subParams.getOrDefault("neighborhoodsize", "20")), 
                     weightVectorDirectory, 
                     termination
                 );
@@ -583,51 +597,44 @@ public final class StaticUtils {
                 populationSize = nearestPerfectSquare(populationSize);
 
                 // Get subparameters
+                Map<String, String> subParams = StaticUtils.getSubParams("MOCell-SingleThread", strAlgorithm);
                 BoundedArchive<CompositeSolution> archive = new CrowdingDistanceArchive<>(populationSize);
                 Neighborhood<CompositeSolution> neighborhood = new C9<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
 
-                if (strAlgorithm.matches("MOCell-SingleThread((.*))")) {
-                    String[] strParams = strAlgorithm.split("[()=, ]");
-                    for (int i = 0; i < strParams.length; i++) {
-                        switch (strParams[i].toLowerCase()) {
-
-                            case "archive":
-                                switch (strParams[i + 1].toLowerCase()) {
-                                    case "crowdingdistancearchive":
-                                        archive = new CrowdingDistanceArchive<>(populationSize);
-                                        break;
-                                    case "hypervolumearchive":
-                                        archive = new HypervolumeArchive<>(populationSize, new PISAHypervolume<>());
-                                        break;
-                                    case "spatialspreaddeviationarchive":
-                                        archive = new SpatialSpreadDeviationArchive<>(populationSize);
-                                        break;
-                                    default:
-                                        throw new IllegalArgumentException("The archive " + strParams[i + 1] + " is not implemented.");
-                                }
+                for (Map.Entry<String, String> entry : subParams.entrySet()) {
+                    if (entry.getKey().equals("archive")) {
+                        switch (entry.getValue()) {
+                            case "crowdingdistancearchive":
+                                archive = new CrowdingDistanceArchive<>(populationSize);
                                 break;
-
-                            case "neighborhood":
-                                switch (strParams[i + 1].toLowerCase()) {
-                                    case "c9":
-                                        neighborhood = new C9<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
-                                        break;
-                                    case "c25":
-                                        neighborhood = new C25<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
-                                        break;
-                                    case "l5":
-                                        neighborhood = new L5<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
-                                        break;
-                                    case "l13":
-                                        neighborhood = new L13<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
-                                        break;
-                                    case "l25":
-                                        neighborhood = new L25<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
-                                        break;
-                                    default:
-                                        throw new IllegalArgumentException("The neighborhood " + strParams[i + 1] + " is not implemented.");
-                                }
+                            case "hypervolumearchive":
+                                archive = new HypervolumeArchive<>(populationSize, new PISAHypervolume<>());
                                 break;
+                            case "spatialspreaddeviationarchive":
+                                archive = new SpatialSpreadDeviationArchive<>(populationSize);
+                                break;
+                            default:
+                                throw new IllegalArgumentException("The archive " + entry.getValue() + " is not implemented.");
+                        }
+                    } else if (entry.getKey().equals("neighborhood")) {
+                        switch (entry.getValue()) {
+                            case "c9":
+                                neighborhood = new C9<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                break;
+                            case "c25":
+                                neighborhood = new C25<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                break;
+                            case "l5":
+                                neighborhood = new L5<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                break;
+                            case "l13":
+                                neighborhood = new L13<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                break;
+                            case "l25":
+                                neighborhood = new L25<>((int)Math.sqrt(populationSize), (int)Math.sqrt(populationSize));
+                                break;
+                            default:
+                                throw new IllegalArgumentException("The neighborhood " + entry.getValue() + " is not implemented.");
                         }
                     }
                 }
@@ -654,19 +661,7 @@ public final class StaticUtils {
                 long initTime = System.currentTimeMillis();
 
                 // Get subparameters
-                int k = 1;
-
-                if (strAlgorithm.matches("SPEA2-SingleThread((.*))")) {
-                    String[] strParams = strAlgorithm.split("[()=, ]");
-                    for (int i = 0; i < strParams.length; i++) {
-                        switch (strParams[i].toLowerCase()) {
-
-                            case "k":
-                                k = Integer.parseInt(strParams[i + 1]);
-                                break;
-                        }
-                    }
-                }
+                Map<String, String> subParams = StaticUtils.getSubParams("SPEA2-SingleThread", strAlgorithm);
 
                 SPEA2<CompositeSolution> algorithm = new SPEA2<CompositeSolution>(
                    problem,
@@ -676,7 +671,7 @@ public final class StaticUtils {
                    mutation,
                    selection,
                    new SequentialSolutionListEvaluator<>(),
-                   k
+                   Integer.parseInt(subParams.getOrDefault("k", "1"))
                 );
 
                 algorithm.run();
@@ -705,19 +700,8 @@ public final class StaticUtils {
             
             } else if (strAlgorithm.startsWith("NSGAIII-SingleThread")) {
                 // Get subparameters
-                int numberOfDivisions = 12;
-
-                if (strAlgorithm.matches("NSGAIII-SingleThread((.*))")) {
-                    String[] strParams = strAlgorithm.split("[()=, ]");
-                    for (int i = 0; i < strParams.length; i++) {
-                        switch (strParams[i].toLowerCase()) {
-
-                            case "numberofdivisions":
-                                numberOfDivisions = Integer.parseInt(strParams[i + 1]);
-                                break;
-                        }
-                    }
-                }
+                Map<String, String> subParams = StaticUtils.getSubParams("NSGAIII-SingleThread", strAlgorithm);
+                int numberOfDivisions = Integer.parseInt(subParams.getOrDefault("numberofdivisions", "12"));
                 
                 // Instantiates and executes a single-threaded NSGAIII algorithm
                 NSGAIII<CompositeSolution> algorithm = new NSGAIIIBuilder<>(problem)
@@ -738,26 +722,14 @@ public final class StaticUtils {
                 long initTime = System.currentTimeMillis();
 
                 // Get subparameters
-                double initialTemperature = 1.0;
-
-                if (strAlgorithm.matches("MOSA-SingleThread((.*))")) {
-                    String[] strParams = strAlgorithm.split("[()=, ]");
-                    for (int i = 0; i < strParams.length; i++) {
-                        switch (strParams[i].toLowerCase()) {
-
-                            case "initialtemperature":
-                                initialTemperature = Double.parseDouble(strParams[i + 1]);
-                                break;
-                        }
-                    }
-                }
+                Map<String, String> subParams = StaticUtils.getSubParams("MOSA-SingleThread", strAlgorithm);
 
                 MOSA<CompositeSolution> algorithm = new MOSA<CompositeSolution>(
                     problem,
                     maxEvaluations,
                     new GenericBoundedArchive<>(populationSize, new CrowdingDistanceDensityEstimator<>()),
                     mutation,
-                    initialTemperature, 
+                    Double.parseDouble(subParams.getOrDefault("initialtemperature", "1.0")), 
                     new Exponential(0.95)
                 );  
 
@@ -986,5 +958,29 @@ public final class StaticUtils {
                  });
         }
         return tempDir;
+    }
+
+    /**
+     * Extracts sub-parameters from a given parameter string.
+     * 
+     * @param param The parameter string to extract sub-parameters from.
+     * @param input The input string containing the sub-parameters.
+     * @return A map of sub-parameters with their corresponding values.
+     */
+    public static Map<String, String> getSubParams(String param, String input) {
+        Map<String, String> subParams = new HashMap<>();
+        param = param.toLowerCase();
+        input = input.toLowerCase();
+        
+        if (input.matches(param + "((.*))")) {
+            String[] strSubparams = input.split("[()=, ]");
+            
+            // Iterate through the array in pairs, with each pair representing a sub-parameter and its value
+            for (int i = 0; i < strSubparams.length-1; i+=2) {
+                subParams.put(strSubparams[i], strSubparams[i+1]);
+            }
+        }
+
+        return subParams;
     }
 }

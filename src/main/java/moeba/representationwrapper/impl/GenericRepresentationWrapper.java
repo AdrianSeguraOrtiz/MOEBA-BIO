@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
+import moeba.StaticUtils;
 import moeba.operator.crossover.generic.GenericCrossover;
 import moeba.operator.crossover.generic.biclusterbinary.BiclusterBinaryCrossover;
 import moeba.operator.crossover.generic.biclusterbinary.impl.BicUniformCrossover;
@@ -282,31 +283,18 @@ public class GenericRepresentationWrapper extends RepresentationWrapper {
 
     public static RowBiclusterMixedCrossover getRowBiclusterMixedCrossoverFromString(String str, int numApproxCrossovers) {
         RowBiclusterMixedCrossover res;
-        float shuffleEnd = 0.75f;
-        float dynamicStartAmount = 0.25f;
-        switch (str.toLowerCase()) {
-            case "groupedbasedcrossover":
-                res = new GroupedBasedCrossover(numApproxCrossovers, shuffleEnd, dynamicStartAmount);
-                break;
-            default:
-                if (str.toLowerCase().matches("groupedbasedcrossover((.*))")) {
-                    String[] strParams = str.split("[()=, ]");
-                    for (int i = 0; i < strParams.length; i++) {
-                        switch (strParams[i].toLowerCase()) {
-                            case "shuffleend":
-                                shuffleEnd = Float.parseFloat(strParams[i + 1]);
-                                break;
-                            case "dynamicstartamount":
-                                dynamicStartAmount = Float.parseFloat(strParams[i + 1]);
-                                break;
-                        }
-                    }
-                    res = new GroupedBasedCrossover(numApproxCrossovers, shuffleEnd, dynamicStartAmount);
-                } else {
-                    throw new RuntimeException(
-                        "The row bicluster mixed crossover " + str + " is not implemented.");
-                }
+
+        if (str.toLowerCase().startsWith("groupedbasedcrossover")) {
+            Map<String, String> subParams = StaticUtils.getSubParams("groupedbasedcrossover", str);
+            res = new GroupedBasedCrossover(
+                numApproxCrossovers, 
+                Float.parseFloat(subParams.getOrDefault("shuffleend", "0.75")),
+                Float.parseFloat(subParams.getOrDefault("dynamicstartamount", "0.25"))
+            );
+        } else {
+            throw new RuntimeException("The row bicluster mixed crossover " + str + " is not implemented.");
         }
+        
         return res;
     }
 
