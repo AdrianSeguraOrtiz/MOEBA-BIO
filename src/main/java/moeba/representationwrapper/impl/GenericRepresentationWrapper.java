@@ -288,8 +288,8 @@ public class GenericRepresentationWrapper extends RepresentationWrapper {
             Map<String, String> subParams = StaticUtils.getSubParams("groupedbasedcrossover", str);
             res = new GroupedBasedCrossover(
                 numApproxCrossovers, 
-                Float.parseFloat(subParams.getOrDefault("shuffleend", "0.75")),
-                Float.parseFloat(subParams.getOrDefault("dynamicstartamount", "0.25"))
+                Float.parseFloat(StaticUtils.getOne("groupedbasedcrossover", subParams, "shuffleend", "0.75")),
+                Float.parseFloat(StaticUtils.getOne("groupedbasedcrossover", subParams, "dynamicstartamount", "0.25"))
             );
         } else {
             throw new RuntimeException("The row bicluster mixed crossover " + str + " is not implemented.");

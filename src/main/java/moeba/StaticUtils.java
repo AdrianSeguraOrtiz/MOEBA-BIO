@@ -115,33 +115,33 @@ public final class StaticUtils {
     static final Map<String, BiFunction<String, ObjectivesParams, FitnessFunction>> OBJETIVES_MAP = new HashMap<>();
     static {
         OBJETIVES_MAP.put("biclustersizenormcomp", (str, op) -> {
-            Map<String, String> subParams = getSubParams(str, "biclustersizenormcomp");
-            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
-            Double rowsWeight = Double.parseDouble(subParams.getOrDefault("rowsweight", "0.5"));
+            Map<String, String> subParams = getSubParams("biclustersizenormcomp", str);
+            String sumIndObjs = StaticUtils.getOne("biclustersizenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
+            Double rowsWeight = Double.parseDouble(StaticUtils.getOne("biclustersizenormcomp", subParams, "rowsweight", "0.5"));
             return new BiclusterSizeNormComp(op.data, op.types, op.cache, sumIndObjs, rowsWeight);
         });
 
         OBJETIVES_MAP.put("biclustervariancenorm", (str, op) -> {
-            Map<String, String> subParams = getSubParams(str, "biclustervariancenorm");
-            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
+            Map<String, String> subParams = getSubParams("biclustervariancenorm", str);
+            String sumIndObjs = StaticUtils.getOne("biclustersizenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
             return new BiclusterVarianceNorm(op.data, op.types, op.cache, sumIndObjs);
         });
 
         OBJETIVES_MAP.put("rowvariancenormcomp", (str, op) -> {
-            Map<String, String> subParams = getSubParams(str, "rowvariancenormcomp");
-            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
+            Map<String, String> subParams = getSubParams("rowvariancenormcomp", str);
+            String sumIndObjs = StaticUtils.getOne("biclustersizenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
             return new RowVarianceNormComp(op.data, op.types, op.cache, sumIndObjs);
         });
 
         OBJETIVES_MAP.put("meansquaredresiduenorm", (str, op) -> {
-            Map<String, String> subParams = getSubParams(str, "meansquaredresiduenorm");
-            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
+            Map<String, String> subParams = getSubParams("meansquaredresiduenorm", str);
+            String sumIndObjs = StaticUtils.getOne("biclustersizenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
             return new MeanSquaredResidueNorm(op.data, op.types, op.cache, sumIndObjs);
         });
 
         OBJETIVES_MAP.put("distancebetweenbiclustersnormcomp", (str, op) -> {
-            Map<String, String> subParams = getSubParams(str, "distancebetweenbiclustersnormcomp");
-            String sumIndObjs = subParams.getOrDefault("summariseindividualobjectives", op.summariseIndividualObjectives);
+            Map<String, String> subParams = getSubParams("distancebetweenbiclustersnormcomp", str);
+            String sumIndObjs = StaticUtils.getOne("biclustersizenormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
             return new DistanceBetweenBiclustersNormComp(op.data, op.types, op.cache, sumIndObjs);
         });
     }
@@ -556,9 +556,9 @@ public final class StaticUtils {
                     mutation, 
                     crossover, 
                     aggregativeFunction, 
-                    Double.parseDouble(subParams.getOrDefault("neighborhoodselectionprobability", "0.1")), 
-                    Integer.parseInt(subParams.getOrDefault("maximumnumberofreplacedsolutions", "2")),
-                    Integer.parseInt(subParams.getOrDefault("neighborhoodsize", "20")), 
+                    Double.parseDouble(StaticUtils.getOne("MOEAD-SingleThread", subParams, "neighborhoodselectionprobability", "0.1")),
+                    Integer.parseInt(StaticUtils.getOne("MOEAD-SingleThread", subParams, "maximumnumberofreplacedsolutions", "2")),
+                    Integer.parseInt(StaticUtils.getOne("MOEAD-SingleThread", subParams, "neighborhoodsize", "20")),
                     weightVectorDirectory, 
                     termination
                 );
@@ -671,7 +671,7 @@ public final class StaticUtils {
                    mutation,
                    selection,
                    new SequentialSolutionListEvaluator<>(),
-                   Integer.parseInt(subParams.getOrDefault("k", "1"))
+                   Integer.parseInt(StaticUtils.getOne("SPEA2-SingleThread", subParams, "k", "1"))
                 );
 
                 algorithm.run();
@@ -701,7 +701,7 @@ public final class StaticUtils {
             } else if (strAlgorithm.startsWith("NSGAIII-SingleThread")) {
                 // Get subparameters
                 Map<String, String> subParams = StaticUtils.getSubParams("NSGAIII-SingleThread", strAlgorithm);
-                int numberOfDivisions = Integer.parseInt(subParams.getOrDefault("numberofdivisions", "12"));
+                int numberOfDivisions = Integer.parseInt(StaticUtils.getOne("NSGAIII-SingleThread", subParams, "numberofdivisions", "12"));
                 
                 // Instantiates and executes a single-threaded NSGAIII algorithm
                 NSGAIII<CompositeSolution> algorithm = new NSGAIIIBuilder<>(problem)
@@ -729,7 +729,7 @@ public final class StaticUtils {
                     maxEvaluations,
                     new GenericBoundedArchive<>(populationSize, new CrowdingDistanceDensityEstimator<>()),
                     mutation,
-                    Double.parseDouble(subParams.getOrDefault("initialtemperature", "1.0")), 
+                    Double.parseDouble(StaticUtils.getOne("MOSA-SingleThread", subParams, "initialtemperature", "1.0")), 
                     new Exponential(0.95)
                 );  
 
@@ -976,11 +976,30 @@ public final class StaticUtils {
             String[] strSubparams = input.split("[()=, ]");
             
             // Iterate through the array in pairs, with each pair representing a sub-parameter and its value
-            for (int i = 0; i < strSubparams.length-1; i+=2) {
+            for (int i = 1; i < strSubparams.length; i+=2) {
                 subParams.put(strSubparams[i], strSubparams[i+1]);
             }
         }
 
         return subParams;
+    }
+
+    /**
+     * Retrieves the value of a specific key from a map of sub-parameters, or returns a default value if the key is not found.
+     * 
+     * @param param        The parameter string to extract sub-parameters from. This is included in the warning message.
+     * @param subParams    The map of sub-parameters to retrieve the value from.
+     * @param key          The key of the sub-parameter to retrieve the value from.
+     * @param defaultValue The default value to return if the key is not found.
+     * @return             The value of the sub-parameter if it exists, otherwise the default value.
+     */
+    public static String getOne(String param, Map<String, String> subParams, String key, String defaultValue) {
+        if (subParams.containsKey(key)) {
+            return subParams.get(key);
+        } else {
+            // If the key is not found, print a warning message and return the default value
+            System.out.println("Warning: " + key + " not found in sub-parameters of " + param + ". Using default value: " + defaultValue);
+            return defaultValue;
+        }
     }
 }
