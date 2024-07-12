@@ -36,6 +36,7 @@ import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
 import moeba.fitnessfunction.impl.MeanSquaredResidueNorm;
 import moeba.fitnessfunction.impl.RowVarianceNormComp;
+import moeba.parameterization.ParameterizationExercise;
 import moeba.fitnessfunction.impl.DistanceBetweenBiclustersNormComp;
 import moeba.representationwrapper.RepresentationWrapper;
 import moeba.representationwrapper.impl.GenericRepresentationWrapper;
@@ -49,6 +50,7 @@ import moeba.utils.observer.impl.FitnessEvolutionMaxObserver;
 import moeba.utils.observer.impl.FitnessEvolutionMinObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
 import moeba.utils.observer.impl.NumEvaluationsObserver;
+import moeba.utils.observer.impl.ParameterizationObserver;
 import moeba.utils.storage.CacheStorage;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.uma.jmetal.algorithm.Algorithm;
@@ -188,10 +190,11 @@ public final class StaticUtils {
      * @param numGenerations the number of generations of the genetic algorithm
      * @param externalCache a map of external cache data
      * @param internalCaches an array of internal caches
+     * @param exercise the parameterization exercise
      * @return an observer
      * @throws RuntimeException if the observer is not implemented
      */
-    public static ObserverInterface getObserverFromString(String str, int populationSize, String[] fitnessFunctions, int numGenerations, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches) {
+    public static ObserverInterface getObserverFromString(String str, int populationSize, String[] fitnessFunctions, int numGenerations, CacheStorage<String, Double[]> externalCache, CacheStorage<String, Double>[] internalCaches, ParameterizationExercise exercise) {
         ObserverInterface res;
         switch (str.toLowerCase()) {
             case "biclustercountobserver":
@@ -214,6 +217,9 @@ public final class StaticUtils {
                 break;
             case "numevaluationsobserver":
                 res = new NumEvaluationsObserver(populationSize);
+                break;
+            case "parameterizationobserver":
+                res = new ParameterizationObserver(exercise);
                 break;
             default:
                 throw new RuntimeException("The observer " + str + " is not implemented.");

@@ -101,20 +101,30 @@ public class ParameterizationExercise {
 
         // Iterate over the double variables and add their names and values to the result string
         for (int i = 0; i < doubleSolution.variables().size(); i++) {
-            res += this.doubleNames.get(i) + "=";
-            res += this.doubleFuncs.get(i).getValue(doubleSolution.variables().get(i)) + " ";
+            res += getArgOfValue(i, doubleNames, doubleFuncs, doubleSolution.variables().get(i)) + " ";
         }
 
         // Iterate over the integer variables and add their names and values to the result string
         for (int i = 0; i < integerSolution.variables().size(); i++) {
-            res += this.integerNames.get(i) + "=";
-            res += this.integerFuncs.get(i).getValue(integerSolution.variables().get(i)) + " ";
+            res += getArgOfValue(i, integerNames, integerFuncs, integerSolution.variables().get(i)) + " ";
         }
 
         // Remove the trailing space and return the result string
         return res.substring(0, res.length() - 1);
     }
 
+    /**
+     * Retrieves the name and value of a specific argument from a list of names and a list of value functions.
+     * 
+     * @param pos The position of the argument in the name and function lists.
+     * @param names The list of argument names.
+     * @param funcs The list of value functions.
+     * @param value The value of the argument.
+     * @return The name and value of the argument as a string.
+     */
+    public <T> String getArgOfValue(int pos, List<String> names, List<ValueFunc<T>> funcs, T value) {
+        return names.get(pos) + "=" + funcs.get(pos).getValue(value);
+    }
 
     /**
      * Retrieves the value of a specific argument from the given solution.

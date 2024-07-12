@@ -205,7 +205,7 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
         String[] strObserversArray = strObservers.split(";");
         this.observers = new ObserverInterface[strObserversArray.length];
         for (int i = 0; i < this.observers.length; i++) {
-            this.observers[i] = StaticUtils.getObserverFromString(strObserversArray[i], populationSize, fitnessFunctions, maxEvaluations / populationSize, externalCache, internalCaches);
+            this.observers[i] = StaticUtils.getObserverFromString(strObserversArray[i], populationSize, fitnessFunctions, maxEvaluations / populationSize, externalCache, internalCaches, null);
         }
 
         // Problem
