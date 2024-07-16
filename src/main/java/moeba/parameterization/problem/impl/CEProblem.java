@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -127,7 +128,8 @@ public class CEProblem extends ParameterizationProblem {
                 RepresentationWrapper wrapper = StaticUtils.getRepresentationWrapperFromRepresentation(Representation.valueOf(representation), numRows[finalI], numCols[finalI], 0, 0, 0, null);
 
                 // Get inferred biclusters from the MOEBA winner population after apply the configuration of HV winner
-                List<ParameterizationSolution> subSolutions = solution.subPopulations.get(0).get(0).subPopulations.get(finalI);
+                int tagIndex = result.population.get(0).tags.indexOf(Paths.get(prefixes[finalI]).getFileName().toString());
+                List<ParameterizationSolution> subSolutions = result.population.get(0).subPopulations.get(tagIndex);
                 ArrayList<ArrayList<ArrayList<Integer>[]>> inferredBiclusters = new ArrayList<>();
                 for (ParameterizationSolution ss : subSolutions) {
                     inferredBiclusters.add(wrapper.getBiclustersFromRepresentation(ss));

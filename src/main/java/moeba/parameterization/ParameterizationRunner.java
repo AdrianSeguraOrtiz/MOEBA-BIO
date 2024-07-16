@@ -149,23 +149,27 @@ public class ParameterizationRunner implements Runnable {
             cntO++;
         }
 
-        for (int i = 0; i < validPrefixes.size(); i++) {
-            List<ParameterizationSolution> moebaSolutions = hvSolution.subPopulations.get(i);
+        String[] prefixes = validPrefixes.toArray(new String[validPrefixes.size()]);
+        for (int i = 0; i < prefixes.length; i++) {
+            
+            String tag = Paths.get(prefixes[i]).getFileName().toString();
+            int tagIndex = hvSolution.tags.indexOf(tag);
+            List<ParameterizationSolution> moebaSolutions = hvSolution.subPopulations.get(tagIndex);
             RepresentationWrapper wrapper = StaticUtils.getRepresentationWrapperFromRepresentation(Representation.valueOf(representation), ceproblem.numRows[i], ceproblem.numCols[i], 0, 0, 0, null);
 
             // Write the data of the moeba population
             new SolutionListVARWithHeader(moebaSolutions, objectives.toArray(new String[0]), wrapper.getVarLabels())
-                    .setVarFileOutputContext(new DefaultFileOutputContext(outputFolder + "/VAR-" + hvSolution.tags.get(i) + ".csv", ","))
-                    .setFunFileOutputContext(new DefaultFileOutputContext(outputFolder + "/FUN-" + hvSolution.tags.get(i) + ".csv", ","))
+                    .setVarFileOutputContext(new DefaultFileOutputContext(outputFolder + "/VAR-" + tag + ".csv", ","))
+                    .setFunFileOutputContext(new DefaultFileOutputContext(outputFolder + "/FUN-" + tag + ".csv", ","))
                     .print();
 
             // Write translated VAR
             new SolutionListTranslatedVAR(wrapper)
-                .printTranslatedVAR(outputFolder + "/VAR-translated-" + hvSolution.tags.get(i) + ".csv", moebaSolutions);
+                .printTranslatedVAR(outputFolder + "/VAR-translated-" + tag + ".csv", moebaSolutions);
 
             // Write observers registered data
-            for (ObserverInterface observer : hvSolution.subObservers.get(i)) {
-                observer.writeToFile(outputFolder + "/moeba-" + observer.getClass().getSimpleName() + "-" + hvSolution.tags.get(i) + ".csv");
+            for (ObserverInterface observer : hvSolution.subObservers.get(tagIndex)) {
+                observer.writeToFile(outputFolder + "/moeba-" + observer.getClass().getSimpleName() + "-" + tag + ".csv");
             }
         }
 
