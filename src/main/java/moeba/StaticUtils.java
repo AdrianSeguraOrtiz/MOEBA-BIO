@@ -50,6 +50,7 @@ import moeba.utils.observer.impl.FitnessEvolutionMaxObserver;
 import moeba.utils.observer.impl.FitnessEvolutionMinObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
 import moeba.utils.observer.impl.NumEvaluationsObserver;
+import moeba.utils.observer.impl.ParameterizationFitnessEvolutionMinObserver;
 import moeba.utils.observer.impl.ParameterizationObserver;
 import moeba.utils.storage.CacheStorage;
 import org.apache.commons.math3.util.CombinatoricsUtils;
@@ -217,6 +218,9 @@ public final class StaticUtils {
                 break;
             case "numevaluationsobserver":
                 res = new NumEvaluationsObserver(populationSize);
+                break;
+            case "parameterizationfitnessevolutionminobserver":
+                res = new ParameterizationFitnessEvolutionMinObserver(populationSize, fitnessFunctions.length);
                 break;
             case "parameterizationobserver":
                 res = new ParameterizationObserver(exercise);
