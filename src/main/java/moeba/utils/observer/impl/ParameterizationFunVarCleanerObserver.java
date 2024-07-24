@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.util.concurrent.AtomicDoubleArray;
 import moeba.parameterization.ParameterizationExercise;
 import moeba.parameterization.ParameterizationSolution;
 import moeba.parameterization.problem.ParameterizationProblem;
@@ -19,14 +20,18 @@ import org.uma.jmetal.solution.doublesolution.impl.DefaultDoubleSolution;
 import org.uma.jmetal.solution.integersolution.IntegerSolution;
 import org.uma.jmetal.solution.integersolution.impl.DefaultIntegerSolution;
 
-public class ParameterizationObserver implements ObserverInterface {
-    ParameterizationExercise pe;
+public class ParameterizationFunVarCleanerObserver implements ObserverInterface {
+    private ParameterizationExercise pe;
     private Map<String, String[][]> values;
+    private int numObjectives;
+    private AtomicDoubleArray progressiveValues;
     private AtomicInteger parallelCount;
 
-    public ParameterizationObserver(ParameterizationExercise pe) {
+    public ParameterizationFunVarCleanerObserver(ParameterizationExercise pe, int numObjectives) {
         this.pe = pe;
         this.values = new HashMap<>();
+        this.numObjectives = numObjectives;
+        this.progressiveValues = new AtomicDoubleArray(numObjectives);
         this.parallelCount = new AtomicInteger();
         this.initialize();
     }
@@ -52,6 +57,20 @@ public class ParameterizationObserver implements ObserverInterface {
                 }
             }
             this.values.get(mainKV[0])[gen][pos] = processedVComps.substring(0, processedVComps.length() - 1);
+        }
+
+        boolean save = false;
+        for (int i = 0; i < this.numObjectives; i++) {
+            this.values.get("Objective - " + i)[gen][pos] = String.valueOf(result.objectives()[i]);
+            double currentMin = this.progressiveValues.get(i);
+            if (result.objectives()[i] < currentMin) {
+                this.progressiveValues.compareAndSet(i, currentMin, result.objectives()[i]);
+                save = true;
+            }
+        }
+        if (!save) {
+            // Clean the individual's metadata in case it does not surpass the best recorded so far.
+            result = new ParameterizationSolution(result);
         }
     }
 
@@ -101,6 +120,12 @@ public class ParameterizationObserver implements ObserverInterface {
             }
             this.values.put(mainKV[0], new String[pe.evaluations / pe.populationSize + 5][pe.populationSize]);
         }
+
+        for(int i = 0; i < numObjectives; i++) {
+            this.progressiveValues.set(i, Double.MAX_VALUE);
+            this.values.put("Objective - " + i, new String[pe.evaluations / pe.populationSize + 5][pe.populationSize]);
+        }
+        
     }
     
 }

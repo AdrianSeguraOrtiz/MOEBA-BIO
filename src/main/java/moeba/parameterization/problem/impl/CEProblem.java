@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,8 +35,9 @@ public class CEProblem extends ParameterizationProblem {
     private String subObservers;
     public int[] numRows;
     public int[] numCols;
+    public String strTempFolder;
 
-    public CEProblem(ParameterizationExercise parameterizationExercise, String staticConf, ObserverInterface[] observers, String subObservers, String[] prefixes, ParameterizationExercise subExercise) {
+    public CEProblem(ParameterizationExercise parameterizationExercise, String staticConf, ObserverInterface[] observers, String subObservers, String[] prefixes, ParameterizationExercise subExercise, String strTempFolder) {
         super(parameterizationExercise, staticConf, observers);
 
         this.subObservers = subObservers;
@@ -43,6 +45,12 @@ public class CEProblem extends ParameterizationProblem {
         this.subExercise = subExercise;
         this.numRows = new int[prefixes.length];
         this.numCols = new int[prefixes.length];
+        this.strTempFolder = strTempFolder;
+        try {
+            Files.createDirectories(Paths.get(strTempFolder));
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
 
         for (int i = 0; i < prefixes.length; i++) {
             String dataset = prefixes[i] + "-data.csv";
@@ -178,6 +186,7 @@ public class CEProblem extends ParameterizationProblem {
 
         // Observers
         this.registerInfo(solution);
+        this.writeInfo(strTempFolder);
 
         return solution;
     }

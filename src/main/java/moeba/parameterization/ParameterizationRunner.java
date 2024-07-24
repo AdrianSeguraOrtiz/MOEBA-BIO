@@ -44,8 +44,7 @@ import moeba.parameterization.problem.impl.CEProblem;
 import moeba.representationwrapper.RepresentationWrapper;
 import moeba.utils.observer.ProblemObserver.ObserverInterface;
 import moeba.utils.observer.impl.NumEvaluationsObserver;
-import moeba.utils.observer.impl.ParameterizationFitnessEvolutionMinObserver;
-import moeba.utils.observer.impl.ParameterizationObserver;
+import moeba.utils.observer.impl.ParameterizationFunVarCleanerObserver;
 import moeba.utils.output.SolutionListTranslatedVAR;
 import moeba.utils.output.SolutionListVARWithHeader;
 import picocli.CommandLine;
@@ -101,9 +100,9 @@ public class ParameterizationRunner implements Runnable {
         
         // Get parameterization problem
         String staticConf = "--max-evaluations=" + internalEvaluations + " --num-threads=1" + " --observers=FitnessEvolutionMinObserver";
-        ObserverInterface[] externalSupervisedObservers = new ObserverInterface[]{new NumEvaluationsObserver(externalSupervisedPopulationSize), new ParameterizationFitnessEvolutionMinObserver(externalSupervisedPopulationSize, 1), new ParameterizationObserver(supervisedParameterizationExercise)};
-        String externalUnsupervisedObservers = "ParameterizationFitnessEvolutionMinObserver;ParameterizationObserver";
-        CEProblem ceproblem = new CEProblem(supervisedParameterizationExercise, staticConf, externalSupervisedObservers, externalUnsupervisedObservers, validPrefixes.toArray(new String[validPrefixes.size()]), unsupervisedParameterizationExercise);
+        ObserverInterface[] externalSupervisedObservers = new ObserverInterface[]{new NumEvaluationsObserver(externalSupervisedPopulationSize), new ParameterizationFunVarCleanerObserver(supervisedParameterizationExercise, 1)};
+        String externalUnsupervisedObservers = "ParameterizationFunVarCleanerObserver";
+        CEProblem ceproblem = new CEProblem(supervisedParameterizationExercise, staticConf, externalSupervisedObservers, externalUnsupervisedObservers, validPrefixes.toArray(new String[validPrefixes.size()]), unsupervisedParameterizationExercise, outputFolder + "/ce-tmp/");
 
         // Run parameterization
         AlgorithmResult<ParameterizationSolution> result = ParameterizationRunner.executeParameterizationAlgorithm(ceproblem);

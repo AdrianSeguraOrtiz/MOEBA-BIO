@@ -6,8 +6,7 @@ import moeba.representationwrapper.impl.GenericRepresentationWrapper;
 import moeba.utils.observer.impl.BiclusterCountObserver;
 import moeba.utils.observer.impl.ExternalCacheObserver;
 import moeba.utils.observer.impl.InternalCacheObserver;
-import moeba.utils.observer.impl.ParameterizationFitnessEvolutionMinObserver;
-import moeba.utils.observer.impl.ParameterizationObserver;
+import moeba.utils.observer.impl.ParameterizationFunVarCleanerObserver;
 import moeba.utils.storage.CacheStorage;
 import org.uma.jmetal.solution.compositesolution.CompositeSolution;
 
@@ -72,7 +71,7 @@ public class ProblemObserver extends Problem {
             if (observer instanceof BiclusterCountObserver && !(super.representationWrapper instanceof GenericRepresentationWrapper)) {
                 throw new IllegalArgumentException("Bicluster count observer requires generic representation wrapper.");
             }
-            if (observer instanceof ParameterizationObserver || observer instanceof ParameterizationFitnessEvolutionMinObserver) {
+            if (observer instanceof ParameterizationFunVarCleanerObserver) {
                 throw new IllegalArgumentException("Parameterization observer is not available for this problem.");
             }
         }

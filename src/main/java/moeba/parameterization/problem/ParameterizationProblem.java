@@ -155,4 +155,11 @@ public abstract class ParameterizationProblem implements Problem<Parameterizatio
             observer.register(solution);
         }
     }
+
+    public void writeInfo(String strFolder) {
+        // Notify all registered observers with the evaluation result
+        for (ObserverInterface observer : observers) {
+            observer.writeToFile(strFolder + "/" + observer.getClass().getSimpleName() + ".txt");
+        }
+    }
 }
