@@ -95,8 +95,8 @@ public class ParameterizationRunner implements Runnable {
         System.out.println("Prefixes: " + String.join(", ", validPrefixes));
 
         // Get parameterization exercises
-        ParameterizationExercise supervisedParameterizationExercise = new ParameterizationExercise(supervisedConfFile, externalSupervisedEvaluations, externalSupervisedPopulationSize, 1);
         ParameterizationExercise unsupervisedParameterizationExercise = new ParameterizationExercise(unsupervisedConfFile, externalUnsupervisedEvaluations, externalUnsupervisedPopulationSize, numThreads/validPrefixes.size());
+        ParameterizationExercise supervisedParameterizationExercise = new ParameterizationExercise(supervisedConfFile, externalSupervisedEvaluations, externalSupervisedPopulationSize, unsupervisedParameterizationExercise.numThreads == 1 ? numThreads/validPrefixes.size() : 1);
         
         // Get parameterization problem
         String staticConf = "--max-evaluations=" + internalEvaluations + " --num-threads=1" + " --observers=FitnessEvolutionMinObserver";
