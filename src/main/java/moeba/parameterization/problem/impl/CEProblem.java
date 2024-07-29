@@ -182,7 +182,7 @@ public class CEProblem extends ParameterizationProblem {
         executorService.shutdown();
 
         // Evaluate solution
-        solution.objectives()[0] += score / prefixes.length;
+        solution.objectives()[0] = score / prefixes.length;
 
         // Observers
         this.registerInfo(solution);
