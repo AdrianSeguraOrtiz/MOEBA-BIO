@@ -100,8 +100,8 @@ public class ParameterizationRunner implements Runnable {
         
         // Get parameterization problem
         String staticConf = "--max-evaluations=" + internalEvaluations + " --num-threads=1" + " --observers=FitnessEvolutionMinObserver";
-        ObserverInterface[] externalSupervisedObservers = new ObserverInterface[]{new NumEvaluationsObserver(externalSupervisedPopulationSize), new ParameterizationFunVarCleanerObserver(supervisedParameterizationExercise, 1)};
-        String externalUnsupervisedObservers = "ParameterizationFunVarCleanerObserver";
+        ObserverInterface[] externalSupervisedObservers = supervisedParameterizationExercise.populationSize == 1 ? new ObserverInterface[0] : new ObserverInterface[]{new NumEvaluationsObserver(externalSupervisedPopulationSize), new ParameterizationFunVarCleanerObserver(supervisedParameterizationExercise, 1)};
+        String externalUnsupervisedObservers = unsupervisedParameterizationExercise.populationSize == 1 ? "" : "ParameterizationFunVarCleanerObserver";
         CEProblem ceproblem = new CEProblem(supervisedParameterizationExercise, staticConf, externalSupervisedObservers, externalUnsupervisedObservers, validPrefixes.toArray(new String[validPrefixes.size()]), unsupervisedParameterizationExercise, outputFolder + "/ce-tmp/");
 
         // Run parameterization
