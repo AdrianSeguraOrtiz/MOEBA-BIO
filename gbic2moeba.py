@@ -2,6 +2,7 @@ import random
 import pandas as pd
 import json
 import argparse
+import numpy as np
 
 from sklearn.preprocessing import MinMaxScaler
 
@@ -131,17 +132,29 @@ with open(bic_clusters_filename, "w") as file:
     )
     file.write(bic_clusters_info)
 
-# Normalize the dataset
+# Separar columnas numéricas y no numéricas
+numeric_cols = df.select_dtypes(include=[np.number]).columns
+non_numeric_cols = df.select_dtypes(exclude=[np.number]).columns
+
+# Guardar el orden original de las columnas
+original_order = df.columns
+
+# Normalización Min-Max
 scaler = MinMaxScaler()
-for column in df.columns:
-    if pd.api.types.is_numeric_dtype(df[column]):
-        df[column] = scaler.fit_transform(df[column].values.reshape(-1, 1))
+df_numeric = df[numeric_cols]
+df_numeric_scaled = pd.DataFrame(scaler.fit_transform(df_numeric), columns=numeric_cols)
+
+# Recombinar las columnas
+df_normalized = pd.concat([df_numeric_scaled, df[non_numeric_cols]], axis=1)
+
+# Reordenar las columnas al orden original
+df_normalized = df_normalized[original_order]
 
 # Save the modified dataset to CSV
-df.to_csv(f'{output_base}-data.csv', index=False)
+df_normalized.to_csv(f'{output_base}-data.csv', index=False)
 
 # Create a dictionary with column names and their data types
-column_data_types = {col: str(dtype) for col, dtype in df.dtypes.items()}
+column_data_types = {col: str(dtype) for col, dtype in df_normalized.dtypes.items()}
 
 # Save the data types dictionary as JSON
 types_json_path = f'{output_base}-types.json'
