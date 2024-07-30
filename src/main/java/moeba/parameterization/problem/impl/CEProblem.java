@@ -100,10 +100,13 @@ public class CEProblem extends ParameterizationProblem {
         }
 
         // Get subObservers
-        String[] subObserversArrayStr = this.subObservers.split(";");
-        ObserverInterface[] subObserversArray = new ObserverInterface[subObserversArrayStr.length];
-        for (int i = 0; i < subObserversArrayStr.length; i++) {
-            subObserversArray[i] = StaticUtils.getObserverFromString(subObserversArrayStr[i], subExercise.populationSize, new String[]{"HV"}, 0, null, null, subExercise);
+        ObserverInterface[] subObserversArray = new ObserverInterface[0];
+        if (!this.subObservers.equals("")) {
+            String[] subObserversArrayStr = this.subObservers.split(";");
+            subObserversArray = new ObserverInterface[subObserversArrayStr.length];
+            for (int i = 0; i < subObserversArrayStr.length; i++) {
+                subObserversArray[i] = StaticUtils.getObserverFromString(subObserversArrayStr[i], subExercise.populationSize, new String[]{"HV"}, 0, null, null, subExercise);
+            }
         }
 
         // Config HV problem

@@ -145,7 +145,10 @@ df_numeric = df[numeric_cols]
 df_numeric_scaled = pd.DataFrame(scaler.fit_transform(df_numeric), columns=numeric_cols)
 
 # Recombinar las columnas
-df_normalized = pd.concat([df_numeric_scaled, df[non_numeric_cols]], axis=1)
+if non_numeric_cols.size > 0:
+    df_normalized = pd.concat([df_numeric_scaled, df[non_numeric_cols]], axis=1)
+else:
+    df_normalized = df_numeric_scaled
 
 # Reordenar las columnas al orden original
 df_normalized = df_normalized[original_order]
