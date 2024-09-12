@@ -32,7 +32,7 @@ public class DistanceBetweenBiclustersNormComp extends GenericBiclusterFitnessFu
                     distance += Math.pow(data[i][j] - mean, 2);
                 }
             }
-            distance = 4 * distance / (b[0].size() * bicluster[1].size());
+            distance = distance / (b[0].size() * bicluster[1].size());
 
             if (distance < res) {
                 res = distance;
