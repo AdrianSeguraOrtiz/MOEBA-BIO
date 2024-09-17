@@ -23,7 +23,7 @@ Usage:
 parser = argparse.ArgumentParser(description='Process bicluster and data files with explicit parameter names.')
 parser.add_argument("--biclusters-file", required=True, help="JSON file containing the biclusters' specification")
 parser.add_argument("--data-file", required=True, help="TSV file containing the dataset")
-parser.add_argument("--policy", choices=["replace", "remove"], default="replace", help="Policy to handle non grouped rows")
+parser.add_argument("--policy", choices=["replace", "remove", "nothing"], default="replace", help="Policy to handle non grouped rows")
 args = parser.parse_args()
 
 # Load biclusters specification from JSON
@@ -40,69 +40,71 @@ df = pd.read_csv(args.data_file, sep='\t', decimal='.')
 # Remove the first column
 df.drop(columns=df.columns[0], inplace=True)
 
-# Check the status of each row
-status = []
-for row_index in range(len(df)):
-    status.append(sum(row_index in bic[0] for bic in biclusters_list))
+if args.policy != "nothing":
 
-# Duplicate overlapped rows and delete one of ungrouped rows
-for row_index in range(len(df)):
-    if status[row_index] > 1:
-        # Get the indexes of the biclusters where the row is part of
-        bic_indexes = [i for i, bic in enumerate(biclusters_list) if row_index in bic[0]]
+    # Check the status of each row
+    status = []
+    for row_index in range(len(df)):
+        status.append(sum(row_index in bic[0] for bic in biclusters_list))
 
-        # For each one less the last one
-        for i in range(len(bic_indexes) - 1):
-            # Get the bicluster
-            bic = biclusters_list[bic_indexes[i]]
+    # Duplicate overlapped rows and delete one of ungrouped rows
+    for row_index in range(len(df)):
+        if status[row_index] > 1:
+            # Get the indexes of the biclusters where the row is part of
+            bic_indexes = [i for i, bic in enumerate(biclusters_list) if row_index in bic[0]]
 
-            # Select a random row from the same bicluster
-            same_bic_copy = random.choice([row_index for row_index in bic[0] if status[row_index] == 1])
+            # For each one less the last one
+            for i in range(len(bic_indexes) - 1):
+                # Get the bicluster
+                bic = biclusters_list[bic_indexes[i]]
 
-            # Select a random ungrouped row
-            ungrouped_rows = [row_index for row_index in range(len(status)) if status[row_index] == 0]
-            ungrouped_replace = random.choice(ungrouped_rows) if len(ungrouped_rows) > 0 else random.choice([row_index for row_index in biclusters_list[bic_indexes[i+1]][0] if status[row_index] == 1])
+                # Select a random row from the same bicluster
+                same_bic_copy = random.choice([row_index for row_index in bic[0] if status[row_index] == 1])
 
-            # In the ungrouped row we copy the data of the row in the same bilcluster but changing values of the columns of the bicluster by the data of the overlapped row 
-            # In the overlapped row and in the columns of the bicluster we copy the data of the ungrouped row
-            ungrouped_replace_data = df.iloc[ungrouped_replace]
-            df.iloc[ungrouped_replace] = df.iloc[same_bic_copy]
-            for col in bic[1]:
-                df.iloc[ungrouped_replace, col] = df.iloc[row_index, col]
-                df.iloc[row_index, col] = ungrouped_replace_data.iloc[col]
-            
-            # Ungrouped row is grouped now in the bicluster
-            status[ungrouped_replace] = 1
-            for j in range(len(bic[0])):
-                if bic[0][j] == row_index:
-                    bic[0][j] = ungrouped_replace
+                # Select a random ungrouped row
+                ungrouped_rows = [row_index for row_index in range(len(status)) if status[row_index] == 0]
+                ungrouped_replace = random.choice(ungrouped_rows) if len(ungrouped_rows) > 0 else random.choice([row_index for row_index in biclusters_list[bic_indexes[i+1]][0] if status[row_index] == 1])
+
+                # In the ungrouped row we copy the data of the row in the same bilcluster but changing values of the columns of the bicluster by the data of the overlapped row 
+                # In the overlapped row and in the columns of the bicluster we copy the data of the ungrouped row
+                ungrouped_replace_data = df.iloc[ungrouped_replace]
+                df.iloc[ungrouped_replace] = df.iloc[same_bic_copy]
+                for col in bic[1]:
+                    df.iloc[ungrouped_replace, col] = df.iloc[row_index, col]
+                    df.iloc[row_index, col] = ungrouped_replace_data.iloc[col]
                 
-        # At the end overlapped row is grouped
-        status[row_index] = 1
-
-# The rows that remain ungrouped are:
-if args.policy == "replace":
-    # Replaced by copies of grouped rows
-    for row_index in range(len(df)):
-        if status[row_index] == 0:
-            chosen_bic = random.choice(biclusters_list)
-            random_row_index = random.choice(chosen_bic[0])
-            df.iloc[row_index] = df.iloc[random_row_index]
-            chosen_bic[0].append(row_index)
+                # Ungrouped row is grouped now in the bicluster
+                status[ungrouped_replace] = 1
+                for j in range(len(bic[0])):
+                    if bic[0][j] == row_index:
+                        bic[0][j] = ungrouped_replace
+                    
+            # At the end overlapped row is grouped
             status[row_index] = 1
-elif args.policy == "remove":
-    # Removed
-    tmp_df = df.copy()
-    num_removes = 0
-    for row_index in range(len(df)):
-        if status[row_index] == 0:
-            tmp_df.drop(index=row_index, inplace=True)
-            for bic in biclusters_list:
-                for i in range(len(bic[0])):
-                    if bic[0][i] > row_index - num_removes:
-                        bic[0][i] -= 1
-            num_removes += 1
-    df = tmp_df
+
+    # The rows that remain ungrouped are:
+    if args.policy == "replace":
+        # Replaced by copies of grouped rows
+        for row_index in range(len(df)):
+            if status[row_index] == 0:
+                chosen_bic = random.choice(biclusters_list)
+                random_row_index = random.choice(chosen_bic[0])
+                df.iloc[row_index] = df.iloc[random_row_index]
+                chosen_bic[0].append(row_index)
+                status[row_index] = 1
+    elif args.policy == "remove":
+        # Removed
+        tmp_df = df.copy()
+        num_removes = 0
+        for row_index in range(len(df)):
+            if status[row_index] == 0:
+                tmp_df.drop(index=row_index, inplace=True)
+                for bic in biclusters_list:
+                    for i in range(len(bic[0])):
+                        if bic[0][i] > row_index - num_removes:
+                            bic[0][i] -= 1
+                num_removes += 1
+        df = tmp_df
 
 # Check the status of each row
 ungrouped = 0

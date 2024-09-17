@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,7 +91,7 @@ public class BiclusterCountObserver implements ObserverInterface {
                 double[] percentages = biclusterPercentages.get(k);
                 // Write percentages for each generation
                 for (int i = 1; i < limit; i++) {
-                    bw.write(String.format("%.2f", percentages[i]) + (i == limit - 1 ? "" : ", "));
+                    bw.write(String.format(Locale.US, "%.2f", percentages[i]) + (i == limit - 1 ? "" : ", "));
                 }
                 bw.write("\n");
             }

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.testng.annotations.Test;
-
+import moeba.fitnessfunction.impl.BiclusterSizeCoverNormComp;
 import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
 import moeba.fitnessfunction.impl.DistanceBetweenBiclustersNormComp;
@@ -135,6 +135,40 @@ public class FitnessFunctionTest {
         biclusters.add(b1);
         biclusters.add(b2);
 
-        assert(Math.abs((1.0 - (4*(Math.pow(0.7-0.3, 2) + Math.pow(0.8-0.3, 2) + Math.pow(0.2-0.3, 2) + Math.pow(0.3-0.3, 2))/4.0 + 4*(Math.pow(0.7-0.5, 2) + Math.pow(0.3-0.5, 2) + Math.pow(0.6-0.5, 2) + Math.pow(0.8-0.5, 2))/4.0)/2) - f.run(biclusters)) < epsilon);
+        double dy2b = (Math.pow(0.7-0.3, 2) + Math.pow(0.8-0.3, 2)) / 2.0;
+        double dy2cb = (Math.pow(0.5-0.8, 2) + Math.pow(0.1-0.6, 2)) / 2.0;
+        double fvy2 = dy2b / (dy2b + dy2cb);
+
+        double dy3b = (Math.pow(0.2-0.3, 2) + Math.pow(0.3-0.3, 2)) / 2.0;
+        double dy3cb = (Math.pow(0.5-0.8, 2) + Math.pow(0.1-0.6, 2)) / 2.0;
+        double fvy3 = dy3b / (dy3b + dy3cb);
+
+        double fvb1 = (fvy2 + fvy3) / 2.0;
+
+        double dy0b = (Math.pow(0.7-0.65, 2) + Math.pow(0.3-0.35, 2)) / 2.0;
+        double dy0cb = (Math.pow(0.5-0.1, 2) + Math.pow(0.2-0.4, 2)) / 2.0;
+        double fvy0 = dy0b / (dy0b + dy0cb);
+        
+        double dy1b = (Math.pow(0.6-0.65, 2) + Math.pow(0.8-0.35, 2)) / 2.0;
+        double dy1cb = (Math.pow(0.5-0.1, 2) + Math.pow(0.2-0.4, 2)) / 2.0;
+        double fvy1 = dy1b / (dy1b + dy1cb);
+
+        double fvb2 = (fvy0 + fvy1) / 2.0;
+
+        assert((Math.abs(1.0 - (fvb1 + fvb2)/2.0) - f.run(biclusters)) < epsilon);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testBiclusterSizeCoverNormCompMean() {
+        FitnessFunction f = new BiclusterSizeCoverNormComp(data, types, null, "Mean", 0.5);
+
+        ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
+        ArrayList<Integer>[] b1 = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
+        ArrayList<Integer>[] b2 = new ArrayList[]{new ArrayList<>(Arrays.asList(0, 3)), new ArrayList<>(Arrays.asList(1, 2, 3))};
+        biclusters.add(b1);
+        biclusters.add(b2);
+
+        assert(Math.abs((1.0 - ((0.5*(2.0/4.0) + 0.5*(1.5/4.0)) + (0.5*(2.0/4.0) + 0.5*(2.5/4.0)))/2) - f.run(biclusters)) < epsilon);
     }
 }

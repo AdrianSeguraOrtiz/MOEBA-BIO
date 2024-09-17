@@ -100,6 +100,24 @@ instances <- list(
         sd_l_noise = 0.3,
         mean_l = 4.0,
         sd_l = 1.5
+    ),
+    list(
+        name = "instance4",
+        description = "Biclusters Medianos con Diferentes Patrones de Coexpresión",
+        n = 400,
+        l = 150,
+        p = 10,
+        f1 = 150,
+        f2 = 400,
+        of1 = 150 / 10,
+        of2 = 400 / 10,
+        sd_noise = 1.5,
+        sd_z_noise = 0.3,
+        mean_z = 2.2,
+        sd_z = 0.6,
+        sd_l_noise = 0.2,
+        mean_l = 3.8,
+        sd_l = 0.8
     )
 )
 

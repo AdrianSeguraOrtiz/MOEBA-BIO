@@ -33,7 +33,7 @@ import moeba.algorithm.AsyncMultiThreadNSGAIIParents;
 import moeba.algorithm.AsyncMultiThreadNSGAIIParentsExternalFile;
 import moeba.fitnessfunction.FitnessFunction;
 import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
-import moeba.fitnessfunction.impl.BiclusterSizeNumBicsNormComp;
+import moeba.fitnessfunction.impl.BiclusterSizeCoverNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
 import moeba.fitnessfunction.impl.MeanSquaredResidueNorm;
 import moeba.fitnessfunction.impl.RowVarianceNormComp;
@@ -153,11 +153,11 @@ public final class StaticUtils {
             return new RegulatoryCoherenceNormComp(op.data, op.types);
         });
 
-        OBJETIVES_MAP.put("biclustersizenumbicsnormcomp", (str, op) -> {
-            Map<String, String> subParams = getSubParams("biclustersizenumbicsnormcomp", str);
-            String sumIndObjs = StaticUtils.getOne("biclustersizenumbicsnormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
-            Double rowsWeight = Double.parseDouble(StaticUtils.getOne("biclustersizenumbicsnormcomp", subParams, "rowsweight", "0.5"));
-            return new BiclusterSizeNumBicsNormComp(op.data, op.types, op.cache, sumIndObjs, rowsWeight);
+        OBJETIVES_MAP.put("biclustersizecovernormcomp", (str, op) -> {
+            Map<String, String> subParams = getSubParams("biclustersizecovernormcomp", str);
+            String sumIndObjs = StaticUtils.getOne("biclustersizecovernormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
+            Double rowsWeight = Double.parseDouble(StaticUtils.getOne("biclustersizecovernormcomp", subParams, "rowsweight", "0.5"));
+            return new BiclusterSizeCoverNormComp(op.data, op.types, op.cache, sumIndObjs, rowsWeight);
         });
     }
 
