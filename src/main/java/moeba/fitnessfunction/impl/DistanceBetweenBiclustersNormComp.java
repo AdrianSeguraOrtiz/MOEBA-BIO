@@ -2,7 +2,6 @@ package moeba.fitnessfunction.impl;
 
 import java.util.ArrayList;
 
-import moeba.StaticUtils;
 import moeba.fitnessfunction.GenericBiclusterFitnessFunction;
 import moeba.utils.storage.CacheStorage;
 
@@ -48,13 +47,10 @@ public class DistanceBetweenBiclustersNormComp extends GenericBiclusterFitnessFu
 
             // Paso 2.3: Calcular el valor de encaje
             double fitScore = calculateFitScore(distanceBiclusterMean, distanceClosestBicAdjustedMean);
-            System.out.println("Fitnes for row " + row + "evaluating bicluster " + StaticUtils.biclusterToString(bicluster) + ": " + fitScore);
 
             // Acumular el puntaje
             totalScore += fitScore;
         }
-
-        //System.out.println(totalScore / closestBicluster[0].size());
 
         // Paso 3: Promedio de los valores
         return totalScore / closestBicluster[0].size();

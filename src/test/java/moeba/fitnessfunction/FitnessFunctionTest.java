@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.testng.annotations.Test;
-import moeba.fitnessfunction.impl.BiclusterSizeCoverNormComp;
+import moeba.fitnessfunction.impl.BiclusterSizeNumBicsNormComp;
 import moeba.fitnessfunction.impl.BiclusterSizeNormComp;
 import moeba.fitnessfunction.impl.BiclusterVarianceNorm;
 import moeba.fitnessfunction.impl.DistanceBetweenBiclustersNormComp;
@@ -161,14 +161,16 @@ public class FitnessFunctionTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testBiclusterSizeCoverNormCompMean() {
-        FitnessFunction f = new BiclusterSizeCoverNormComp(data, types, null, "Mean", 0.5);
+        FitnessFunction f = new BiclusterSizeNumBicsNormComp(data, types, null, "Mean", 8, 0.75);
 
         ArrayList<ArrayList<Integer>[]> biclusters = new ArrayList<>();
         ArrayList<Integer>[] b1 = new ArrayList[]{new ArrayList<>(Arrays.asList(1, 2)), new ArrayList<>(Arrays.asList(0, 1))};
-        ArrayList<Integer>[] b2 = new ArrayList[]{new ArrayList<>(Arrays.asList(0, 3)), new ArrayList<>(Arrays.asList(1, 2, 3))};
+        ArrayList<Integer>[] b2 = new ArrayList[]{new ArrayList<>(Arrays.asList(0, 3)), new ArrayList<>(Arrays.asList(2, 3))};
         biclusters.add(b1);
         biclusters.add(b2);
+        double b1Score = (0.75 + 0.25 * (1 - Math.pow(1 - (4.0/16.0)*2, 8))) * (1 - ((4.0 - 4.0) / 4.0));
+        double b2Score = (0.75 + 0.25 * (1 - Math.pow(1 - (4.0/16.0)*2, 8))) * (1 - ((4.0 - 4.0) / 4.0));
 
-        assert(Math.abs((1.0 - ((0.5*(2.0/4.0) + 0.5*(1.5/4.0)) + (0.5*(2.0/4.0) + 0.5*(2.5/4.0)))/2) - f.run(biclusters)) < epsilon);
+        assert(Math.abs((1.0 - (b1Score + b2Score)/2) - f.run(biclusters)) < epsilon);
     }
 }
