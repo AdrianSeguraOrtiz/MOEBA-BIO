@@ -30,7 +30,13 @@ public class FastEvaluationRunner implements Runnable {
     @Option(names = {"--representation"}, description = "Representation as a string. Possible values: GENERIC, INDIVIDUAL", defaultValue = "GENERIC")
     private Representation representation;
 
-    @Option(names = {"--str-fitness-functions"}, description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSizeNormComp, BiclusterSizeWeightedNormComp, BiclusterVarianceNorm, RowVarianceNormComp, DistanceBetweenBiclustersNormComp", defaultValue = "BiclusterSizeNormComp;RowVarianceNormComp;MeanSquaredResidueNorm")
+    @Option(names = {"--str-fitness-functions"}, 
+            description = "Objectives to optimize separated by semicolon. Possible values: \n" + //
+                "\t- General purpose objectives (Any representation): BiclusterSizeNormComp, BiclusterVarianceNorm, RowVarianceNormComp, MeanSquaredResidueNorm \n" + //
+                "\t- General purpose objectives (GENERIC representation): BiclusterSizeNumBicsNormComp, DistanceBetweenBiclustersNormComp \n" + //
+                "\t- Co-Expression objectives (GENERIC representation): RegulatoryCoherenceNormComp \n" + //
+                "In case any objective requires additional parameters, they shall be specified in brackets in the following way ObjectiveName(parameter1=value, parameter2=value, ...)", 
+            defaultValue = "BiclusterSizeNormComp;MeanSquaredResidueNorm")
     private String strFitnessFormulas;
 
     @Option(names = {"--summarise-individual-objectives"}, description = "Way to summarise the overall quality of the solutions from the individual quality of their biclusters. Only for GENERIC, SPECIFIC or DYNAMIC representation. Possible values: Mean, HarmonicMean, GeometricMean", defaultValue = "Mean")
@@ -102,7 +108,7 @@ public class FastEvaluationRunner implements Runnable {
         // Run evaluation
         try (PrintWriter writer = new PrintWriter(new FileWriter(outputFile))) {
             for (int i = 0; i < strFitnessFunctions.length; i++) {
-                writer.print(strFitnessFunctions[i]);
+                writer.print("\"" + strFitnessFunctions[i] + "\"");
                 if (i < strFitnessFunctions.length - 1) writer.print(",");
             }
             writer.println();

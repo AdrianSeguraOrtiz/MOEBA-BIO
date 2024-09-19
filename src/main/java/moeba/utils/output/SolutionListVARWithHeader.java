@@ -153,7 +153,9 @@ public class SolutionListVARWithHeader extends SolutionListOutput {
         try {
             if (!solutionList.isEmpty()) {
                 // Write the header with fitness function descriptions/formulas
-                bufferedWriter.write(String.join(",", funLabels));
+                for (int i = 0; i < funLabels.length; i++) {
+                    bufferedWriter.write("\"" + funLabels[i] + "\"" + ((i < funLabels.length - 1) ? context.getSeparator() : ""));
+                }
                 bufferedWriter.newLine();
                 
                 // Write objectives for each solution

@@ -55,9 +55,12 @@ public class Runner extends AbstractAlgorithmRunner implements Runnable {
     private int genericInitialMaxNumBics;
 
     @Option(names = {"--str-fitness-functions"}, 
-            description = "Objectives to optimize separated by semicolon. Possible values: BiclusterSizeNormComp, BiclusterVarianceNorm, RowVarianceNormComp, MeanSquaredResidueNorm, DistanceBetweenBiclustersNormComp \n" + //
+            description = "Objectives to optimize separated by semicolon. Possible values: \n" + //
+                "\t- General purpose objectives (Any representation): BiclusterSizeNormComp, BiclusterVarianceNorm, RowVarianceNormComp, MeanSquaredResidueNorm \n" + //
+                "\t- General purpose objectives (GENERIC or SPECIFIC representation): BiclusterSizeNumBicsNormComp, DistanceBetweenBiclustersNormComp \n" + //
+                "\t- Co-Expression objectives (GENERIC or SPECIFIC representation): RegulatoryCoherenceNormComp \n" + //
                 "In case any objective requires additional parameters, they shall be specified in brackets in the following way ObjectiveName(parameter1=value, parameter2=value, ...)", 
-            defaultValue = "BiclusterSizeNormComp;RowVarianceNormComp;MeanSquaredResidueNorm")
+            defaultValue = "BiclusterSizeNormComp;MeanSquaredResidueNorm")
     private String strFitnessFormulas;
 
     @Option(names = {"--summarise-individual-objectives"}, 

@@ -6,24 +6,23 @@ import moeba.fitnessfunction.GenericBiclusterFitnessFunction;
 import moeba.utils.storage.CacheStorage;
 
 public class BiclusterSizeNumBicsNormComp extends GenericBiclusterFitnessFunction {
-    private int growthRate;
-    private double initialWeight;
+    private BiclusterSizeNormComp biclusterSizeNormComp;
+    private double coherenceWeight;
 
     public BiclusterSizeNumBicsNormComp(double[][] data, Class<?>[] types, CacheStorage<String, Double> internalCache,
-            String summariseIndividualObjectives, int growthRate, double initialWeight) {
+            String summariseIndividualObjectives, double rowsWeight, double coherenceWeight) {
         super(data, types, internalCache, summariseIndividualObjectives);
-        this.growthRate = growthRate;
-        this.initialWeight = initialWeight;
+        this.biclusterSizeNormComp = new BiclusterSizeNormComp(data, types, internalCache, summariseIndividualObjectives, rowsWeight);
+        this.coherenceWeight = coherenceWeight;
     }
 
     @Override
     protected double getBiclusterScore(ArrayList<Integer>[] bicluster, ArrayList<ArrayList<Integer>[]> biclusters) {
         int maxSize = data.length * data[0].length;
-        int numBics = biclusters.size() + 1;
-        double parcelSize = (double) maxSize / Math.pow(numBics, 2);
+        double parcelSize = (double) maxSize / Math.pow(biclusters.size() + 1, 2);
         int biclusterSize = bicluster[0].size() * bicluster[1].size();
 
-        return (initialWeight + (1 - initialWeight) * (1 - Math.pow(1 - ((parcelSize / maxSize) * numBics), growthRate))) * (1 - Math.min(1, Math.abs(parcelSize - biclusterSize) / parcelSize));
+        return (1 - coherenceWeight) * biclusterSizeNormComp.getNormalizedSize(bicluster) + coherenceWeight * (1 - Math.min(1, Math.abs(parcelSize - biclusterSize) / parcelSize));
     }
     
 }

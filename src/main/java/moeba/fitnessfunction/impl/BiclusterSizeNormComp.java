@@ -15,7 +15,11 @@ public class BiclusterSizeNormComp extends IndividualBiclusterFitnessFunction {
         this.colsWeight = 1 - rowsWeight;
     }
 
-    protected double getBiclusterScore(ArrayList<Integer>[] bicluster) {
+    public double getNormalizedSize(ArrayList<Integer>[] bicluster) {
         return this.rowsWeight * ((double) bicluster[0].size() / data.length) + this.colsWeight * ((double) bicluster[1].size() / data[0].length);
+    }
+
+    protected double getBiclusterScore(ArrayList<Integer>[] bicluster) {
+        return getNormalizedSize(bicluster);
     }
 }

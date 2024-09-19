@@ -156,9 +156,9 @@ public final class StaticUtils {
         OBJETIVES_MAP.put("biclustersizenumbicsnormcomp", (str, op) -> {
             Map<String, String> subParams = getSubParams("biclustersizenumbicsnormcomp", str);
             String sumIndObjs = StaticUtils.getOne("biclustersizenumbicsnormcomp", subParams, "summariseindividualobjectives", op.summariseIndividualObjectives);
-            int growthRate = Integer.parseInt(StaticUtils.getOne("biclustersizenumbicsnormcomp", subParams, "growthrate", "8"));
-            double initialWeight = Double.parseDouble(StaticUtils.getOne("biclustersizenumbicsnormcomp", subParams, "initialweight", "0.75"));
-            return new BiclusterSizeNumBicsNormComp(op.data, op.types, op.cache, sumIndObjs, growthRate, initialWeight);
+            Double rowsWeight = Double.parseDouble(StaticUtils.getOne("biclustersizenumbicsnormcomp", subParams, "rowsweight", "0.5"));
+            double coherenceWeight = Double.parseDouble(StaticUtils.getOne("biclustersizenumbicsnormcomp", subParams, "coherenceWeight", "0.5"));
+            return new BiclusterSizeNumBicsNormComp(op.data, op.types, op.cache, sumIndObjs, rowsWeight, coherenceWeight);
         });
     }
 
