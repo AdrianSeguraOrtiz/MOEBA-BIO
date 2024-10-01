@@ -10,7 +10,7 @@ public abstract class GlobalFitnessFunction extends FitnessFunction {
 
     @Override
     public double run(ArrayList<ArrayList<Integer>[]> biclusters) {
-        return super.func.run(biclusters);
+        return super.func.run(deleteSmallOrEmptyBiclusters(biclusters));
     }
     
 }

@@ -38,7 +38,7 @@ public abstract class BiclusterFitnessFunction extends FitnessFunction {
 
     @Override
     public double run(ArrayList<ArrayList<Integer>[]> biclusters) {
-        return 1 - super.func.run(biclusters);
+        return 1 - super.func.run(deleteSmallOrEmptyBiclusters(biclusters));
     }
 
     private double calculateMean(ArrayList<ArrayList<Integer>[]> biclusters, BiclusterScoreFunction scoreFunc) {

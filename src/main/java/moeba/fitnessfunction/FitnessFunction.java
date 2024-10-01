@@ -17,5 +17,10 @@ public abstract class FitnessFunction {
     }
 
     public abstract double run(ArrayList<ArrayList<Integer>[]> biclusters);
+
+    public ArrayList<ArrayList<Integer>[]> deleteSmallOrEmptyBiclusters(ArrayList<ArrayList<Integer>[]> biclusters) {
+        biclusters.removeIf(b -> b[0].size() <= 1 || b[1].size() <= 1);
+        return biclusters;
+    }
     
 }
