@@ -463,9 +463,9 @@ def main(
         # Set the axis names and the title of the plot
         fig.update_layout(
             scene=dict(
-                xaxis_title=fun_df.columns[0],
-                yaxis_title=fun_df.columns[1],
-                zaxis_title=fun_df.columns[2],
+                xaxis_title=re.sub(r'\(.*?\)', '', fun_df.columns[0]),
+                yaxis_title=re.sub(r'\(.*?\)', '', fun_df.columns[1]),
+                zaxis_title=re.sub(r'\(.*?\)', '', fun_df.columns[2]),
                 xaxis_title_font=dict(size=20),
                 yaxis_title_font=dict(size=20),
                 zaxis_title_font=dict(size=20),

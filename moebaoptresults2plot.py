@@ -1,5 +1,6 @@
 import argparse
 import math
+import re
 from pathlib import Path
 
 import numpy as np
@@ -116,6 +117,14 @@ def plot_parallel_coordinates(fun_df: pd.DataFrame, objectives: list, output_fil
     - objectives (list): The list of column names to use as dimensions for the parallel coordinates.
     - output_file (str): The file path to save the output graph.
     """
+    # Delete rows with NaN from dataframe
+    fun_df = fun_df.dropna()
+    
+    # Delete "(*)" pattern from objectives names
+    objectives = [re.sub("[\(].*?[\)]", "", x) for x in objectives]
+    
+    # Now from colsnames
+    fun_df.columns = [re.sub("[\(].*?[\)]", "", x) for x in fun_df.columns]
 
     # Create the parallel coordinates figure
     fig = px.parallel_coordinates(
@@ -182,9 +191,9 @@ def plot_3D_pareto_front(fun_df: pd.DataFrame, objectives: list, output_file: st
     # Set the axis names and the title of the plot
     fig.update_layout(
         scene=dict(
-            xaxis_title=objectives[0],
-            yaxis_title=objectives[1],
-            zaxis_title=objectives[2],
+            xaxis_title=re.sub(r'\(.*?\)', '', objectives[0]),
+            yaxis_title=re.sub(r'\(.*?\)', '', objectives[1]),
+            zaxis_title=re.sub(r'\(.*?\)', '', objectives[2]),
             xaxis_title_font=dict(size=20),
             yaxis_title_font=dict(size=20),
             zaxis_title_font=dict(size=20),
@@ -253,8 +262,11 @@ def plot_bicluster_count(df: pd.DataFrame,
     elif plot_type == 'box':
         # Plot box plot
         ax = sns.boxplot(x='Generation', y='Number of Biclusters', data=df)
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(25))
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
         ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        ax.set_xlabel('Generation', fontsize=30)
+        ax.set_ylabel('Number of Biclusters', fontsize=30)
+        ax.tick_params(axis='both', which='major', labelsize=20)
     elif plot_type == 'histogram':
         # Plot histogram
         # Convert 'Generation' to categorical for better histogram plotting
@@ -275,7 +287,7 @@ def plot_bicluster_count(df: pd.DataFrame,
         sns.ecdfplot(data=df, x='Number of Biclusters', hue='Generation')
 
     # Set plot title
-    plt.title('Distribution of Biclusters per Generation')
+    plt.title('Distribution of Biclusters per Generation', fontsize=45)
 
     # Save the plot to an image file
     plt.savefig(output_file)
@@ -338,7 +350,18 @@ def main(fun_file: str, fitness_evolution_file: str, bicluster_count_file: str, 
                 ## Plot pareto front
                 plot_2D_pareto_front(df, [objectives[i], objectives[j]], filename)
     
-    # 4. Fitness evolution
+    # 4. Pareto Fronts 3D (if there are more than three objectives)
+    if len(objectives) > 3:
+        for i in range(len(objectives)):
+            for j in range(i + 1, len(objectives)):
+                for k in range(j + 1, len(objectives)):
+                    ## Set pareto front filename
+                    filename = f"{output_folder}/pareto_front_3D_{objectives[i]}-{objectives[j]}-{objectives[k]}.html"
+
+                    ## Plot pareto front
+                    plot_3D_pareto_front(df, [objectives[i], objectives[j], objectives[k]], filename)
+    
+    # 5. Fitness evolution
     if fitness_evolution_file is not None:
         ## Set fitness evolution filename
         filename = f"{output_folder}/fitness_evolution.html"
@@ -349,7 +372,7 @@ def main(fun_file: str, fitness_evolution_file: str, bicluster_count_file: str, 
         ## Plot fitness evolution
         plot_fitness_evolution(lines, objectives, filename)
 
-    # 5. Bicluster count evolution
+    # 6. Bicluster count evolution
     if bicluster_count_file is not None:
         if population_size is None:
             raise ValueError("Population size must be provided if bicluster count file is provided.")
