@@ -14,17 +14,20 @@ def load_data(file_path: str) -> pd.DataFrame:
 
 def save_biclusters(file_path: str, biclusters: Biclustering) -> None:
     with open(file_path, 'w') as f:
-        for i in range(len(biclusters.biclusters)):
-            rows = ' '.join(str(x) for x in biclusters.biclusters[i].rows)
-            cols = ' '.join(str(x) for x in biclusters.biclusters[i].cols)
-            f.write(f"Bicluster{i}: (rows: [{rows}] cols: [{cols}])")
-            if i < len(biclusters.biclusters) - 1:
-                f.write(', ')
+        if len(biclusters.biclusters) == 0:
+            f.write(f"Bicluster{0}: (rows: [0] cols: [0])")
+        else:
+            for i in range(len(biclusters.biclusters)):
+                rows = ' '.join(str(x) for x in biclusters.biclusters[i].rows)
+                cols = ' '.join(str(x) for x in biclusters.biclusters[i].cols)
+                f.write(f"Bicluster{i}: (rows: [{rows}] cols: [{cols}])")
+                if i < len(biclusters.biclusters) - 1:
+                    f.write(', ')
 
 def competitors(algorithm: str, input_file: str, output_file: str) -> None:
     data = load_data(args.input_file)
     n_biclusters = max(1, int(0.1 * (data.shape[0] + data.shape[1]) / 2))
-    discretion_level = 30
+    discretion_level = 10
 
     data_dis = discretize_data(data, discretion_level)
     data_bin = discretize_data(data)
