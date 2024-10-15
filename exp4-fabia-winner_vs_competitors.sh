@@ -60,8 +60,9 @@ algorithms=('xMotifs' 'OPSM' 'Plaid' 'CCA' 'Bimax' 'ISA' 'BiBit' 'LAS' 'Spectral
 
 # Loop through all data files and run each competitor algorithm
 for data_file in fabia_simulated_data/*-data.csv; do
-    # Extract the problem name from the data file
+    # Extract the problem name and id from the data file
     problema=${data_file%-data.csv}
+    id=$(basename $problema)
     # Run each algorithm on the current data file
     for algorithm in ${algorithms[@]}; do
         run_competitors $problema $algorithm $root_output_folder/$id
