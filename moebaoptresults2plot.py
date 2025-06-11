@@ -79,6 +79,7 @@ def plot_fitness_evolution(
 
     # Make plots
     fig = make_subplots(rows=r, cols=c, subplot_titles=objectives)
+    fig.update_annotations(font_size=24)
 
     # For each objective ...
     for i in range(len(fitness_evolution_lines)):
@@ -99,8 +100,8 @@ def plot_fitness_evolution(
             row=curr_row,
             col=curr_col,
         )
-        fig.update_xaxes(title_text="Generation", row=curr_row, col=curr_col)
-        fig.update_yaxes(title_text="Fitness", row=curr_row, col=curr_col)
+        fig.update_xaxes(title_text="Generation", row=curr_row, col=curr_col, titlefont={"size": 22}, tickfont={"size": 18})
+        fig.update_yaxes(title_text="Fitness", row=curr_row, col=curr_col, titlefont={"size": 22}, tickfont={"size": 18})
 
     # Customize and save the figure
     fig.update_layout(title_text="Fitness evolution", showlegend=False)
@@ -128,7 +129,18 @@ def plot_parallel_coordinates(fun_df: pd.DataFrame, objectives: list, output_fil
 
     # Create the parallel coordinates figure
     fig = px.parallel_coordinates(
-        fun_df, dimensions=objectives, title="Graph of parallel coordinates"
+        fun_df, dimensions=objectives, title="Graph of parallel coordinates", labels={"BiclusterVarianceNorm" : "BiclusterVarianceN", "RowVarianceNormComp" : "RowVarianceNC", "BiclusterSizeNumBicsNormComp" : "BiclusterSizeNumBicsNC", "RegulatoryCoherenceNormComp" : "RegulatoryCoherenceNC"}
+    )
+    
+    fig.update_traces( 
+        labelfont={'size': 20},
+        tickfont={'size': 16},
+        rangefont={'size': 16},
+    )
+    
+    fig.update_layout(
+        titlefont={'size': 20},
+        margin=dict(l=200, r=200, t=200, b=200),
     )
 
     # Save the figure as HTML
@@ -176,6 +188,7 @@ def plot_3D_pareto_front(fun_df: pd.DataFrame, objectives: list, output_file: st
         None
     """
     # Create the 3D scatter plot
+    fun_df = fun_df.dropna()
     fig = go.Figure(
         data=[
             go.Scatter3d(

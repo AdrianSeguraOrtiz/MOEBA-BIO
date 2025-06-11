@@ -17,11 +17,12 @@ def save_biclusters(file_path: str, biclusters: Biclustering) -> None:
         if len(biclusters.biclusters) == 0:
             f.write(f"Bicluster{0}: (rows: [0] cols: [0])")
         else:
-            for i in range(len(biclusters.biclusters)):
+            num_bics = min(len(biclusters.biclusters), 15000)
+            for i in range(num_bics):
                 rows = ' '.join(str(x) for x in biclusters.biclusters[i].rows)
                 cols = ' '.join(str(x) for x in biclusters.biclusters[i].cols)
                 f.write(f"Bicluster{i}: (rows: [{rows}] cols: [{cols}])")
-                if i < len(biclusters.biclusters) - 1:
+                if i < num_bics - 1:
                     f.write(', ')
 
 def competitors(algorithm: str, input_file: str, output_file: str) -> None:

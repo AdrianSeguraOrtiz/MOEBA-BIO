@@ -59,7 +59,11 @@ public class GeneRegulatoryNetwork {
 
         // Set up Docker client and infer the gene regulatory network using GENIE3
         DockerClient dockerClient = DockerClientBuilder.getInstance().build();
+        long startTime = System.currentTimeMillis();
         String containerId = runNetworkInference(dockerClient, imageName, tempDir, inputFilePath);
+        long endTime = System.currentTimeMillis();
+        double duration = (endTime - startTime) / 1000.0;
+        System.out.println("Inference time: " + duration + " s");
 
         // Initialize adjacency matrix and degree arrays
         this.adjRegMatrix = new float[geneExpressionData.length][geneExpressionData.length];
